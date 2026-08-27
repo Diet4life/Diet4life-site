@@ -44,6 +44,12 @@ const SOURCES: SourceLink[] = [
 
 const RELATED_ARTICLES: RelatedArticle[] = [
   {
+    title: "Sunt toate caloriile la fel?",
+    excerpt: "O calorie este mereu aceeași unitate de energie. Dar nu toate sursele de calorii hrănesc, satură sau se comportă la fel în organism.",
+    href: "/articole/sunt-toate-caloriile-la-fel",
+    img: "/images/sunt-toate-caloriile-la-fel.webp",
+  },
+  {
     title: "Ghidul Complet de Nutriție Bariatrică",
     excerpt: "Tot ce trebuie să știi despre alimentația înainte și după intervenția chirurgicală pentru obezitate.",
     href: "/blog",
@@ -54,12 +60,6 @@ const RELATED_ARTICLES: RelatedArticle[] = [
     excerpt: "Află adevărul științific din spatele celor mai comune credințe despre dietă, carbohidrați și grăsimi.",
     href: "/blog",
     img: "/images/blog-myths.png",
-  },
-  {
-    title: "Beneficiile Dietei Mediteraneene",
-    excerpt: "De ce dieta mediteraneană este considerată constant cea mai sănătoasă abordare nutrițională din lume.",
-    href: "/blog",
-    img: "/images/blog-med.png",
   },
 ];
 
