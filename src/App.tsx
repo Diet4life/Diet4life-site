@@ -21,6 +21,7 @@ import EducationPrevention from "@/pages/EducationPrevention";
 import EducationKids from "@/pages/EducationKids";
 import EducationFun from "@/pages/EducationFun";
 import Consultatii from "@/pages/Consultatii";
+import DeCeNuSlabescDacaMananc from "@/pages/articles/DeCeNuSlabescDacaMananc";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/education/kids" component={EducationKids} />
         <Route path="/education/fun" component={EducationFun} />
         <Route path="/consultatii" component={Consultatii} />
+        <Route path="/articole/de-ce-nu-slabesc-daca-mananc-putin" component={DeCeNuSlabescDacaMananc} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
