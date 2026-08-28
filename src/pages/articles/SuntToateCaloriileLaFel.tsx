@@ -59,7 +59,7 @@ const RELATED_ARTICLES: RelatedArticle[] = [
   },
 ];
 
-const p = "text-[17px] md:text-[18px] leading-[1.7] text-foreground/90 mb-5";
+const p = "font-serif text-[17px] md:text-[18px] leading-[1.7] text-foreground/90 mb-5";
 const h2 = "text-2xl sm:text-3xl font-serif font-bold text-foreground mt-12 mb-5 scroll-mt-28";
 
 export default function SuntToateCaloriileLaFel() {
