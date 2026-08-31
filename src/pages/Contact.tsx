@@ -127,8 +127,6 @@ export default function Contact() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="weight_loss">{language === 'ro' ? 'Scădere în greutate' : 'Weight loss'}</SelectItem>
-                          <SelectItem value="bariatric">{language === 'ro' ? 'Nutriție Bariatrică (Pre/Post-Op)' : 'Bariatric Nutrition (Pre/Post-Op)'}</SelectItem>
-
                           <SelectItem value="health">{language === 'ro' ? 'Sănătate Generală' : 'General Health'}</SelectItem>
                           <SelectItem value="other">{language === 'ro' ? 'Altul' : 'Other'}</SelectItem>
                         </SelectContent>

@@ -38,20 +38,19 @@ export default function About() {
             
             <div className="prose prose-lg prose-slate text-muted-foreground font-light leading-relaxed">
               <p>
-                {language === 'ro' 
-                  ? 'Cu o experiență de peste 10 ani în nutriția clinică și bariatrică, misiunea mea este să te ghidez către un stil de viață echilibrat, bazat pe dovezi științifice și adaptat nevoilor tale unice.' 
-                  : 'With over 10 years of experience in clinical and bariatric nutrition, my mission is to guide you toward a balanced lifestyle based on scientific evidence and tailored to your unique needs.'}
+                {language === 'ro'
+                  ? 'Cu o experiență de peste 10 ani în nutriția clinică, misiunea mea este să te ghidez către un stil de viață echilibrat, bazat pe dovezi științifice și adaptat nevoilor tale unice.'
+                  : 'With over 10 years of experience in clinical nutrition, my mission is to guide you toward a balanced lifestyle based on scientific evidence and tailored to your unique needs.'}
               </p>
               <p>
                 {language === 'ro'
-                  ? 'Cred cu tărie că nutriția nu este despre restricții severe, ci despre înțelegerea modului în care alimentele interacționează cu corpul tău. Fie că te pregătești pentru o intervenție bariatrică, îți dorești să scazi în greutate sau pur și simplu vrei să îți îmbunătățești sănătatea generală, abordarea mea este una empatică și profesională.'
-                  : 'I strongly believe that nutrition is not about severe restrictions, but about understanding how food interacts with your body. Whether you are preparing for bariatric surgery, looking to lose weight, or simply want to improve your overall health, my approach is empathetic and professional.'}
+                  ? 'Cred cu tărie că nutriția nu este despre restricții severe, ci despre înțelegerea modului în care alimentele interacționează cu corpul tău. Fie că îți dorești să scazi în greutate sau pur și simplu vrei să îți îmbunătățești sănătatea generală, abordarea mea este una empatică și profesională.'
+                  : 'I strongly believe that nutrition is not about severe restrictions, but about understanding how food interacts with your body. Whether you are looking to lose weight or simply want to improve your overall health, my approach is empathetic and professional.'}
               </p>
             </div>
             
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { ro: 'Nutriție Bariatrică', en: 'Bariatric Nutrition' },
                 { ro: 'Managementul Greutății', en: 'Weight Management' },
                 { ro: 'Nutriție Sportivă', en: 'Sports Nutrition' },
                 { ro: 'Sănătate Femeii', en: "Women's Health" }

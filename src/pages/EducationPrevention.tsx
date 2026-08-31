@@ -7,10 +7,8 @@ import {
   ArrowLeft,
   Heart,
   Activity,
-  Stethoscope,
   TrendingDown,
   Clock,
-  CalendarCheck,
   ChevronRight,
   AlertCircle,
 } from "lucide-react";
@@ -46,17 +44,6 @@ const articles = [
     tag: { ro: "Metabolism", en: "Metabolism" },
     readTime: "7 min",
     badgeColor: "bg-primary/10 text-primary",
-  },
-  {
-    icon: Stethoscope,
-    title: { ro: "Educația pacientului bariatric — înainte și după operație", en: "Bariatric patient education — before and after surgery" },
-    excerpt: {
-      ro: "Pregătirea nutrițională înainte de chirurgia bariatrică este la fel de importantă ca intervenția în sine. Descoperă ce trebuie să știi, ce să mănânci și cum să te adaptezi pe termen lung.",
-      en: "Nutritional preparation before bariatric surgery is as important as the procedure itself. Find out what you need to know, what to eat, and how to adapt long-term.",
-    },
-    tag: { ro: "Bariatric", en: "Bariatric" },
-    readTime: "10 min",
-    badgeColor: "bg-accent/10 text-accent",
   },
   {
     icon: Clock,
@@ -206,33 +193,6 @@ export default function EducationPrevention() {
                 </div>
               </motion.div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Bariatric special callout */}
-      <section className="py-12 bg-muted/20 border-t border-b">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="rounded-2xl bg-card border-2 border-accent/25 p-8 md:flex gap-8 items-center">
-            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center shrink-0 mb-6 md:mb-0">
-              <Stethoscope className="w-8 h-8 text-accent" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-serif font-bold text-foreground text-2xl mb-3">
-                {language === "ro" ? "Educație specializată pentru pacienții bariatrici" : "Specialized education for bariatric patients"}
-              </h3>
-              <p className="text-muted-foreground leading-relaxed mb-6">
-                {language === "ro"
-                  ? "Pacienții care au trecut prin chirurgie bariatrică au nevoi nutriționale unice. Programul nostru educațional bariatric acoperă toate etapele: pre-operator, post-operator imediat și long-term maintenance. Suport continuu din partea echipei noastre clinice."
-                  : "Patients who have undergone bariatric surgery have unique nutritional needs. Our bariatric education program covers all stages: pre-operative, immediate post-operative, and long-term maintenance. Continuous support from our clinical team."}
-              </p>
-              <Button asChild className="rounded-full" data-testid="button-bariatric-consult">
-                <Link href="/contact">
-                  <CalendarCheck className="w-4 h-4 mr-2" />
-                  {t("edu.cta.consult")}
-                </Link>
-              </Button>
-            </div>
           </div>
         </div>
       </section>

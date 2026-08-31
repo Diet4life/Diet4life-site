@@ -1,7 +1,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HeartPulse, Scale, Stethoscope, ChevronDown, CheckCircle2, ArrowRight } from "lucide-react";
+import { HeartPulse, Scale, ChevronDown, CheckCircle2, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
@@ -99,54 +99,6 @@ const services = [
         duration: "3–6 month program",
         format: "In-person or online",
         cta: "Start the program",
-      },
-    },
-  },
-  {
-    id: "bariatric",
-    icon: Stethoscope,
-    color: "hsl(340 60% 50%)",
-    bgColor: "hsl(340 60% 50% / 0.08)",
-    title: {
-      ro: "Nutriție bariatrică",
-      en: "Bariatric Nutrition",
-    },
-    desc: {
-      ro: "Pregătire pre-operatorie și monitorizare post-operatorie pentru a asigura succesul intervenției.",
-      en: "Pre-operative preparation and post-operative monitoring to ensure the success of the intervention.",
-    },
-    details: {
-      ro: {
-        intro:
-          "Suportul nutrițional în chirurgia bariatrică este esențial atât înainte cât și după intervenție. Colaborăm îndeaproape cu echipa medicală pentru a asigura că pacientul este pregătit optim și că recuperarea este rapidă și fără complicații.",
-        includes: [
-          "Evaluare nutrițională pre-operatorie detaliată",
-          "Dietă lichidiană și de tranziție pre-op (2–4 săptămâni)",
-          "Educație nutrițională: etapele post-op (lichide → piure → solid)",
-          "Plan de suplimentare obligatorie (vitamine, minerale, proteine)",
-          "Monitorizare lunară pe 12–24 luni post-operator",
-          "Gestionarea complicațiilor nutriționale (dumping syndrome, deficiențe)",
-          "Colaborare cu echipa chirurgicală și medicul de familie",
-        ],
-        duration: "Continuă: pre-op + minim 12 luni post-op",
-        format: "Cabinet (recomandat) sau online",
-        cta: "Solicită evaluare bariatrică",
-      },
-      en: {
-        intro:
-          "Nutritional support in bariatric surgery is essential both before and after the procedure. We work closely with the medical team to ensure patients are optimally prepared and that recovery is swift and complication-free.",
-        includes: [
-          "Detailed pre-operative nutritional assessment",
-          "Liquid and transition diet pre-op (2–4 weeks)",
-          "Nutritional education: post-op stages (liquids → puree → solid)",
-          "Mandatory supplementation plan (vitamins, minerals, proteins)",
-          "Monthly monitoring for 12–24 months post-op",
-          "Management of nutritional complications (dumping syndrome, deficiencies)",
-          "Collaboration with the surgical team and family doctor",
-        ],
-        duration: "Ongoing: pre-op + minimum 12 months post-op",
-        format: "In-person (recommended) or online",
-        cta: "Request bariatric assessment",
       },
     },
   },

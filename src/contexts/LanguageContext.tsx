@@ -14,7 +14,6 @@ const translations: Translations = {
   "nav.home": { ro: "Acasă", en: "Home" },
   "nav.about": { ro: "Despre Mine", en: "About Me" },
   "nav.services": { ro: "Servicii", en: "Services" },
-  "nav.nutrition": { ro: "Nutriție", en: "Nutrition" },
   "nav.calculator": { ro: "Calculator", en: "Calculator" },
   "nav.blog": { ro: "Blog", en: "Blog" },
   "nav.products": { ro: "Produse", en: "Products" },
@@ -78,8 +77,8 @@ const translations: Translations = {
     en: "Your health begins with informed choices" 
   },
   "hero.subtitle": { 
-    ro: "Nutriție clinică și bariatrică personalizată pentru o transformare durabilă. Descoperă echilibrul alături de specialiști.", 
-    en: "Personalized clinical and bariatric nutrition for sustainable transformation. Discover balance with specialists." 
+    ro: "Nutriție clinică personalizată pentru o transformare durabilă. Descoperă echilibrul alături de specialiști.",
+    en: "Personalized clinical nutrition for sustainable transformation. Discover balance with specialists."
   },
   "hero.cta.book": { ro: "Programează o Consultație", en: "Book a Consultation" },
   "hero.cta.services": { ro: "Descoperă Serviciile", en: "Explore Services" },

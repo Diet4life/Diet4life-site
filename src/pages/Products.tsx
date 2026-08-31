@@ -14,12 +14,6 @@ export default function Products() {
       desc: { ro: "Un plan complet de slăbire echilibrat pentru o săptămână, incluzând liste de cumpărături și rețete detaliate.", en: "A complete balanced weight loss plan for one week, including shopping lists and detailed recipes." }
     },
     {
-      title: { ro: "Ghid Nutriție Bariatrică", en: "Bariatric Nutrition Guide" },
-      price: { ro: "79 RON", en: "€16" },
-      icon: <BookOpen className="w-12 h-12 text-primary" />,
-      desc: { ro: "Manual complet pentru pregătirea și recuperarea optimă după chirurgia bariatrică.", en: "Complete manual for optimal preparation and recovery after bariatric surgery." }
-    },
-    {
       title: { ro: "Workbook: Monitorizare Macro", en: "Macro Tracking Workbook" },
       price: { ro: "39 RON", en: "€8" },
       icon: <FileText className="w-12 h-12 text-primary" />,

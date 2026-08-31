@@ -8,16 +8,6 @@ export default function Blog() {
 
   const posts = [
     {
-      img: "/images/blog-bariatric.png",
-      title: { ro: "Ghidul Complet de Nutriție Bariatrică", en: "The Complete Bariatric Nutrition Guide" },
-      excerpt: { 
-        ro: "Tot ce trebuie să știi despre alimentația înainte și după intervenția chirurgicală pentru obezitate, etapele de reintroducere a alimentelor și suplimentare.", 
-        en: "Everything you need to know about nutrition before and after obesity surgery, food reintroduction stages, and supplementation." 
-      },
-      date: "12 Oct 2023",
-      readTime: "8 min"
-    },
-    {
       img: "/images/blog-myths.png",
       title: { ro: "10 Mituri Alimentare Demontate", en: "10 Food Myths Debunked" },
       excerpt: { 
