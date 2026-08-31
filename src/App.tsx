@@ -13,7 +13,6 @@ import About from "@/pages/About";
 import Services from "@/pages/Services";
 import Nutrition from "@/pages/Nutrition";
 import Calculator from "@/pages/Calculator";
-import Recipes from "@/pages/Recipes";
 import Blog from "@/pages/Blog";
 import Products from "@/pages/Products";
 import Contact from "@/pages/Contact";
@@ -36,7 +35,6 @@ function Router() {
         <Route path="/services" component={Services} />
         <Route path="/nutrition" component={Nutrition} />
         <Route path="/calculator" component={Calculator} />
-        <Route path="/recipes" component={Recipes} />
         <Route path="/blog" component={Blog} />
         <Route path="/products" component={Products} />
         <Route path="/contact" component={Contact} />
