@@ -74,9 +74,19 @@ sections, top to bottom, as far as confirmed:
    donut/chips/chocolate ~550kcal), subtitle "500 kcal vs. 500 kcal: două
    farfurii, efecte complet diferite.", body copy, link "Descoperă diferența →".
    This is clearly the answer page/section for the "Sunt toate caloriile la
-   fel?" hero question card.
-   **Not yet confirmed whether the homepage ends here or continues further —
-   ask user for more screenshots (footer etc.) before finalizing the rebuild.**
+   fel?" hero question card. **Confirmed: "Descoperă diferența →" currently
+   404s live — nothing has been written for that destination yet.** Build the
+   card, but the link has no working target for now (skip it or point nowhere
+   functional); the actual article gets written later as a separate task.
+7. **Final CTA**: "Ai găsit răspunsurile pe care le căutai?" + body copy
+   ("Dacă încă ai întrebări sau îți dorești recomandări adaptate istoricului,
+   obiectivelor și stilului tău de viață, mi-ar face plăcere să ne cunoaștem
+   și să construim împreună un plan potrivit pentru tine.") + button
+   "♡ Hai să ne cunoaștem" (→ presumably `/contact`).
+
+**Homepage is now fully mapped end to end** — section 7 is the last one before
+the footer, which already matches what's in git (`Layout.tsx`'s footer), no
+changes needed there.
 
 `/consultatii` page — live version has a "Cum funcționează" (How it works) block
 tied to the food-journal PDF flow, not present in git's `Consultatii.tsx`:
