@@ -103,6 +103,49 @@ Rețete · Produse · Consultații (+ RO/EN, Contact button). Note **Rețete is 
 in the live nav** — expected, since we've only removed it from git so far, not
 yet redeployed.
 
+## Homepage rebuild status
+
+**Done** — `Home.tsx` rebuilt to match the live design end to end (all 7 sections
+above), replacing the old CTA-only hero (user confirmed: replace, not additive —
+question-driven hero attracts more top-of-funnel visitors than a direct-booking
+hero). Implementation choices made along the way, not yet re-confirmed with the
+user:
+- Orange (`text-orange-600` / `bg-orange-600`, Tailwind's built-in palette) used
+  as the accent for this page's CTAs/highlights, matching the live screenshots.
+  Not tied to the theme's `--accent` token (which is blue, used elsewhere) —
+  deliberately scoped to just this page rather than a global token change.
+- New card sections (NutriHub topics, "Aplică în viața reală") use lucide icons
+  in colored circles instead of photos, to avoid piling on more broken
+  `/images/*.png` references on top of the existing unresolved image problem.
+- Search bar and the 3 question cards are functional in a limited way: clicking
+  a question card fills the search input (no actual search/results yet, no
+  backend or content index exists to search against).
+- "Explorează NutriHub" button smooth-scrolls to the `#nutrihub` section on the
+  same page (not a separate route) — no dedicated NutriHub hub/subpages exist.
+- "Calculator necesar caloric" card → real, working `/calculator` link.
+- "Jurnal alimentar" card → links to `/consultatii`, which does **not** yet have
+  the "Cum funcționează" PDF/upload/email flow built in — that page still needs
+  updating to match the live version (see below).
+- Featured spotlight ("De ce nu toate caloriile sunt la fel?") is static text
+  only, no link — its destination 404s live too, nothing written yet.
+- Removed the old `hero.*` translation keys from `LanguageContext.tsx` (no
+  longer used); new copy uses inline `language === 'ro' ? ... : ...` like most
+  other pages, not the `t()` helper.
+
+## Still open / not yet done
+
+- `/consultatii` needs the "Cum funcționează" journal block added (Descarcă
+  PDF → Completează online → Încarcă fișier → Trimite pe email) — discovered
+  live, not yet built anywhere in git.
+- NutriHub topic cards ("Controlul greutății", "Nutriție echilibrată") don't
+  link anywhere yet — live site has real subpages at `/nutrihub/<slug>`;
+  building those out is a separate, bigger task, not started.
+- The "De ce nu toate caloriile sunt la fel?" article itself doesn't exist
+  anywhere (live or git) — content to be written together later.
+- Hero image (`/images/hero.png`) is still broken/missing — user is separately
+  regenerating it with an AI image tool; reused the same path so it'll pick up
+  automatically once they drop the file in.
+
 ## Content policy decided this session
 
 - **Bariatric nutrition: remove everywhere, including in the rebuild.** No

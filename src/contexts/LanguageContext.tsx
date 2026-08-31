@@ -71,18 +71,6 @@ const translations: Translations = {
   "fun.title": { ro: "Învățare prin Joc", en: "Learning & Fun" },
   "fun.subtitle": { ro: "Nutriția devine aventură — pentru copii curioși", en: "Nutrition becomes an adventure — for curious kids" },
 
-  // Home Hero
-  "hero.title": { 
-    ro: "Sănătatea ta începe cu alegeri informate", 
-    en: "Your health begins with informed choices" 
-  },
-  "hero.subtitle": { 
-    ro: "Nutriție clinică personalizată pentru o transformare durabilă. Descoperă echilibrul alături de specialiști.",
-    en: "Personalized clinical nutrition for sustainable transformation. Discover balance with specialists."
-  },
-  "hero.cta.book": { ro: "Programează o Consultație", en: "Book a Consultation" },
-  "hero.cta.services": { ro: "Descoperă Serviciile", en: "Explore Services" },
-  
   // Footer
   "footer.rights": { ro: "Toate drepturile rezervate.", en: "All rights reserved." },
   "footer.clinic": { ro: "Diet4Life Concept - Clinică de Nutriție", en: "Diet4Life Concept - Nutrition Clinic" }

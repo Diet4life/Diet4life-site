@@ -1,51 +1,264 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import {
+  Search,
+  Clock,
+  Minus,
+  Heart,
+  ShieldCheck,
+  BadgeCheck,
+  BookOpenCheck,
+  Scale,
+  Salad,
+  Calculator as CalculatorIcon,
+  NotebookPen,
+  Flame,
+  ArrowRight,
+} from "lucide-react";
+
+const quickQuestions = [
+  { icon: Clock, ro: "Fructele seara îngrașă?", en: "Do fruits at night make you gain weight?" },
+  { icon: Minus, ro: "Sunt toate caloriile la fel?", en: "Are all calories the same?" },
+  { icon: Heart, ro: "De ce mi-e foame", en: "Why am I hungry" },
+];
+
+const nutriHubTopics = [
+  { icon: Scale, ro: "Controlul greutății", en: "Weight control" },
+  { icon: Salad, ro: "Nutriție echilibrată", en: "Balanced nutrition" },
+];
 
 export default function Home() {
-  const { t } = useLanguage();
+  const { language } = useLanguage();
+  const ro = language === "ro";
+  const [search, setSearch] = useState("");
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-80px)]">
-      <section className="relative flex-1 flex items-center pt-20 pb-32 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-background/40 backdrop-blur-[2px] z-10" />
-          <img 
-            src="/images/hero.png" 
-            alt="Diet4Life Concept Hero" 
-            className="w-full h-full object-cover object-center"
-          />
-        </div>
-        
-        <div className="container mx-auto px-4 relative z-20">
-          <div className="max-w-3xl">
+    <div className="flex flex-col">
+      {/* Hero */}
+      <section className="relative py-20 md:py-28 bg-secondary/40 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <h1 className="text-5xl md:text-7xl font-serif font-bold text-foreground leading-[1.1] mb-6">
-                {t("hero.title")}
+              <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground leading-[1.1] mb-8">
+                {ro ? "Nutriția începe cu" : "Nutrition starts with"}{" "}
+                <span className="text-orange-600">{ro ? "întrebarea potrivită." : "the right question."}</span>
               </h1>
-              <p className="text-lg md:text-xl text-foreground/80 mb-10 leading-relaxed max-w-2xl font-light">
-                {t("hero.subtitle")}
+
+              <form onSubmit={(e) => e.preventDefault()} className="relative mb-6">
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={ro ? "Caută întrebări, subiecte, mituri..." : "Search questions, topics, myths..."}
+                  className="w-full h-16 pl-6 pr-16 rounded-2xl border border-border bg-background text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-shadow"
+                  data-testid="input-home-search"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-2 h-12 w-12 rounded-xl bg-orange-600 hover:bg-orange-700 active:scale-[0.97] text-white flex items-center justify-center transition-all"
+                  data-testid="button-home-search"
+                  aria-label={ro ? "Caută" : "Search"}
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+              </form>
+
+              <p className="text-sm text-muted-foreground mb-4">
+                {ro ? "Începe cu una dintre acestea" : "Start with one of these"}
               </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="text-base h-14 px-8 rounded-full shadow-lg" asChild>
-                  <Link href="/contact" data-testid="button-book-consultation">
-                    {t("hero.cta.book")}
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" className="text-base h-14 px-8 rounded-full bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-background/80" asChild>
-                  <Link href="/services" data-testid="button-explore-services">
-                    {t("hero.cta.services")}
-                  </Link>
-                </Button>
+              <div className="grid sm:grid-cols-3 gap-3 mb-8">
+                {quickQuestions.map((q, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setSearch(ro ? q.ro : q.en)}
+                    className="text-left p-4 rounded-xl border border-border bg-background hover:border-orange-300 hover:shadow-sm active:scale-[0.98] transition-all"
+                    data-testid={`button-quick-question-${i}`}
+                  >
+                    <q.icon className="w-4 h-4 text-orange-600 mb-2" />
+                    <span className="text-sm font-medium text-foreground">{ro ? q.ro : q.en}</span>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => document.getElementById("nutrihub")?.scrollIntoView({ behavior: "smooth" })}
+                className="inline-flex items-center justify-center rounded-full bg-orange-600 hover:bg-orange-700 active:scale-[0.97] text-white font-medium px-8 h-12 transition-all"
+                data-testid="button-explore-nutrihub"
+              >
+                {ro ? "Explorează NutriHub" : "Explore NutriHub"}
+              </button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+              className="hidden lg:block"
+            >
+              <div className="rounded-3xl overflow-hidden shadow-xl aspect-square">
+                <img
+                  src="/images/hero.png"
+                  alt="Diet4Life"
+                  className="w-full h-full object-cover"
+                />
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Trust bar */}
+      <section className="py-6 border-y bg-background">
+        <div className="container mx-auto px-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-muted-foreground">
+          <span className="flex items-center gap-2">
+            <BadgeCheck className="w-4 h-4 text-primary" />
+            {ro ? "Informații bazate pe dovezi" : "Evidence-based information"}
+          </span>
+          <span className="hidden sm:inline text-border">·</span>
+          <span className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-primary" />
+            {ro ? "Nutriționist dietetician autorizat" : "Licensed dietitian-nutritionist"}
+          </span>
+          <span className="hidden sm:inline text-border">·</span>
+          <span className="flex items-center gap-2">
+            <BookOpenCheck className="w-4 h-4 text-primary" />
+            {ro ? "Resurse educaționale revizuite periodic" : "Regularly reviewed educational resources"}
+          </span>
+        </div>
+      </section>
+
+      {/* Explorează pe subiecte (NutriHub) */}
+      <section id="nutrihub" className="py-20 bg-secondary/20 scroll-mt-20">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-12">
+            {ro ? "Explorează pe subiecte" : "Explore by topic"}
+          </h2>
+          <div className="grid sm:grid-cols-2 max-w-2xl mx-auto gap-6">
+            {nutriHubTopics.map((topic, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <div
+                  className="rounded-2xl bg-card border border-border p-8 text-center hover:shadow-md transition-shadow"
+                  data-testid={`card-nutrihub-topic-${i}`}
+                >
+                  <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
+                    <topic.icon className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <h3 className="font-serif font-bold text-foreground text-lg">
+                    {ro ? topic.ro : topic.en}
+                  </h3>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Aplică în viața reală */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-12">
+            {ro ? "Aplică în viața reală" : "Apply it in real life"}
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-6 mb-6">
+            <Link
+              href="/calculator"
+              className="group rounded-2xl border border-border bg-card p-7 hover:shadow-md hover:border-primary/30 transition-all"
+              data-testid="link-apply-calculator"
+            >
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                <CalculatorIcon className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-serif font-bold text-foreground text-lg mb-2">
+                {ro ? "Calculator necesar caloric" : "Calorie needs calculator"}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {ro
+                  ? "Află orientativ câte calorii ai nevoie, pornind de la profilul tău."
+                  : "Get an estimate of how many calories you need, based on your profile."}
+              </p>
+              <span className="text-primary text-sm font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                {ro ? "Deschide calculatorul" : "Open the calculator"} <ArrowRight className="w-4 h-4" />
+              </span>
+            </Link>
+
+            <Link
+              href="/consultatii"
+              className="group rounded-2xl border border-border bg-card p-7 hover:shadow-md hover:border-primary/30 transition-all"
+              data-testid="link-apply-journal"
+            >
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                <NotebookPen className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-serif font-bold text-foreground text-lg mb-2">
+                {ro ? "Jurnal alimentar" : "Food journal"}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {ro
+                  ? "Înțelege-ți obiceiurile alimentare, notând ce mănânci zi de zi."
+                  : "Understand your eating habits by tracking what you eat day to day."}
+              </p>
+              <span className="text-primary text-sm font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                {ro ? "Deschide jurnalul" : "Open the journal"} <ArrowRight className="w-4 h-4" />
+              </span>
+            </Link>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            {ro
+              ? "Instrumentele au rol educațional și nu oferă diagnostic medical."
+              : "These tools are educational and do not provide a medical diagnosis."}
+          </p>
+        </div>
+      </section>
+
+      {/* Featured spotlight */}
+      <section className="py-20 bg-secondary/20">
+        <div className="container mx-auto px-4 max-w-3xl text-center">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-orange-600 uppercase mb-4">
+            <Flame className="w-3.5 h-3.5" /> {ro ? "În prim-plan" : "Featured"}
+          </span>
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-3">
+            {ro ? "De ce nu toate caloriile sunt la fel?" : "Why aren't all calories the same?"}
+          </h2>
+          <p className="text-muted-foreground leading-relaxed">
+            {ro
+              ? "500 kcal vs. 500 kcal: două farfurii, efecte complet diferite asupra foamei, energiei și sațietății."
+              : "500 kcal vs. 500 kcal: two plates, completely different effects on hunger, energy, and satiety."}
+          </p>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-20 bg-background border-t">
+        <div className="container mx-auto px-4 max-w-2xl text-center">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-4">
+            {ro ? "Ai găsit răspunsurile pe care le căutai?" : "Did you find the answers you were looking for?"}
+          </h2>
+          <p className="text-muted-foreground mb-8 leading-relaxed">
+            {ro
+              ? "Dacă încă ai întrebări sau îți dorești recomandări adaptate istoricului, obiectivelor și stilului tău de viață, mi-ar face plăcere să ne cunoaștem și să construim împreună un plan potrivit pentru tine."
+              : "If you still have questions or want recommendations tailored to your history, goals, and lifestyle, I'd love to get to know you and build a plan that fits you together."}
+          </p>
+          <Link
+            href="/contact"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-orange-600 hover:bg-orange-700 active:scale-[0.97] text-white font-medium px-8 h-12 transition-all"
+            data-testid="button-lets-meet"
+          >
+            <Heart className="w-4 h-4" />
+            {ro ? "Hai să ne cunoaștem" : "Let's get to know each other"}
+          </Link>
         </div>
       </section>
     </div>
