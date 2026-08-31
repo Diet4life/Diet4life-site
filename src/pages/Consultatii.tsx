@@ -38,15 +38,14 @@ const EMPTY_PATIENT: PatientInfo = {
   discomfortFoods: "", mainDifficulty: "", objectives: "",
 };
 
+// Hand portion guide — a visual, memorable alternative to a scale/measuring cup.
+// The color triplets are used both as jsPDF fill colors and as inline RGB styles on the web page.
 const PORTION_GUIDE = [
-  { item: "Carne / pește", tip: "aproximativ cât palma" },
-  { item: "Brânză", tip: "aproximativ 2–3 degete" },
-  { item: "Garnitură", tip: "2–4 linguri de supă" },
-  { item: "Legume", tip: "1–2 pumni" },
-  { item: "Pâine", tip: "1 felie" },
-  { item: "Ulei", tip: "1 linguriță" },
-  { item: "Fruct", tip: "1 bucată mică sau cât un pumn" },
-  { item: "Nuci / semințe", tip: "1 lingură sau un pumn mic" },
+  { hand: "Palmă", color: [92, 138, 103] as [number, number, number], group: "Proteine", examples: "carne, pește, tofu, ouă" },
+  { hand: "Pumn", color: [70, 130, 180] as [number, number, number], group: "Legume", examples: "crude sau gătite" },
+  { hand: "Căuș de mână", color: [200, 150, 60] as [number, number, number], group: "Carbohidrați", examples: "orez, cartofi, cereale, paste" },
+  { hand: "Degetul mare", color: [230, 140, 60] as [number, number, number], group: "Grăsimi", examples: "ulei, unt, nuci, semințe" },
+  { hand: "Vârful degetului", color: [200, 90, 90] as [number, number, number], group: "Adaosuri bogate caloric", examples: "dulceață, unt de arahide, sosuri" },
 ];
 
 // ─── Unicode font loading (DejaVu Sans — full Romanian diacritics support) ───
@@ -180,23 +179,39 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   });
   y = (doc as any).lastAutoTable.finalY + 10;
 
-  // ── Portion Guide ─────────────────────────────────────────────────────────
-  addPageIfNeeded(50);
+  // ── Portion Guide (hand-based) ────────────────────────────────────────────
+  addPageIfNeeded(55);
   doc.setFont("DejaVuSans", "bold");
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
-  doc.text("Ghid estimare porții", margin, y);
-  y += 4;
+  doc.text("Ghid vizual: mâna ca unitate de măsură", margin, y);
+  y += 5;
+  doc.setFont("DejaVuSans", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text("Simplu și eficient, fără cântar sau pahar gradat.", margin, y);
+  y += 5;
 
   autoTable(doc, {
     startY: y,
-    head: [["Aliment", "Porție orientativă"]],
-    body: PORTION_GUIDE.map(p => [p.item, p.tip]),
-    theme: "striped",
+    head: [["Reper", "Grup alimentar", "Exemple"]],
+    body: PORTION_GUIDE.map(p => [p.hand, p.group, p.examples]),
+    theme: "grid",
     headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 8, fontStyle: "bold" },
-    styles: { fontSize: 8, cellPadding: 2, font: "DejaVuSans" },
+    styles: { fontSize: 8, cellPadding: 3, font: "DejaVuSans" },
     margin: { left: margin, right: margin },
-    columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: pageW - 2 * margin - 60 } },
+    columnStyles: {
+      0: { cellWidth: 38, fontStyle: "bold", cellPadding: { top: 3, right: 3, bottom: 3, left: 10 } },
+      1: { cellWidth: 45, fontStyle: "bold" },
+      2: { cellWidth: pageW - 2 * margin - 83 },
+    },
+    didDrawCell: (data) => {
+      if (data.section === "body" && data.column.index === 0) {
+        const p = PORTION_GUIDE[data.row.index];
+        doc.setFillColor(...p.color);
+        doc.circle(data.cell.x + 4, data.cell.y + data.cell.height / 2, 2, "F");
+      }
+    },
   });
   y = (doc as any).lastAutoTable.finalY + 10;
 
@@ -484,14 +499,27 @@ export default function Consultatii() {
                     <Utensils className="w-4 h-4" />
                   </div>
                   <h3 className="text-xl font-serif font-bold text-foreground">
-                    {ro ? "Ghid estimare porții" : "Portion estimation guide"}
+                    {ro ? "Ghid vizual: mâna ca unitate de măsură" : "Visual guide: your hand as a measuring tool"}
                   </h3>
                 </div>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {ro
+                    ? "Simplu și eficient, fără cântar sau pahar gradat."
+                    : "Simple and effective, no scale or measuring cup needed."}
+                </p>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {PORTION_GUIDE.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between gap-2 py-2.5 px-3 bg-secondary/40 rounded-xl">
-                      <span className="text-sm font-semibold text-foreground">{p.item}</span>
-                      <span className="text-sm text-muted-foreground text-right">{p.tip}</span>
+                    <div key={i} className="flex items-start gap-3 py-2.5 px-3 bg-secondary/40 rounded-xl">
+                      <span
+                        className="w-3 h-3 rounded-full shrink-0 mt-1"
+                        style={{ backgroundColor: `rgb(${p.color.join(",")})` }}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">
+                          {p.hand} <span className="font-normal text-muted-foreground">→ {p.group}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">{p.examples}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
