@@ -41,25 +41,39 @@ const ACTIVE_LEVELS = new Set(["moderate", "very", "extra"]);
 interface BmiCategory {
   label: { ro: string; en: string };
   textClass: string;
+  recommendation: { ro: string; en: string };
 }
+
+const BMI_RECOMMENDATION_GAIN = {
+  ro: "Se recomandă creșterea în greutate, treptat și controlat, pentru a ajunge la normoponderabilitate.",
+  en: "Gradual, controlled weight gain is recommended to reach a normal weight.",
+};
+const BMI_RECOMMENDATION_MAINTAIN = {
+  ro: "Greutatea este în limite normale — se recomandă menținerea ei.",
+  en: "Weight is within the normal range — maintaining it is recommended.",
+};
+const BMI_RECOMMENDATION_LOSE = {
+  ro: "Se recomandă scăderea în greutate, treptat și controlat, pentru a ajunge la normoponderabilitate.",
+  en: "Gradual, controlled weight loss is recommended to reach a normal weight.",
+};
 
 function getBmiCategory(bmi: number): BmiCategory {
   if (bmi < 18.5) {
-    return { label: { ro: "Subponderal", en: "Underweight" }, textClass: "text-blue-600" };
+    return { label: { ro: "Subponderal", en: "Underweight" }, textClass: "text-blue-600", recommendation: BMI_RECOMMENDATION_GAIN };
   }
   if (bmi < 25) {
-    return { label: { ro: "Greutate normală", en: "Normal weight" }, textClass: "text-primary" };
+    return { label: { ro: "Greutate normală", en: "Normal weight" }, textClass: "text-primary", recommendation: BMI_RECOMMENDATION_MAINTAIN };
   }
   if (bmi < 30) {
-    return { label: { ro: "Supraponderal", en: "Overweight" }, textClass: "text-amber-600" };
+    return { label: { ro: "Supraponderal", en: "Overweight" }, textClass: "text-amber-600", recommendation: BMI_RECOMMENDATION_LOSE };
   }
   if (bmi < 35) {
-    return { label: { ro: "Obezitate gradul I", en: "Obesity class I" }, textClass: "text-orange-600" };
+    return { label: { ro: "Obezitate gradul I", en: "Obesity class I" }, textClass: "text-orange-600", recommendation: BMI_RECOMMENDATION_LOSE };
   }
   if (bmi < 40) {
-    return { label: { ro: "Obezitate gradul II", en: "Obesity class II" }, textClass: "text-red-600" };
+    return { label: { ro: "Obezitate gradul II", en: "Obesity class II" }, textClass: "text-red-600", recommendation: BMI_RECOMMENDATION_LOSE };
   }
-  return { label: { ro: "Obezitate gradul III (severă)", en: "Obesity class III (severe)" }, textClass: "text-red-700" };
+  return { label: { ro: "Obezitate gradul III (severă)", en: "Obesity class III (severe)" }, textClass: "text-red-700", recommendation: BMI_RECOMMENDATION_LOSE };
 }
 
 // BMI scale rendered as a 15–40 kg/m² bar; segment widths match real WHO cutoffs.
@@ -523,6 +537,9 @@ export default function Calculator() {
 
                     <p className={cn("text-sm font-semibold text-center", results.bmiCategory.textClass)} data-testid="text-bmi-category">
                       {ro ? results.bmiCategory.label.ro : results.bmiCategory.label.en}
+                    </p>
+                    <p className="text-xs text-muted-foreground text-center mt-1.5" data-testid="text-bmi-recommendation">
+                      {ro ? results.bmiCategory.recommendation.ro : results.bmiCategory.recommendation.en}
                     </p>
                   </div>
 
