@@ -21,7 +21,9 @@ import {
   Dumbbell,
   Droplets,
   Wheat,
+  Scale,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // ─── Activity level table ────────────────────────────────────────────────────
 // Base energy range in kcal/kg body weight per day (ESPEN-aligned)
@@ -34,6 +36,52 @@ const ACTIVITY_KCAL: Record<string, [number, number]> = {
 };
 
 const ACTIVE_LEVELS = new Set(["moderate", "very", "extra"]);
+
+// ─── BMI (IMC) classification — WHO ranges ────────────────────────────────────
+interface BmiCategory {
+  label: { ro: string; en: string };
+  textClass: string;
+}
+
+function getBmiCategory(bmi: number): BmiCategory {
+  if (bmi < 18.5) {
+    return { label: { ro: "Subponderal", en: "Underweight" }, textClass: "text-blue-600" };
+  }
+  if (bmi < 25) {
+    return { label: { ro: "Greutate normală", en: "Normal weight" }, textClass: "text-primary" };
+  }
+  if (bmi < 30) {
+    return { label: { ro: "Supraponderal", en: "Overweight" }, textClass: "text-amber-600" };
+  }
+  if (bmi < 35) {
+    return { label: { ro: "Obezitate gradul I", en: "Obesity class I" }, textClass: "text-orange-600" };
+  }
+  if (bmi < 40) {
+    return { label: { ro: "Obezitate gradul II", en: "Obesity class II" }, textClass: "text-red-600" };
+  }
+  return { label: { ro: "Obezitate gradul III (severă)", en: "Obesity class III (severe)" }, textClass: "text-red-700" };
+}
+
+// BMI scale rendered as a 15–40 kg/m² bar; segment widths match real WHO cutoffs.
+const BMI_SCALE_MIN = 15;
+const BMI_SCALE_MAX = 40;
+const BMI_SEGMENTS = [
+  { upTo: 18.5, color: "hsl(210 70% 60%)" }, // underweight
+  { upTo: 25, color: "hsl(152 40% 45%)" },   // normal
+  { upTo: 30, color: "hsl(35 70% 55%)" },    // overweight
+  { upTo: 40, color: "hsl(0 65% 55%)" },     // obese
+];
+
+const BMI_BAR_SEGMENTS = (() => {
+  let prev = BMI_SCALE_MIN;
+  return BMI_SEGMENTS.map((seg) => {
+    const to = Math.min(seg.upTo, BMI_SCALE_MAX);
+    const widthPct = ((to - prev) / (BMI_SCALE_MAX - BMI_SCALE_MIN)) * 100;
+    const segment = { widthPct, color: seg.color };
+    prev = to;
+    return segment;
+  });
+})();
 
 // ─── Zod schema ──────────────────────────────────────────────────────────────
 const formSchema = z.object({
@@ -62,12 +110,19 @@ interface CalcResults {
   carbsGMin: number;
   carbsGMax: number;
   chartData: { name: string; value: number; color: string }[];
+  bmi: number;
+  bmiCategory: BmiCategory;
 }
 
 // ─── Core calculation logic ───────────────────────────────────────────────────
 function calculate(values: FormValues): CalcResults {
-  const { weight, activityLevel, goal } = values;
+  const { weight, height, activityLevel, goal } = values;
   const [kMin, kMax] = ACTIVITY_KCAL[activityLevel] ?? [25, 30];
+
+  // 0. BMI (IMC) = weight(kg) / height(m)²
+  const heightM = height / 100;
+  const bmi = Math.round((weight / (heightM * heightM)) * 10) / 10;
+  const bmiCategory = getBmiCategory(bmi);
 
   // 1. Maintenance calorie range
   let calMin = Math.round(weight * kMin);
@@ -164,6 +219,8 @@ function calculate(values: FormValues): CalcResults {
     carbsGMin,
     carbsGMax,
     chartData,
+    bmi,
+    bmiCategory,
   };
 }
 
@@ -426,6 +483,47 @@ export default function Calculator() {
                       </p>
                     </div>
                     <Flame className="w-10 h-10 opacity-60 shrink-0" />
+                  </div>
+
+                  {/* BMI (IMC) card */}
+                  <div className="rounded-2xl bg-card border border-border p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Scale className="w-4 h-4 text-muted-foreground" />
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {ro ? "Indice de Masă Corporală (IMC)" : "Body Mass Index (BMI)"}
+                        </p>
+                      </div>
+                      <span className="text-2xl font-bold font-serif text-foreground" data-testid="text-bmi-value">
+                        {results.bmi.toFixed(1)}
+                      </span>
+                    </div>
+
+                    <div className="relative mb-2">
+                      <div className="flex h-2.5 rounded-full overflow-hidden">
+                        {BMI_BAR_SEGMENTS.map((seg, i) => (
+                          <div key={i} style={{ width: `${seg.widthPct}%`, backgroundColor: seg.color }} />
+                        ))}
+                      </div>
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-background border-2 border-foreground shadow"
+                        style={{
+                          left: `${((Math.min(Math.max(results.bmi, BMI_SCALE_MIN), BMI_SCALE_MAX) - BMI_SCALE_MIN) / (BMI_SCALE_MAX - BMI_SCALE_MIN)) * 100}%`,
+                          transform: "translate(-50%, -50%)",
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground mb-3">
+                      <span>{BMI_SCALE_MIN}</span>
+                      <span>18.5</span>
+                      <span>25</span>
+                      <span>30</span>
+                      <span>{BMI_SCALE_MAX}+</span>
+                    </div>
+
+                    <p className={cn("text-sm font-semibold text-center", results.bmiCategory.textClass)} data-testid="text-bmi-category">
+                      {ro ? results.bmiCategory.label.ro : results.bmiCategory.label.en}
+                    </p>
                   </div>
 
                   {/* Macros grid */}
