@@ -49,9 +49,44 @@ const PORTION_GUIDE = [
   { item: "Nuci / semințe", tip: "1 lingură sau un pumn mic" },
 ];
 
+// ─── Unicode font loading (DejaVu Sans — full Romanian diacritics support) ───
+// jsPDF's built-in "helvetica" is WinAnsi-only and silently drops ă/â/î/ș/ț,
+// which also corrupts splitTextToSize's width math (text overflowing its box).
+// Fonts are fetched from /public at generation time so they don't bloat the JS bundle.
+let fontsLoaded = false;
+
+async function arrayBufferToBase64(buf: ArrayBuffer): Promise<string> {
+  let binary = "";
+  const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+async function registerFonts(doc: jsPDF) {
+  if (!fontsLoaded) {
+    const [regularRes, boldRes] = await Promise.all([
+      fetch("/fonts/DejaVuSans.ttf"),
+      fetch("/fonts/DejaVuSans-Bold.ttf"),
+    ]);
+    const [regular, bold] = await Promise.all([
+      arrayBufferToBase64(await regularRes.arrayBuffer()),
+      arrayBufferToBase64(await boldRes.arrayBuffer()),
+    ]);
+    (window as any).__diet4lifeFontCache = { regular, bold };
+    fontsLoaded = true;
+  }
+  const { regular, bold } = (window as any).__diet4lifeFontCache;
+  doc.addFileToVFS("DejaVuSans.ttf", regular);
+  doc.addFont("DejaVuSans.ttf", "DejaVuSans", "normal");
+  doc.addFileToVFS("DejaVuSans-Bold.ttf", bold);
+  doc.addFont("DejaVuSans-Bold.ttf", "DejaVuSans", "bold");
+  doc.setFont("DejaVuSans", "normal");
+}
+
 // ─── PDF Generator ─────────────────────────────────────────────────────────
-function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
+async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  await registerFonts(doc);
   const margin = 15;
   const pageW = 210;
   let y = margin;
@@ -64,43 +99,53 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.setFillColor(92, 138, 103);
   doc.rect(0, 0, pageW, 22, "F");
   doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("DejaVuSans", "bold");
   doc.setFontSize(14);
   doc.text("Diet4Life Concept", margin, 10);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("DejaVuSans", "normal");
   doc.setFontSize(9);
   doc.text("Nutriție medicală personalizată  |  contact@diet4lifeconcept.ro  |  0766 572 968", margin, 17);
   y = 30;
 
   // Title
   doc.setTextColor(30, 30, 30);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("DejaVuSans", "bold");
   doc.setFontSize(16);
   doc.text("Jurnal Alimentar – 7 Zile", margin, y);
   y += 6;
-  doc.setFont("helvetica", "normal");
+  doc.setFont("DejaVuSans", "normal");
   doc.setFontSize(9);
   doc.setTextColor(100, 100, 100);
   doc.text("Pregătire pentru consultație nutrițională", margin, y);
-  y += 10;
+  y += 8;
 
-  // Instruction box
+  // Completion options — how the patient can fill in and return this journal
+  const optionsText = "Puteți completa acest jurnal tipărit de mână, sau direct online pe site-ul nostru (diet4lifeconcept.ro). Odată completat, trimiteți-l — fotografiat, scanat sau ca document — pe email la contact@diet4lifeconcept.ro.";
+  doc.setFontSize(8);
+  doc.setFont("DejaVuSans", "normal");
+  doc.setTextColor(100, 100, 100);
+  const optionsWrapped = doc.splitTextToSize(optionsText, pageW - 2 * margin);
+  doc.text(optionsWrapped, margin, y);
+  y += optionsWrapped.length * 4 + 6;
+
+  // Instruction box — height computed from the wrapped line count so text never overflows it
+  const instrText = "Notați toate mesele și gustările timp de 7 zile consecutive. Includeți orele, cantitățile aproximative, lichidele consumate și orice simptome digestive (foame, balonare, greață etc.).";
+  doc.setFontSize(8);
+  const wrapped = doc.splitTextToSize(instrText, pageW - 2 * margin - 8);
+  const instrBoxHeight = 8 + wrapped.length * 4;
   doc.setFillColor(240, 248, 242);
   doc.setDrawColor(92, 138, 103);
-  doc.roundedRect(margin, y, pageW - 2 * margin, 18, 2, 2, "FD");
+  doc.roundedRect(margin, y, pageW - 2 * margin, instrBoxHeight, 2, 2, "FD");
   doc.setTextColor(60, 100, 70);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("DejaVuSans", "bold");
   doc.text("Instrucțiuni:", margin + 4, y + 5);
-  doc.setFont("helvetica", "normal");
-  const instrText = "Notați toate mesele și gustările timp de 7 zile consecutive. Includeți orele, cantitățile aproximative, lichidele consumate și orice simptome digestive (foame, balonare, greață etc.).";
-  const wrapped = doc.splitTextToSize(instrText, pageW - 2 * margin - 8);
+  doc.setFont("DejaVuSans", "normal");
   doc.setTextColor(80, 80, 80);
-  doc.text(wrapped, margin + 4, y + 10);
-  y += 24;
+  doc.text(wrapped, margin + 4, y + 9);
+  y += instrBoxHeight + 6;
 
   // ── Patient Info ──────────────────────────────────────────────────────────
-  doc.setFont("helvetica", "bold");
+  doc.setFont("DejaVuSans", "bold");
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
   doc.text("Date Pacient", margin, y);
@@ -126,7 +171,7 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     head: [],
     body: fields,
     theme: "grid",
-    styles: { fontSize: 8, cellPadding: 2.5 },
+    styles: { fontSize: 8, cellPadding: 2.5, font: "DejaVuSans" },
     columnStyles: {
       0: { fontStyle: "bold", cellWidth: 65, fillColor: [248, 251, 249] },
       1: { cellWidth: pageW - 2 * margin - 65 },
@@ -137,7 +182,7 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
 
   // ── Portion Guide ─────────────────────────────────────────────────────────
   addPageIfNeeded(50);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("DejaVuSans", "bold");
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
   doc.text("Ghid estimare porții", margin, y);
@@ -149,7 +194,7 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     body: PORTION_GUIDE.map(p => [p.item, p.tip]),
     theme: "striped",
     headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 8, fontStyle: "bold" },
-    styles: { fontSize: 8, cellPadding: 2 },
+    styles: { fontSize: 8, cellPadding: 2, font: "DejaVuSans" },
     margin: { left: margin, right: margin },
     columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: pageW - 2 * margin - 60 } },
   });
@@ -167,10 +212,10 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     doc.setFillColor(92, 138, 103);
     doc.rect(margin, y, pageW - 2 * margin, 10, "F");
     doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
+    doc.setFont("DejaVuSans", "bold");
     doc.setFontSize(11);
     doc.text(day, margin + 4, y + 7);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("DejaVuSans", "normal");
     doc.setFontSize(8);
     doc.text("Data: ____________________", pageW - margin - 55, y + 7);
     y += 16;
@@ -194,7 +239,7 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
       body: rows,
       theme: "grid",
       headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 7.5, fontStyle: "bold", halign: "center" },
-      styles: { fontSize: 8, cellPadding: 3, minCellHeight: 12 },
+      styles: { fontSize: 8, cellPadding: 3, minCellHeight: 12, font: "DejaVuSans" },
       columnStyles: {
         0: { cellWidth: 28, fontStyle: "bold", fillColor: [248, 251, 249] },
         1: { cellWidth: 16, halign: "center" },
@@ -211,12 +256,12 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     // Observations note
     doc.setFontSize(7);
     doc.setTextColor(120, 120, 120);
-    doc.setFont("helvetica", "italic");
+    doc.setFont("DejaVuSans", "normal");
     doc.text("*Observații: foame, poftă, balonare, greață, vărsături, disconfort, ronțăieli între mese", margin, y);
     y += 8;
 
     // Extra notes box
-    doc.setFont("helvetica", "bold");
+    doc.setFont("DejaVuSans", "bold");
     doc.setFontSize(8);
     doc.setTextColor(60, 60, 60);
     doc.text("Note suplimentare:", margin, y);
@@ -228,7 +273,7 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   });
 
   // Footer on last page
-  doc.setFont("helvetica", "italic");
+  doc.setFont("DejaVuSans", "normal");
   doc.setFontSize(7);
   doc.setTextColor(140, 140, 140);
   doc.text("Diet4Life Concept  •  contact@diet4lifeconcept.ro  •  0766 572 968", margin, 285);
@@ -268,8 +313,8 @@ export default function Consultatii() {
       return next;
     });
 
-  const handleDownload = () => {
-    generatePDF(patient, journal);
+  const handleDownload = async () => {
+    await generatePDF(patient, journal);
     toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: ro ? "Jurnalul a fost generat cu succes." : "Journal generated successfully." });
   };
 
