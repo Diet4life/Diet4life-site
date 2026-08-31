@@ -88,15 +88,21 @@ sections, top to bottom, as far as confirmed:
 the footer, which already matches what's in git (`Layout.tsx`'s footer), no
 changes needed there.
 
-`/consultatii` page — live version has a "Cum funcționează" (How it works) block
-tied to the food-journal PDF flow, not present in git's `Consultatii.tsx`:
+`/consultatii` page — **already fully implements the food-journal flow seen
+live, no work needed.** Checked by actually opening `Consultatii.tsx` (not just
+inferring from screenshots): it has a complete "Cum funcționează" block with
+the exact 4 steps from the live screenshot, word-for-word —
 1. Descarcă și printează jurnalul PDF
 2. Sau completează-l direct online în tab-ul următor
 3. Încarcă fișierul completat (PDF, DOCX, JPG, PNG)
 4. Trimite-l pe email la contact@diet4lifeconcept.ro
-This ties into the same "Jurnal alimentar" feature as the homepage card above —
-likely the same feature, reached two ways (a downloadable/printable PDF journal,
-or an online form). Scope/implementation not yet decided.
+—plus a real jsPDF-generated 7-day/5-meals-per-day journal with a portion
+guide, a full online-completion tab (12-field patient form + day-by-day meal
+editor), and an upload tab with mailto handoff. Verified working end to end in
+a headless browser: tabs switch cleanly, the PDF download actually fires
+(`Jurnal_Alimentar_7Zile_Diet4Life.pdf`). This *is* the "Jurnal alimentar"
+feature — the homepage card linking to `/consultatii` already points at a
+complete, working destination, not a placeholder.
 
 Nav on live site: Acasă · Despre Mine · Servicii · **NutriHub** · Calculator ·
 Rețete · Produse · Consultații (+ RO/EN, Contact button). Note **Rețete is still
@@ -123,9 +129,9 @@ user:
 - "Explorează NutriHub" button smooth-scrolls to the `#nutrihub` section on the
   same page (not a separate route) — no dedicated NutriHub hub/subpages exist.
 - "Calculator necesar caloric" card → real, working `/calculator` link.
-- "Jurnal alimentar" card → links to `/consultatii`, which does **not** yet have
-  the "Cum funcționează" PDF/upload/email flow built in — that page still needs
-  updating to match the live version (see below).
+- "Jurnal alimentar" card → links to `/consultatii`, which **already has** the
+  full PDF/online/upload/email flow built in (verified — see below). Nothing
+  to build here.
 - Featured spotlight ("De ce nu toate caloriile sunt la fel?") is static text
   only, no link — its destination 404s live too, nothing written yet.
 - Removed the old `hero.*` translation keys from `LanguageContext.tsx` (no
@@ -134,9 +140,6 @@ user:
 
 ## Still open / not yet done
 
-- `/consultatii` needs the "Cum funcționează" journal block added (Descarcă
-  PDF → Completează online → Încarcă fișier → Trimite pe email) — discovered
-  live, not yet built anywhere in git.
 - NutriHub topic cards ("Controlul greutății", "Nutriție echilibrată") don't
   link anywhere yet — live site has real subpages at `/nutrihub/<slug>`;
   building those out is a separate, bigger task, not started.
