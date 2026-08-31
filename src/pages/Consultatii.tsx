@@ -254,7 +254,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
       body: rows,
       theme: "grid",
       headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 7.5, fontStyle: "bold", halign: "center" },
-      styles: { fontSize: 8, cellPadding: 3, minCellHeight: 12, font: "DejaVuSans" },
+      styles: { fontSize: 8, cellPadding: 3, minCellHeight: 20, font: "DejaVuSans" },
       columnStyles: {
         0: { cellWidth: 28, fontStyle: "bold", fillColor: [248, 251, 249] },
         1: { cellWidth: 16, halign: "center" },
@@ -275,7 +275,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     doc.text("*Observații: foame, poftă, balonare, greață, vărsături, disconfort, ronțăieli între mese", margin, y);
     y += 8;
 
-    // Extra notes box
+    // Extra notes box — stretches to a fixed bottom line so every day page fills the full sheet
     doc.setFont("DejaVuSans", "bold");
     doc.setFontSize(8);
     doc.setTextColor(60, 60, 60);
@@ -283,8 +283,9 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     y += 4;
     doc.setDrawColor(180, 180, 180);
     doc.setFillColor(252, 252, 252);
-    doc.roundedRect(margin, y, pageW - 2 * margin, 28, 2, 2, "FD");
-    y += 32;
+    const dayPageBottom = 273;
+    const notesBoxHeight = Math.max(28, dayPageBottom - y);
+    doc.roundedRect(margin, y, pageW - 2 * margin, notesBoxHeight, 2, 2, "FD");
   });
 
   // Footer on last page
