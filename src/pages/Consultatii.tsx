@@ -1,5 +1,5 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -344,6 +344,31 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.save("Jurnal_Alimentar_7Zile_Diet4Life.pdf");
 }
 
+// ─── Draft persistence (browser localStorage) ─────────────────────────────────
+// The journal is meant to be filled over 7 days, not in one sitting, so progress
+// is auto-saved on this device/browser — no account or server involved.
+const STORAGE_KEY_PATIENT = "diet4life_journal_patient";
+const STORAGE_KEY_JOURNAL = "diet4life_journal_data";
+
+function loadPatientDraft(): PatientInfo {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_PATIENT);
+    return raw ? { ...EMPTY_PATIENT, ...JSON.parse(raw) } : EMPTY_PATIENT;
+  } catch {
+    return EMPTY_PATIENT;
+  }
+}
+
+function loadJournalDraft(): JournalDay[] {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_JOURNAL);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) && parsed.length === 7 ? parsed : EMPTY_JOURNAL();
+  } catch {
+    return EMPTY_JOURNAL();
+  }
+}
+
 // ─── Section tabs ──────────────────────────────────────────────────────────
 const TABS = [
   { id: "info", icon: BookOpen, labelRo: "Informații & PDF", labelEn: "Info & PDF" },
@@ -358,11 +383,37 @@ export default function Consultatii() {
   const ro = language === "ro";
 
   const [activeTab, setActiveTab] = useState("info");
-  const [patient, setPatient] = useState<PatientInfo>(EMPTY_PATIENT);
-  const [journal, setJournal] = useState<JournalDay[]>(EMPTY_JOURNAL());
+  const [patient, setPatient] = useState<PatientInfo>(loadPatientDraft);
+  const [journal, setJournal] = useState<JournalDay[]>(loadJournalDraft);
   const [activeDay, setActiveDay] = useState(0);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [journalSent, setJournalSent] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+
+  // Auto-save the draft to this browser as the patient fills it in over multiple days
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY_PATIENT, JSON.stringify(patient));
+      window.localStorage.setItem(STORAGE_KEY_JOURNAL, JSON.stringify(journal));
+      setDraftSaved(true);
+    } catch {
+      // localStorage unavailable (private browsing, storage full, etc.) — fail silently
+    }
+  }, [patient, journal]);
+
+  const resetDraft = () => {
+    if (!window.confirm(ro ? "Ștergi tot ce ai completat până acum?" : "Delete everything filled in so far?")) return;
+    setPatient(EMPTY_PATIENT);
+    setJournal(EMPTY_JOURNAL());
+    setActiveDay(0);
+    try {
+      window.localStorage.removeItem(STORAGE_KEY_PATIENT);
+      window.localStorage.removeItem(STORAGE_KEY_JOURNAL);
+    } catch {
+      // ignore
+    }
+    toast({ title: ro ? "Jurnalul a fost șters" : "Journal cleared" });
+  };
 
   const setPatientField = (field: keyof PatientInfo, value: string) =>
     setPatient(prev => ({ ...prev, [field]: value }));
@@ -633,6 +684,24 @@ export default function Consultatii() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
+            {/* Draft save status */}
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                {draftSaved
+                  ? (ro ? "Salvat automat pe acest dispozitiv" : "Auto-saved on this device")
+                  : (ro ? "Se salvează..." : "Saving...")}
+              </span>
+              <button
+                type="button"
+                onClick={resetDraft}
+                className="text-muted-foreground hover:text-destructive underline underline-offset-2"
+                data-testid="button-reset-draft"
+              >
+                {ro ? "Șterge jurnalul și ia-o de la capăt" : "Clear journal and start over"}
+              </button>
+            </div>
+
             {/* Patient info */}
             <Card>
               <CardContent className="p-8">
