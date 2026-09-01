@@ -455,6 +455,13 @@ export default function Consultatii() {
     toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: ro ? "Jurnalul a fost generat cu succes." : "Journal generated successfully." });
   };
 
+  // Always generates an empty template, regardless of any saved online-form
+  // draft — for the "print and fill by hand" buttons, not the "send my progress" ones.
+  const handleDownloadBlank = async () => {
+    await generatePDF(EMPTY_PATIENT, EMPTY_JOURNAL());
+    toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: ro ? "Jurnalul gol a fost generat cu succes." : "Blank journal generated successfully." });
+  };
+
   const handleSendEmail = () => {
     const subject = encodeURIComponent(`Jurnal alimentar 7 zile – ${patient.name || "Pacient"}`);
     const body = encodeURIComponent(
@@ -598,7 +605,7 @@ export default function Consultatii() {
                 <Button
                   size="lg"
                   className="rounded-xl gap-2 w-full sm:w-auto text-base"
-                  onClick={handleDownload}
+                  onClick={handleDownloadBlank}
                 >
                   <Download className="w-5 h-5" />
                   {ro ? "Descarcă jurnal alimentar 7 zile" : "Download 7-day food journal"}
@@ -1086,7 +1093,7 @@ export default function Consultatii() {
                     size="lg"
                     variant="outline"
                     className="rounded-xl gap-2"
-                    onClick={handleDownload}
+                    onClick={handleDownloadBlank}
                   >
                     <Download className="w-4 h-4" />
                     {ro ? "Descarcă PDF gol" : "Download blank PDF"}
