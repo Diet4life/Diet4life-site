@@ -54,6 +54,16 @@ const PORTION_GUIDE = [
   { hand: "Vârful degetului", color: [200, 90, 90] as [number, number, number], group: "Adaosuri bogate caloric", examples: "dulceață, unt de arahide, sosuri" },
 ];
 
+// Hunger/fullness scale (1-5) shown per meal in the journal — 3 is the sweet spot both
+// ways (hungry-but-not-starving before, comfortably satisfied after), extremes at 1/5.
+const HUNGER_SCALE = [
+  { level: "1", color: [200, 90, 90] as [number, number, number], before: "Foame extremă, amețeală", after: "Încă flămândă" },
+  { level: "2", color: [230, 140, 60] as [number, number, number], before: "Foarte flămândă", after: "Aproape sătulă" },
+  { level: "3", color: [92, 138, 103] as [number, number, number], before: "Flămândă, gata de masă", after: "Confortabil sătulă (ideal)" },
+  { level: "4", color: [230, 140, 60] as [number, number, number], before: "Puțin flămândă", after: "Sătulă, grea" },
+  { level: "5", color: [200, 90, 90] as [number, number, number], before: "Neutră, deloc flămândă", after: "Prea plină" },
+];
+
 // ─── Unicode font loading (DejaVu Sans — full Romanian diacritics support) ───
 // jsPDF's built-in "helvetica" is WinAnsi-only and silently drops ă/â/î/ș/ț,
 // which also corrupts splitTextToSize's width math (text overflowing its box).
@@ -215,6 +225,37 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
       if (data.section === "body" && data.column.index === 0) {
         const p = PORTION_GUIDE[data.row.index];
         doc.setFillColor(...p.color);
+        doc.circle(data.cell.x + 4, data.cell.y + data.cell.height / 2, 2, "F");
+      }
+    },
+  });
+  y = (doc as any).lastAutoTable.finalY + 10;
+
+  // ── Hunger/fullness scale legend ──────────────────────────────────────────
+  addPageIfNeeded(45);
+  doc.setFont("DejaVuSans", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(30, 30, 30);
+  doc.text("Ce înseamnă scala 1-5 (Foame înainte / Sațietate după)", margin, y);
+  y += 5;
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Nivel", "Foame înainte de masă", "Sațietate după masă"]],
+    body: HUNGER_SCALE.map(h => [h.level, h.before, h.after]),
+    theme: "grid",
+    headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 8, fontStyle: "bold" },
+    styles: { fontSize: 8, cellPadding: 3, font: "DejaVuSans" },
+    margin: { left: margin, right: margin },
+    columnStyles: {
+      0: { cellWidth: 18, fontStyle: "bold", halign: "center", cellPadding: { top: 3, right: 3, bottom: 3, left: 8 } },
+      1: { cellWidth: (pageW - 2 * margin - 18) / 2 },
+      2: { cellWidth: (pageW - 2 * margin - 18) / 2 },
+    },
+    didDrawCell: (data) => {
+      if (data.section === "body" && data.column.index === 0) {
+        const h = HUNGER_SCALE[data.row.index];
+        doc.setFillColor(...h.color);
         doc.circle(data.cell.x + 4, data.cell.y + data.cell.height / 2, 2, "F");
       }
     },
@@ -713,6 +754,9 @@ export default function Consultatii() {
                               </button>
                             ))}
                           </div>
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            {ro ? "1 = foame extremă · 3 = gata de masă · 5 = neutră" : "1 = extremely hungry · 3 = ready to eat · 5 = neutral"}
+                          </p>
                         </div>
                         <div>
                           <label className="text-xs text-muted-foreground mb-1.5 block">
@@ -735,6 +779,9 @@ export default function Consultatii() {
                               </button>
                             ))}
                           </div>
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            {ro ? "1 = încă flămândă · 3 = confortabil sătulă · 5 = prea plină" : "1 = still hungry · 3 = comfortably full · 5 = overfull"}
+                          </p>
                         </div>
                       </div>
 
