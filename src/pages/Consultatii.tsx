@@ -6,7 +6,7 @@ import autoTable from "jspdf-autotable";
 import {
   Download, Upload, Send, BookOpen, CheckCircle2,
   ChevronRight, Info, Utensils, FileText, Mail,
-  ClipboardList, AlertCircle,
+  ClipboardList, AlertCircle, X, Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,19 +23,21 @@ interface PatientInfo {
 }
 
 interface MealEntry {
-  time: string; food: string; quantity: string; liquids: string;
+  label: string; time: string; food: string; quantity: string; quantityUnit: string; liquids: string;
   hungerBefore: string; fullnessAfter: string; why: string[];
 }
 
 type JournalDay = MealEntry[];
 
 const WHY_REASONS = ["Foame", "Obicei", "Plictiseală", "Stres", "Emoție", "Social", "Poftă"];
+const DEFAULT_MEAL_LABELS = ["Mic dejun", "Gustare dimineață", "Prânz", "Gustare după-amiază", "Cină"];
+const QUANTITY_UNITS = ["g", "ml", "cană", "linguriță", "lingură", "bucată", "porție", "felie", "pumn"];
 
-const EMPTY_MEAL = (): MealEntry => ({
-  time: "", food: "", quantity: "", liquids: "",
+const EMPTY_MEAL = (label = ""): MealEntry => ({
+  label, time: "", food: "", quantity: "", quantityUnit: "", liquids: "",
   hungerBefore: "", fullnessAfter: "", why: [],
 });
-const EMPTY_DAY = (): JournalDay => Array.from({ length: 5 }, EMPTY_MEAL);
+const EMPTY_DAY = (): JournalDay => DEFAULT_MEAL_LABELS.map(EMPTY_MEAL);
 const EMPTY_JOURNAL = (): JournalDay[] => Array.from({ length: 7 }, EMPTY_DAY);
 
 const EMPTY_PATIENT: PatientInfo = {
@@ -264,7 +266,6 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
 
   // ── 7-day Journal ─────────────────────────────────────────────────────────
   const days = ["Ziua 1", "Ziua 2", "Ziua 3", "Ziua 4", "Ziua 5", "Ziua 6", "Ziua 7"];
-  const mealLabels = ["Mic dejun", "Gustare dimineață", "Prânz", "Gustare după-amiază", "Cină"];
 
   days.forEach((day, di) => {
     doc.addPage();
@@ -283,14 +284,14 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     y += 16;
 
     const dayData = journal[di] ?? EMPTY_DAY();
-    const rows = mealLabels.map((label, mi) => {
-      const entry = dayData[mi] ?? EMPTY_MEAL();
+    const rows = dayData.map((entry, mi) => {
       const foodCell = [entry.food, entry.liquids].filter(Boolean).join("  •  ");
       const scaleCell = entry.hungerBefore || entry.fullnessAfter
         ? `Î: ${entry.hungerBefore || "_"}   D: ${entry.fullnessAfter || "_"}`
         : "Î: ___\nD: ___";
       const whyCell = entry.why.length > 0 ? entry.why.join(", ") : WHY_REASONS.join(" / ");
-      return [label, entry.time || "", foodCell, entry.quantity || "", scaleCell, whyCell];
+      const quantityCell = [entry.quantity, entry.quantityUnit].filter(Boolean).join(" ");
+      return [entry.label || `Masă ${mi + 1}`, entry.time || "", foodCell, quantityCell, scaleCell, whyCell];
     });
 
     autoTable(doc, {
@@ -384,6 +385,20 @@ export default function Consultatii() {
       return next;
     });
 
+  const addMeal = (day: number) =>
+    setJournal(prev => {
+      const next = prev.map(d => [...d]);
+      next[day] = [...next[day], EMPTY_MEAL(ro ? "Gustare extra" : "Extra snack")];
+      return next;
+    });
+
+  const removeMeal = (day: number, meal: number) =>
+    setJournal(prev => {
+      const next = prev.map(d => [...d]);
+      next[day] = next[day].filter((_, i) => i !== meal);
+      return next;
+    });
+
   const handleDownload = async () => {
     await generatePDF(patient, journal);
     toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: ro ? "Jurnalul a fost generat cu succes." : "Journal generated successfully." });
@@ -422,10 +437,6 @@ export default function Consultatii() {
     window.location.href = `mailto:contact@diet4lifeconcept.ro?subject=${subject}&body=${body}`;
     toast({ title: ro ? "Email deschis!" : "Email opened!", description: ro ? "Atașați fișierul și trimiteți emailul." : "Attach the file and send the email." });
   };
-
-  const mealLabels = ro
-    ? ["Mic dejun", "Gustare dimineață", "Prânz", "Gustare după-amiază", "Cină"]
-    : ["Breakfast", "Morning snack", "Lunch", "Afternoon snack", "Dinner"];
 
   const dayNames = ro
     ? ["Ziua 1", "Ziua 2", "Ziua 3", "Ziua 4", "Ziua 5", "Ziua 6", "Ziua 7"]
@@ -681,9 +692,28 @@ export default function Consultatii() {
                   {dayNames[activeDay]}
                 </h3>
                 <div className="space-y-4">
-                  {mealLabels.map((meal, mi) => (
+                  {journal[activeDay].map((entry, mi) => (
                     <div key={mi} className="rounded-xl border border-border p-4 bg-secondary/20">
-                      <p className="text-sm font-semibold text-foreground mb-3">{meal}</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Input
+                          value={entry.label}
+                          onChange={e => setMealField(activeDay, mi, "label", e.target.value)}
+                          placeholder={ro ? "Numele mesei" : "Meal name"}
+                          className="rounded-lg text-sm font-semibold h-8 max-w-xs border-transparent bg-transparent px-2 -ml-2 hover:border-border focus-visible:border-border"
+                          data-testid={`input-meal-label-${activeDay}-${mi}`}
+                        />
+                        {journal[activeDay].length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeMeal(activeDay, mi)}
+                            className="ml-auto text-muted-foreground hover:text-destructive transition-colors p-1"
+                            aria-label={ro ? "Șterge masa" : "Remove meal"}
+                            data-testid={`button-remove-meal-${activeDay}-${mi}`}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">
@@ -711,12 +741,26 @@ export default function Consultatii() {
                           <label className="text-xs text-muted-foreground mb-1 block">
                             {ro ? "Cantitate aprox." : "Approx. qty"}
                           </label>
-                          <Input
-                            placeholder={ro ? "1 porție / 200g" : "1 serving / 200g"}
-                            value={journal[activeDay][mi].quantity}
-                            onChange={e => setMealField(activeDay, mi, "quantity", e.target.value)}
-                            className="rounded-lg text-sm h-9"
-                          />
+                          <div className="flex gap-1.5">
+                            <Input
+                              placeholder={ro ? "1, 200..." : "1, 200..."}
+                              value={entry.quantity}
+                              onChange={e => setMealField(activeDay, mi, "quantity", e.target.value)}
+                              className="rounded-lg text-sm h-9 min-w-0"
+                              data-testid={`input-quantity-${activeDay}-${mi}`}
+                            />
+                            <select
+                              value={entry.quantityUnit}
+                              onChange={e => setMealField(activeDay, mi, "quantityUnit", e.target.value)}
+                              className="rounded-lg text-sm h-9 border border-input bg-background px-1.5 shrink-0"
+                              data-testid={`select-unit-${activeDay}-${mi}`}
+                            >
+                              <option value="">{ro ? "unit." : "unit"}</option>
+                              {QUANTITY_UNITS.map(u => (
+                                <option key={u} value={u}>{u}</option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">
@@ -814,6 +858,17 @@ export default function Consultatii() {
                     </div>
                   ))}
                 </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl gap-1.5 mt-4"
+                  onClick={() => addMeal(activeDay)}
+                  data-testid="button-add-meal"
+                >
+                  <Plus className="w-4 h-4" />
+                  {ro ? "Adaugă masă / gustare" : "Add meal / snack"}
+                </Button>
 
                 {/* Navigate days */}
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
