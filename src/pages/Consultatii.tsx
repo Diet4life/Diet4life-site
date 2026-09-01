@@ -280,7 +280,9 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     y += 4;
     doc.setDrawColor(180, 180, 180);
     doc.setFillColor(252, 252, 252);
-    doc.roundedRect(margin, y, pageW - 2 * margin, 18, 2, 2, "FD");
+    const dayPageBottom = 273;
+    const notesBoxHeight = Math.max(18, dayPageBottom - y);
+    doc.roundedRect(margin, y, pageW - 2 * margin, notesBoxHeight, 2, 2, "FD");
   });
 
   // Footer on last page
