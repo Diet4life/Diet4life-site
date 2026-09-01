@@ -254,7 +254,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
 
     autoTable(doc, {
       startY: y,
-      head: [["Masă", "Ora", "Ce am mâncat / băut", "Cantitate", "Foame→Sat.\n(1-5)", "De ce ai mâncat?"]],
+      head: [["Masă", "Ora", "Ce am mâncat / băut", "Cantitate", "Foame înainte /\ndupă masă (1-5)", "De ce ai mâncat?"]],
       body: rows,
       theme: "grid",
       headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 7, fontStyle: "bold", halign: "center" },
@@ -262,15 +262,22 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
       columnStyles: {
         0: { cellWidth: 22, fontStyle: "bold", fillColor: [248, 251, 249] },
         1: { cellWidth: 12, halign: "center" },
-        2: { cellWidth: 46 },
-        3: { cellWidth: 40, overflow: "ellipsize" },
-        4: { cellWidth: 18, halign: "center" },
+        2: { cellWidth: 44 },
+        3: { cellWidth: 38, overflow: "ellipsize" },
+        4: { cellWidth: 22, halign: "center" },
         5: { cellWidth: pageW - 2 * margin - 138 },
       },
       margin: { left: margin, right: margin },
     });
 
-    y = (doc as any).lastAutoTable.finalY + 8;
+    y = (doc as any).lastAutoTable.finalY + 6;
+
+    // Legend for the Î/D abbreviations used in the table above
+    doc.setFontSize(7);
+    doc.setTextColor(120, 120, 120);
+    doc.setFont("DejaVuSans", "normal");
+    doc.text("Î = Înainte de masă   ·   D = După masă", margin, y);
+    y += 6;
 
     // Extra notes box
     doc.setFont("DejaVuSans", "bold");
