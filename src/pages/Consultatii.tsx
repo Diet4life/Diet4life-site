@@ -24,11 +24,17 @@ interface PatientInfo {
 
 interface MealEntry {
   time: string; food: string; quantity: string; liquids: string; notes: string;
+  hungerBefore: string; fullnessAfter: string; why: string[];
 }
 
 type JournalDay = MealEntry[];
 
-const EMPTY_MEAL = (): MealEntry => ({ time: "", food: "", quantity: "", liquids: "", notes: "" });
+const WHY_REASONS = ["Foame", "Obicei", "Plictiseală", "Stres", "Emoție", "Social", "Poftă"];
+
+const EMPTY_MEAL = (): MealEntry => ({
+  time: "", food: "", quantity: "", liquids: "", notes: "",
+  hungerBefore: "", fullnessAfter: "", why: [],
+});
 const EMPTY_DAY = (): JournalDay => Array.from({ length: 5 }, EMPTY_MEAL);
 const EMPTY_JOURNAL = (): JournalDay[] => Array.from({ length: 7 }, EMPTY_DAY);
 
@@ -238,30 +244,29 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     const dayData = journal[di] ?? EMPTY_DAY();
     const rows = mealLabels.map((label, mi) => {
       const entry = dayData[mi] ?? EMPTY_MEAL();
-      return [
-        label,
-        entry.time || "",
-        entry.food || "",
-        entry.quantity || "",
-        entry.liquids || "",
-        entry.notes || "",
-      ];
+      const foodCell = [entry.food, entry.liquids].filter(Boolean).join("  •  ");
+      const scaleCell = entry.hungerBefore || entry.fullnessAfter
+        ? `Î: ${entry.hungerBefore || "_"}   D: ${entry.fullnessAfter || "_"}`
+        : "Î: ___\nD: ___";
+      const whyCell = entry.why.length > 0 ? entry.why.join(", ") : WHY_REASONS.join(" / ");
+      return [label, entry.time || "", foodCell, entry.quantity || "", scaleCell, whyCell, entry.notes || ""];
     });
 
     autoTable(doc, {
       startY: y,
-      head: [["Masă", "Ora", "Ce am mâncat", "Cantitate aprox.", "Lichide", "Observații*"]],
+      head: [["Masă", "Ora", "Ce am mâncat / băut", "Cantitate", "Foame→Sat.\n(1-5)", "De ce ai mâncat?", "Observații*"]],
       body: rows,
       theme: "grid",
-      headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 7.5, fontStyle: "bold", halign: "center" },
-      styles: { fontSize: 8, cellPadding: 3, minCellHeight: 20, font: "DejaVuSans" },
+      headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 7, fontStyle: "bold", halign: "center" },
+      styles: { fontSize: 7.5, cellPadding: 2.5, minCellHeight: 20, font: "DejaVuSans" },
       columnStyles: {
-        0: { cellWidth: 28, fontStyle: "bold", fillColor: [248, 251, 249] },
-        1: { cellWidth: 16, halign: "center" },
-        2: { cellWidth: 45 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 25 },
-        5: { cellWidth: pageW - 2 * margin - 139 },
+        0: { cellWidth: 22, fontStyle: "bold", fillColor: [248, 251, 249] },
+        1: { cellWidth: 12, halign: "center" },
+        2: { cellWidth: 38 },
+        3: { cellWidth: 16 },
+        4: { cellWidth: 18, halign: "center" },
+        5: { cellWidth: 42 },
+        6: { cellWidth: pageW - 2 * margin - 148 },
       },
       margin: { left: margin, right: margin },
     });
@@ -321,11 +326,21 @@ export default function Consultatii() {
   const setPatientField = (field: keyof PatientInfo, value: string) =>
     setPatient(prev => ({ ...prev, [field]: value }));
 
-  const setMealField = (day: number, meal: number, field: keyof MealEntry, value: string) =>
+  const setMealField = (day: number, meal: number, field: Exclude<keyof MealEntry, "why">, value: string) =>
     setJournal(prev => {
       const next = prev.map(d => [...d]);
       next[day] = next[day].map(m => ({ ...m }));
       next[day][meal] = { ...next[day][meal], [field]: value };
+      return next;
+    });
+
+  const toggleMealWhy = (day: number, meal: number, reason: string) =>
+    setJournal(prev => {
+      const next = prev.map(d => [...d]);
+      next[day] = next[day].map(m => ({ ...m }));
+      const current = next[day][meal].why;
+      const why = current.includes(reason) ? current.filter(r => r !== reason) : [...current, reason];
+      next[day][meal] = { ...next[day][meal], why };
       return next;
     });
 
@@ -466,7 +481,7 @@ export default function Consultatii() {
                   {[
                     ro ? "Fișă date personale (12 câmpuri)" : "Personal data sheet (12 fields)",
                     ro ? "Tabel 7 zile × 5 mese/zi" : "7-day × 5 meals/day table",
-                    ro ? "Coloane: oră, aliment, cantitate, lichide, observații" : "Columns: time, food, quantity, liquids, notes",
+                    ro ? "Scală foame/sațietate și motivul mesei, la fiecare masă" : "Hunger/fullness scale and eating reason, per meal",
                     ro ? "Ghid estimare porții vizual" : "Visual portion estimation guide",
                     ro ? "Spațiu note suplimentare / zi" : "Extra notes space per day",
                     ro ? "Format A4, ușor de printat" : "A4 format, easy to print",
@@ -684,6 +699,81 @@ export default function Consultatii() {
                             onChange={e => setMealField(activeDay, mi, "notes", e.target.value)}
                             className="rounded-lg text-sm h-9"
                           />
+                        </div>
+                      </div>
+
+                      {/* Hunger before / Fullness after (1-5) */}
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1.5 block">
+                            {ro ? "Foame înainte de masă" : "Hunger before eating"}
+                          </label>
+                          <div className="flex gap-1.5">
+                            {["1", "2", "3", "4", "5"].map(n => (
+                              <button
+                                key={n}
+                                type="button"
+                                onClick={() => setMealField(activeDay, mi, "hungerBefore", n)}
+                                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
+                                  journal[activeDay][mi].hungerBefore === n
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-background border border-border text-muted-foreground hover:border-primary/40"
+                                }`}
+                                data-testid={`button-hunger-${activeDay}-${mi}-${n}`}
+                              >
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1.5 block">
+                            {ro ? "Sațietate după masă" : "Fullness after eating"}
+                          </label>
+                          <div className="flex gap-1.5">
+                            {["1", "2", "3", "4", "5"].map(n => (
+                              <button
+                                key={n}
+                                type="button"
+                                onClick={() => setMealField(activeDay, mi, "fullnessAfter", n)}
+                                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
+                                  journal[activeDay][mi].fullnessAfter === n
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-background border border-border text-muted-foreground hover:border-primary/40"
+                                }`}
+                                data-testid={`button-fullness-${activeDay}-${mi}-${n}`}
+                              >
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Why did you eat? */}
+                      <div className="mt-4">
+                        <label className="text-xs text-muted-foreground mb-1.5 block">
+                          {ro ? "De ce ai mâncat?" : "Why did you eat?"}
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {WHY_REASONS.map(reason => {
+                            const active = journal[activeDay][mi].why.includes(reason);
+                            return (
+                              <button
+                                key={reason}
+                                type="button"
+                                onClick={() => toggleMealWhy(activeDay, mi, reason)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                  active
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-background border border-border text-muted-foreground hover:border-primary/40"
+                                }`}
+                                data-testid={`button-why-${activeDay}-${mi}-${reason}`}
+                              >
+                                {reason}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>

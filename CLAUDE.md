@@ -109,6 +109,50 @@ Rețete · Produse · Consultații (+ RO/EN, Contact button). Note **Rețete is 
 in the live nav** — expected, since we've only removed it from git so far, not
 yet redeployed.
 
+## Food journal (Consultatii.tsx) PDF fixes and upgrades
+
+Three separate rounds of work on the jsPDF-generated 7-day journal:
+1. **Diacritics + layout fix** — jsPDF's built-in "helvetica" font silently
+   dropped ă/â/î/ș/ț and corrupted `splitTextToSize`'s width math (text
+   overflowing its box). Fixed by embedding DejaVu Sans (Regular + Bold) from
+   `/public/fonts/`, fetched at generation time (not bundled) via
+   `registerFonts()`. Also added a line near the top of the PDF stating the
+   3 ways to complete it (print/online/upload+email), and made the
+   instructions box height dynamic instead of fixed.
+2. **Day pages only filled ~half the sheet** — meal rows were 12mm
+   (`minCellHeight`) and the notes box was a fixed 28mm. Rows are now 20mm
+   and the notes box stretches dynamically down to a fixed bottom line
+   (`dayPageBottom = 273`), so every day page fills the A4 sheet regardless
+   of exact row heights.
+3. **Hand-based portion guide** — replaced the old flat "food item → approx
+   portion" table with a 5-category hand-measure guide (palm=protein,
+   fist=vegetables, cupped hand=carbs, thumb=fats, fingertip=calorie-dense
+   add-ons), inspired by a Canva reference the user shared. Color-coded dots
+   drawn natively in the PDF (jsPDF `circle()`, no external images) and
+   mirrored on the `/consultatii` page itself from the same `PORTION_GUIDE`
+   data, so both stay in sync.
+4. **Per-meal hunger/fullness/reason upgrade** — user shared an 11-page
+   Canva reference ("My Food & Wellness Journal") with a much richer
+   structure (personal profile page, hunger/fullness scale + "why did you
+   eat" per meal, daily symptoms/hydration/stress/sleep, mid-week check-in,
+   weekly reflection, Harvard balanced-plate guide). Given the scope, user
+   picked the smallest high-value slice: **only** the per-meal
+   hunger-before/fullness-after (1–5) and "why did you eat?" (multi-select:
+   Foame/Obicei/Plictiseală/Stres/Emoție/Social/Poftă) were added — to both
+   the online form (`journal[day][meal].hungerBefore/fullnessAfter/why`,
+   real interactive controls) and the printable PDF (same data if filled
+   online; a circleable prompt template if left blank for handwriting).
+   Journal stayed at 8 pages. **Not done**, deliberately deferred: personal
+   profile page, daily symptoms/hydration/stress/sleep section, mid-week
+   check-in, weekly reflection, Balanced Plate guide page — revisit if asked
+   to go further with the journal.
+
+The reference PDF and hand-icon images the user shared are Canva *template*
+exports/screenshots (visible chrome: "Private/Share/Make public" bar, or
+editor toolbar overlapping content, "your logo"/"@yourusername"
+placeholders) — never usable as-is; either rebuild the idea natively (what
+was done for the portion guide) or ask for a clean exported image.
+
 ## Homepage rebuild status
 
 **Done** — `Home.tsx` rebuilt to match the live design end to end (all 7 sections
