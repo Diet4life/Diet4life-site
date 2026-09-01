@@ -23,7 +23,7 @@ interface PatientInfo {
 }
 
 interface MealEntry {
-  time: string; food: string; quantity: string; liquids: string; notes: string;
+  time: string; food: string; quantity: string; liquids: string;
   hungerBefore: string; fullnessAfter: string; why: string[];
 }
 
@@ -32,7 +32,7 @@ type JournalDay = MealEntry[];
 const WHY_REASONS = ["Foame", "Obicei", "Plictiseală", "Stres", "Emoție", "Social", "Poftă"];
 
 const EMPTY_MEAL = (): MealEntry => ({
-  time: "", food: "", quantity: "", liquids: "", notes: "",
+  time: "", food: "", quantity: "", liquids: "",
   hungerBefore: "", fullnessAfter: "", why: [],
 });
 const EMPTY_DAY = (): JournalDay => Array.from({ length: 5 }, EMPTY_MEAL);
@@ -249,38 +249,30 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
         ? `Î: ${entry.hungerBefore || "_"}   D: ${entry.fullnessAfter || "_"}`
         : "Î: ___\nD: ___";
       const whyCell = entry.why.length > 0 ? entry.why.join(", ") : WHY_REASONS.join(" / ");
-      return [label, entry.time || "", foodCell, entry.quantity || "", scaleCell, whyCell, entry.notes || ""];
+      return [label, entry.time || "", foodCell, entry.quantity || "", scaleCell, whyCell];
     });
 
     autoTable(doc, {
       startY: y,
-      head: [["Masă", "Ora", "Ce am mâncat / băut", "Cantitate", "Foame→Sat.\n(1-5)", "De ce ai mâncat?", "Observații*"]],
+      head: [["Masă", "Ora", "Ce am mâncat / băut", "Cantitate", "Foame→Sat.\n(1-5)", "De ce ai mâncat?"]],
       body: rows,
       theme: "grid",
       headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 7, fontStyle: "bold", halign: "center" },
-      styles: { fontSize: 7.5, cellPadding: 2.5, minCellHeight: 20, font: "DejaVuSans" },
+      styles: { fontSize: 7.5, cellPadding: 2.5, minCellHeight: 26, font: "DejaVuSans" },
       columnStyles: {
         0: { cellWidth: 22, fontStyle: "bold", fillColor: [248, 251, 249] },
         1: { cellWidth: 12, halign: "center" },
-        2: { cellWidth: 38 },
-        3: { cellWidth: 16 },
+        2: { cellWidth: 46 },
+        3: { cellWidth: 40, overflow: "ellipsize" },
         4: { cellWidth: 18, halign: "center" },
-        5: { cellWidth: 42 },
-        6: { cellWidth: pageW - 2 * margin - 148 },
+        5: { cellWidth: pageW - 2 * margin - 138 },
       },
       margin: { left: margin, right: margin },
     });
 
     y = (doc as any).lastAutoTable.finalY + 8;
 
-    // Observations note
-    doc.setFontSize(7);
-    doc.setTextColor(120, 120, 120);
-    doc.setFont("DejaVuSans", "normal");
-    doc.text("*Observații: foame, poftă, balonare, greață, vărsături, disconfort, ronțăieli între mese", margin, y);
-    y += 8;
-
-    // Extra notes box — stretches to a fixed bottom line so every day page fills the full sheet
+    // Extra notes box
     doc.setFont("DejaVuSans", "bold");
     doc.setFontSize(8);
     doc.setTextColor(60, 60, 60);
@@ -288,9 +280,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     y += 4;
     doc.setDrawColor(180, 180, 180);
     doc.setFillColor(252, 252, 252);
-    const dayPageBottom = 273;
-    const notesBoxHeight = Math.max(28, dayPageBottom - y);
-    doc.roundedRect(margin, y, pageW - 2 * margin, notesBoxHeight, 2, 2, "FD");
+    doc.roundedRect(margin, y, pageW - 2 * margin, 18, 2, 2, "FD");
   });
 
   // Footer on last page
@@ -644,7 +634,7 @@ export default function Consultatii() {
                   {mealLabels.map((meal, mi) => (
                     <div key={mi} className="rounded-xl border border-border p-4 bg-secondary/20">
                       <p className="text-sm font-semibold text-foreground mb-3">{meal}</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">
                             {ro ? "Ora" : "Time"}
@@ -686,17 +676,6 @@ export default function Consultatii() {
                             placeholder={ro ? "Apă, cafea..." : "Water, coffee..."}
                             value={journal[activeDay][mi].liquids}
                             onChange={e => setMealField(activeDay, mi, "liquids", e.target.value)}
-                            className="rounded-lg text-sm h-9"
-                          />
-                        </div>
-                        <div className="col-span-2 sm:col-span-1 lg:col-span-1">
-                          <label className="text-xs text-muted-foreground mb-1 block">
-                            {ro ? "Observații" : "Notes"}
-                          </label>
-                          <Input
-                            placeholder={ro ? "Balonare, foame..." : "Bloating, hunger..."}
-                            value={journal[activeDay][mi].notes}
-                            onChange={e => setMealField(activeDay, mi, "notes", e.target.value)}
                             className="rounded-lg text-sm h-9"
                           />
                         </div>
