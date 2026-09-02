@@ -4,6 +4,46 @@ React + Vite + TS + Tailwind + shadcn/ui (Radix) + Framer Motion + wouter routin
 Bilingual (RO/EN) via `src/contexts/LanguageContext.tsx`. Branch for ongoing work:
 `claude/tool-usage-check-htkbjz`.
 
+## "Pregătește-te pentru consultație" — consultation prep hub (Consultatii.tsx)
+
+Restructured `/consultatii` around a 5-step checklist (Jurnal alimentar, Analize
+medicale, Medicație și suplimente, Documente medicale, Acord GDPR), all on the
+same page/route — no new pages, no account system, per explicit user decision.
+Checklist item click smooth-scrolls to its `id="..."` section. Progress
+("X din 5 pași pregătiți") is computed live from state, all of it auto-saved to
+localStorage same as the journal (new keys: `diet4life_medications`,
+`diet4life_lab_docs`, `diet4life_medical_docs`, `diet4life_gdpr_consent`).
+
+**Confirmed architecture (user chose explicitly, after being shown 3 options)**:
+no backend, no patient account — everything stays client-side/localStorage, and
+"sending to the clinic" happens via `mailto:` and `wa.me` links (patient's own
+email/WhatsApp app opens pre-filled, patient hits send themselves). This means:
+- Uploaded "documents" (analize, documente medicale) are **metadata only**
+  (filename/date/type) — there's nowhere to actually store the file bytes
+  without a server, so the patient still has to manually attach the real files
+  in the email/WhatsApp app that opens. This is stated explicitly in the UI
+  ("fișierele nu se atașează automat").
+- No automatic notification email to the clinic exists or can exist without a
+  backend — every "send" requires the patient's own action to hit send.
+- `CLINIC_WHATSAPP` in `Consultatii.tsx` is `"40766572968"` (derived from the
+  phone number already used elsewhere on the site, `0766 572 968`, RO country
+  code, no leading 0) — **not independently verified as a WhatsApp-enabled
+  number**, worth the user double-checking before relying on it.
+
+**GDPR consent section**: `GDPR_CONSENT_TEXT` in `Consultatii.tsx` is drafted
+consent language (data processing purpose, no third-party sharing without
+consent, right to access/rectify/delete), Romanian only — **not legal advice,
+not reviewed by a lawyer**. The user should have it checked against their
+actual data-processing practice before relying on it for real compliance.
+Consent is captured as name + date + checkbox, included in the summary sent
+via email/WhatsApp (so the clinic has a record) — again, only if the patient
+actually presses send.
+
+**Lab test list** (`LAB_CATEGORIES`) is the exact list the user provided,
+deliberately excluding serum protein electrophoresis, zinc, and abdominal
+ultrasound per their explicit instruction — don't add those back without
+asking.
+
 ## Environment constraint — read this first
 
 This sandbox's network egress is allowlisted and **cannot reach `*.netlify.app`,
