@@ -42,8 +42,22 @@ dropped from this page entirely rather than reworked). Current shape:
   was explicitly requested removed ("Nu afișa adresa de email sau numărul de
   WhatsApp în această etapă"). The pre-existing, older journal-specific send
   flows (Info tab's "Cum funcționează" step 4, the Online tab's "Trimite
-  jurnalul" mailto button, the Upload tab's mailto-with-manual-attach flow)
-  were left untouched — they predate this rework and weren't in scope.
+  jurnalul" mailto button, the Upload tab's dropzone + mailto-with-manual-
+  attach flow, all of which display `contact@diet4lifeconcept.ro` directly)
+  were left untouched.
+
+  **This was a deliberate choice, re-confirmed by the user, not an oversight.**
+  A later, more literal re-read of the spec flagged these 3 spots (plus the
+  3-tab structure vs. the spec's suggested 2-CTA-button layout, and the Upload
+  tab existing at all — the spec says the printable/paper variant should NOT
+  have any upload-to-site step) as inconsistent with a strict reading of
+  "don't show email/WhatsApp at this stage" and "no upload for the print
+  path." A concrete fix was proposed (drop the Upload tab, fold Info+Online
+  into two clearly-labeled CTAs, replace the direct mailto in those 3 spots
+  with the same generic "send via your established channel" wording used at
+  the bottom of the page). **User's answer: "Rămâne cum am avut noi
+  initial" — keep the existing 3-tab structure and the direct email exactly
+  as they are.** Don't re-propose this change unless asked.
 
 **Lab test list** (`LAB_CATEGORIES`) is the exact list the user provided,
 deliberately excluding serum protein electrophoresis, zinc, and abdominal
