@@ -6,43 +6,54 @@ Bilingual (RO/EN) via `src/contexts/LanguageContext.tsx`. Branch for ongoing wor
 
 ## "Pregătește-te pentru consultație" — consultation prep hub (Consultatii.tsx)
 
-Restructured `/consultatii` around a 5-step checklist (Jurnal alimentar, Analize
-medicale, Medicație și suplimente, Documente medicale, Acord GDPR), all on the
-same page/route — no new pages, no account system, per explicit user decision.
-Checklist item click smooth-scrolls to its `id="..."` section. Progress
-("X din 5 pași pregătiți") is computed live from state, all of it auto-saved to
-localStorage same as the journal (new keys: `diet4life_medications`,
-`diet4life_lab_docs`, `diet4life_medical_docs`, `diet4life_gdpr_consent`).
+`/consultatii` has a lightweight checklist ("Pregătește-te pentru consultație":
+Jurnal alimentar, Analize medicale, Medicație și suplimente, Documente medicale)
+all on the same page/route — no new pages, no account system. Checklist item
+click smooth-scrolls to its `id="..."` section.
 
-**Confirmed architecture (user chose explicitly, after being shown 3 options)**:
-no backend, no patient account — everything stays client-side/localStorage, and
-"sending to the clinic" happens via `mailto:` and `wa.me` links (patient's own
-email/WhatsApp app opens pre-filled, patient hits send themselves). This means:
-- Uploaded "documents" (analize, documente medicale) are **metadata only**
-  (filename/date/type) — there's nowhere to actually store the file bytes
-  without a server, so the patient still has to manually attach the real files
-  in the email/WhatsApp app that opens. This is stated explicitly in the UI
-  ("fișierele nu se atașează automat").
-- No automatic notification email to the clinic exists or can exist without a
-  backend — every "send" requires the patient's own action to hit send.
-- `CLINIC_WHATSAPP` in `Consultatii.tsx` is `"40766572968"` (derived from the
-  phone number already used elsewhere on the site, `0766 572 968`, RO country
-  code, no leading 0) — **not independently verified as a WhatsApp-enabled
-  number**, worth the user double-checking before relying on it.
-
-**GDPR consent section**: `GDPR_CONSENT_TEXT` in `Consultatii.tsx` is drafted
-consent language (data processing purpose, no third-party sharing without
-consent, right to access/rectify/delete), Romanian only — **not legal advice,
-not reviewed by a lawyer**. The user should have it checked against their
-actual data-processing practice before relying on it for real compliance.
-Consent is captured as name + date + checkbox, included in the summary sent
-via email/WhatsApp (so the clinic has a record) — again, only if the patient
-actually presses send.
+**Reworked to a much simpler, informational-only shape** (superseding an
+earlier version that briefly had file-upload widgets, a repeatable medication
+form, and a GDPR consent form — all removed after the user clarified: *"Site-ul
+NU trebuie să primească sau să stocheze: analize medicale; scrisori medicale;
+bilete de externare; alte documente medicale"* and, on GDPR specifically,
+*"Eliminam. Pacientul este văzut doar online"* — no physical visit exists where
+a paper GDPR form could be signed either, so GDPR consent collection was
+dropped from this page entirely rather than reworked). Current shape:
+- **Jurnal alimentar** — the only step with real state (localStorage:
+  `diet4life_journal_patient`, `diet4life_journal_data`), unchanged
+  functionally (3 tabs: Info/PDF, online completion, upload+email). Now also
+  shows an explicit confidentiality note ("salvate doar pe dispozitivul tău,
+  nu sunt transmise automat"), and "Șterge jurnalul de pe acest dispozitiv"
+  wording on the reset action. Progress ("X din 7 zile completate") shown in
+  the checklist card header.
+- **Analize medicale** — informational only: intro text + an `Accordion`
+  listing `LAB_CATEGORIES`. **No upload widget** — explicitly removed per
+  instruction ("NU crea sistem de upload. NU stoca analizele pe site.").
+- **Medicație și suplimente** — a single paragraph telling the patient to
+  prepare their own list. **No form, nothing saved** — explicitly removed
+  per instruction ("Nu crea formular care să salveze aceste informații pe
+  site.").
+- **Documente medicale** — informational only, same reasoning as Analize.
+  **No upload widget.**
+- **"Trimite pregătirea"** (closing section) — generic copy only ("Trimite
+  jurnalul și documentele relevante... prin canalul de comunicare stabilit cu
+  dieteticianul"), linking to `/contact` for the actual email/phone. **Does
+  NOT display `CLINIC_EMAIL`/`CLINIC_WHATSAPP` directly on this page** — that
+  was explicitly requested removed ("Nu afișa adresa de email sau numărul de
+  WhatsApp în această etapă"). The pre-existing, older journal-specific send
+  flows (Info tab's "Cum funcționează" step 4, the Online tab's "Trimite
+  jurnalul" mailto button, the Upload tab's mailto-with-manual-attach flow)
+  were left untouched — they predate this rework and weren't in scope.
 
 **Lab test list** (`LAB_CATEGORIES`) is the exact list the user provided,
 deliberately excluding serum protein electrophoresis, zinc, and abdominal
 ultrasound per their explicit instruction — don't add those back without
 asking.
+
+**No GDPR consent form on this page currently.** If the clinic still wants a
+per-patient GDPR record, that now needs a separate mechanism (e.g. signed
+during/after the online consultation itself) — not decided yet, revisit if
+asked.
 
 ## Environment constraint — read this first
 

@@ -1,5 +1,6 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState, useEffect } from "react";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -7,8 +8,8 @@ import {
   Download, Upload, Send, BookOpen, CheckCircle2,
   ChevronRight, Info, Utensils, FileText, Mail,
   ClipboardList, AlertCircle, X, Plus,
-  Pill, TestTube2, ShieldCheck, FolderOpen, MessageCircle,
-  Trash2, ChevronDown, Circle, ListChecks,
+  Pill, TestTube2, FolderOpen,
+  Circle, ListChecks,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,27 +31,11 @@ interface MealEntry {
   hungerBefore: string; fullnessAfter: string; why: string[];
 }
 
-interface MedicationEntry {
-  name: string; dose: string; frequency: string; notes: string;
-}
-
-// File metadata only — there is no backend to actually store the bytes anywhere.
-// The patient still has to attach the real file themselves in their email/WhatsApp app.
-interface DocMeta {
-  id: string; name: string; date: string; docType: string;
-}
-
-interface GdprConsent {
-  name: string; date: string; agreed: boolean;
-}
-
 type JournalDay = MealEntry[];
 
 const WHY_REASONS = ["Foame", "Obicei", "Plictiseală", "Stres", "Emoție", "Social", "Poftă"];
 const DEFAULT_MEAL_LABELS = ["Mic dejun", "Gustare dimineață", "Prânz", "Gustare după-amiază", "Cină"];
 const QUANTITY_UNITS = ["g", "ml", "cană", "linguriță", "lingură", "bucată", "porție", "felie", "pumn"];
-
-const EMPTY_MEDICATION = (): MedicationEntry => ({ name: "", dose: "", frequency: "", notes: "" });
 
 // Useful for the initial evaluation — deliberately excludes serum protein electrophoresis,
 // zinc, and abdominal ultrasound per explicit instruction; those aren't baseline tests here.
@@ -71,17 +56,6 @@ const LAB_CATEGORIES = [
     ],
   },
 ];
-
-const DOC_TYPES_LAB = ["Analize medicale"];
-const DOC_TYPES_MEDICAL = ["Scrisoare medicală", "Bilet de externare", "Alte investigații", "Alt document"];
-
-const GDPR_CONSENT_TEXT =
-  "Sunt de acord ca datele mele cu caracter personal, inclusiv datele privind starea de sănătate " +
-  "(jurnal alimentar, analize medicale, medicație, documente medicale), să fie colectate și " +
-  "prelucrate de Diet4Life Concept exclusiv în scopul pregătirii și desfășurării consultației " +
-  "nutriționale. Datele nu vor fi transmise către terți fără acordul meu explicit, cu excepția " +
-  "situațiilor prevăzute de lege. Îmi păstrez dreptul de a solicita oricând accesul, rectificarea " +
-  "sau ștergerea datelor mele, prin contactarea directă a cabinetului.";
 
 const EMPTY_MEAL = (label = ""): MealEntry => ({
   label, time: "", food: "", quantity: "", quantityUnit: "", liquids: "",
@@ -399,10 +373,6 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
 // is auto-saved on this device/browser — no account or server involved.
 const STORAGE_KEY_PATIENT = "diet4life_journal_patient";
 const STORAGE_KEY_JOURNAL = "diet4life_journal_data";
-const STORAGE_KEY_MEDICATIONS = "diet4life_medications";
-const STORAGE_KEY_LAB_DOCS = "diet4life_lab_docs";
-const STORAGE_KEY_MED_DOCS = "diet4life_medical_docs";
-const STORAGE_KEY_GDPR = "diet4life_gdpr_consent";
 
 function loadPatientDraft(): PatientInfo {
   try {
@@ -420,26 +390,6 @@ function loadJournalDraft(): JournalDay[] {
     return Array.isArray(parsed) && parsed.length === 7 ? parsed : EMPTY_JOURNAL();
   } catch {
     return EMPTY_JOURNAL();
-  }
-}
-
-function loadArrayDraft<T>(key: string): T[] {
-  try {
-    const raw = window.localStorage.getItem(key);
-    const parsed = raw ? JSON.parse(raw) : null;
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function loadGdprDraft(): GdprConsent {
-  const empty: GdprConsent = { name: "", date: "", agreed: false };
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY_GDPR);
-    return raw ? { ...empty, ...JSON.parse(raw) } : empty;
-  } catch {
-    return empty;
   }
 }
 
@@ -463,43 +413,28 @@ export default function Consultatii() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [journalSent, setJournalSent] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
-  const [medications, setMedications] = useState<MedicationEntry[]>(() => loadArrayDraft(STORAGE_KEY_MEDICATIONS));
-  const [labDocs, setLabDocs] = useState<DocMeta[]>(() => loadArrayDraft(STORAGE_KEY_LAB_DOCS));
-  const [medDocs, setMedDocs] = useState<DocMeta[]>(() => loadArrayDraft(STORAGE_KEY_MED_DOCS));
-  const [medDocType, setMedDocType] = useState(DOC_TYPES_MEDICAL[0]);
-  const [gdpr, setGdpr] = useState<GdprConsent>(loadGdprDraft);
 
   // Auto-save the draft to this browser as the patient fills it in over multiple days
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY_PATIENT, JSON.stringify(patient));
       window.localStorage.setItem(STORAGE_KEY_JOURNAL, JSON.stringify(journal));
-      window.localStorage.setItem(STORAGE_KEY_MEDICATIONS, JSON.stringify(medications));
-      window.localStorage.setItem(STORAGE_KEY_LAB_DOCS, JSON.stringify(labDocs));
-      window.localStorage.setItem(STORAGE_KEY_MED_DOCS, JSON.stringify(medDocs));
-      window.localStorage.setItem(STORAGE_KEY_GDPR, JSON.stringify(gdpr));
       setDraftSaved(true);
     } catch {
       // localStorage unavailable (private browsing, storage full, etc.) — fail silently
     }
-  }, [patient, journal, medications, labDocs, medDocs, gdpr]);
+  }, [patient, journal]);
 
   const resetDraft = () => {
-    if (!window.confirm(ro ? "Ștergi tot ce ai completat până acum?" : "Delete everything filled in so far?")) return;
+    if (!window.confirm(ro
+      ? "Această acțiune va șterge definitiv jurnalul salvat în acest browser."
+      : "This will permanently delete the journal saved in this browser.")) return;
     setPatient(EMPTY_PATIENT);
     setJournal(EMPTY_JOURNAL());
     setActiveDay(0);
-    setMedications([]);
-    setLabDocs([]);
-    setMedDocs([]);
-    setGdpr({ name: "", date: "", agreed: false });
     try {
       window.localStorage.removeItem(STORAGE_KEY_PATIENT);
       window.localStorage.removeItem(STORAGE_KEY_JOURNAL);
-      window.localStorage.removeItem(STORAGE_KEY_MEDICATIONS);
-      window.localStorage.removeItem(STORAGE_KEY_LAB_DOCS);
-      window.localStorage.removeItem(STORAGE_KEY_MED_DOCS);
-      window.localStorage.removeItem(STORAGE_KEY_GDPR);
     } catch {
       // ignore
     }
@@ -541,16 +476,20 @@ export default function Consultatii() {
       return next;
     });
 
+  const POST_DOWNLOAD_MESSAGE = ro
+    ? "Jurnalul tău este gata. Descarcă documentul și trimite-l înainte de consultație prin canalul de comunicare stabilit cu dieteticianul."
+    : "Your journal is ready. Download the document and send it before your consultation through the communication channel established with your dietitian.";
+
   const handleDownload = async () => {
     await generatePDF(patient, journal);
-    toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: ro ? "Jurnalul a fost generat cu succes." : "Journal generated successfully." });
+    toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: POST_DOWNLOAD_MESSAGE });
   };
 
   // Always generates an empty template, regardless of any saved online-form
   // draft — for the "print and fill by hand" buttons, not the "send my progress" ones.
   const handleDownloadBlank = async () => {
     await generatePDF(EMPTY_PATIENT, EMPTY_JOURNAL());
-    toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: ro ? "Jurnalul gol a fost generat cu succes." : "Blank journal generated successfully." });
+    toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: POST_DOWNLOAD_MESSAGE });
   };
 
   const handleSendEmail = () => {
@@ -587,100 +526,23 @@ export default function Consultatii() {
     toast({ title: ro ? "Email deschis!" : "Email opened!", description: ro ? "Atașați fișierul și trimiteți emailul." : "Attach the file and send the email." });
   };
 
-  // ── Medication & supplements ──────────────────────────────────────────────
-  const addMedication = () => setMedications(prev => [...prev, EMPTY_MEDICATION()]);
-  const updateMedication = (i: number, field: keyof MedicationEntry, value: string) =>
-    setMedications(prev => prev.map((m, idx) => (idx === i ? { ...m, [field]: value } : m)));
-  const removeMedication = (i: number) => setMedications(prev => prev.filter((_, idx) => idx !== i));
-
-  // ── Document metadata (lab results / other medical documents) ────────────
-  // No backend exists to store the actual file — only name/date/type are kept here,
-  // as a checklist of what the patient still needs to attach when sending.
-  const addDocMeta = (
-    setter: React.Dispatch<React.SetStateAction<DocMeta[]>>,
-    file: File,
-    docType: string
-  ) => {
-    setter(prev => [...prev, { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, name: file.name, date: new Date().toLocaleDateString("ro-RO"), docType }]);
-  };
-  const removeDocMeta = (setter: React.Dispatch<React.SetStateAction<DocMeta[]>>, id: string) =>
-    setter(prev => prev.filter(d => d.id !== id));
-
   // ── Checklist status ──────────────────────────────────────────────────────
+  // Only the journal has real, trackable progress (localStorage); the other
+  // sections are informational-only, so they carry no completion state.
   const completedDays = journal.filter(day => day.length > 0 && day.every(m => m.food.trim() !== "")).length;
   const journalStatus: "not_started" | "in_progress" | "completed" | "uploaded" =
     completedDays === 7 ? "completed" : uploadedFile ? "uploaded" : completedDays > 0 ? "in_progress" : "not_started";
-  const medicationStatus: "not_started" | "completed" = medications.length > 0 ? "completed" : "not_started";
-  const gdprStatus: "not_started" | "completed" = gdpr.agreed && gdpr.name.trim() !== "" ? "completed" : "not_started";
 
   const CHECKLIST = [
     { id: "jurnal", icon: Utensils, label: ro ? "Jurnal alimentar" : "Food journal",
-      detail: journalStatus === "completed" ? `7/7 ${ro ? "zile" : "days"}` : journalStatus === "uploaded" ? (ro ? "Încărcat" : "Uploaded") : journalStatus === "in_progress" ? `${completedDays}/7 ${ro ? "zile" : "days"}` : (ro ? "Neînceput" : "Not started"),
-      status: journalStatus },
-    { id: "analize", icon: TestTube2, label: ro ? "Analize medicale" : "Medical tests",
-      detail: labDocs.length > 0 ? (ro ? `${labDocs.length} încărcate` : `${labDocs.length} uploaded`) : (ro ? "Opțional" : "Optional"),
-      status: labDocs.length > 0 ? "uploaded" : "optional" },
-    { id: "medicatie", icon: Pill, label: ro ? "Medicație și suplimente" : "Medication & supplements",
-      detail: medicationStatus === "completed" ? (ro ? "Completat" : "Completed") : (ro ? "Neînceput" : "Not started"),
-      status: medicationStatus },
-    { id: "documente", icon: FolderOpen, label: ro ? "Documente medicale" : "Medical documents",
-      detail: medDocs.length > 0 ? (ro ? `${medDocs.length} încărcate` : `${medDocs.length} uploaded`) : (ro ? "Opțional" : "Optional"),
-      status: medDocs.length > 0 ? "uploaded" : "optional" },
-    { id: "gdpr", icon: ShieldCheck, label: ro ? "Acord GDPR" : "GDPR consent",
-      detail: gdprStatus === "completed" ? (ro ? "Completat" : "Completed") : (ro ? "Neînceput" : "Not started"),
-      status: gdprStatus },
+      detail: journalStatus === "completed" ? `7/7 ${ro ? "zile" : "days"}` : journalStatus === "uploaded" ? (ro ? "Încărcat" : "Uploaded") : journalStatus === "in_progress" ? `${completedDays}/7 ${ro ? "zile" : "days"}` : (ro ? "Neînceput" : "Not started") },
+    { id: "analize", icon: TestTube2, label: ro ? "Analize medicale" : "Medical tests", detail: null },
+    { id: "medicatie", icon: Pill, label: ro ? "Medicație și suplimente" : "Medication & supplements", detail: null },
+    { id: "documente", icon: FolderOpen, label: ro ? "Documente medicale" : "Medical documents", detail: null },
   ] as const;
-
-  const readySteps = CHECKLIST.filter(c => c.status === "completed" || c.status === "uploaded").length;
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  // ── Send preparation summary (email / WhatsApp — no backend, so the patient still
-  // has to attach any files themselves; this just prepares the message) ──────────
-  const CLINIC_EMAIL = "contact@diet4lifeconcept.ro";
-  const CLINIC_WHATSAPP = "40766572968"; // RO country code + number, no leading 0
-
-  const buildSummaryText = () => {
-    const lines: string[] = [];
-    lines.push(ro ? `Pregătire consultație – ${patient.name || "Pacient"}` : `Consultation prep – ${patient.name || "Patient"}`);
-    lines.push("");
-    lines.push(`${ro ? "Jurnal alimentar" : "Food journal"}: ${
-      journalStatus === "completed" ? (ro ? "completat 7/7 zile" : "completed 7/7 days")
-      : journalStatus === "uploaded" ? (ro ? "completat pe hârtie, atașat" : "completed on paper, attached")
-      : journalStatus === "in_progress" ? `${completedDays}/7 ${ro ? "zile completate" : "days completed"}`
-      : (ro ? "necompletat" : "not completed")
-    }`);
-    lines.push(`${ro ? "Analize medicale" : "Medical tests"}: ${labDocs.length > 0 ? (ro ? `${labDocs.length} fișiere (le atașez separat)` : `${labDocs.length} files (attaching separately)`) : (ro ? "niciuna" : "none")}`);
-    if (medications.length > 0) {
-      lines.push(ro ? "Medicație și suplimente:" : "Medication & supplements:");
-      medications.forEach(m => lines.push(`  - ${[m.name, m.dose, m.frequency].filter(Boolean).join(", ")}${m.notes ? ` (${m.notes})` : ""}`));
-    } else {
-      lines.push(`${ro ? "Medicație și suplimente" : "Medication & supplements"}: ${ro ? "niciuna raportată" : "none reported"}`);
-    }
-    lines.push(`${ro ? "Documente medicale" : "Medical documents"}: ${medDocs.length > 0 ? (ro ? `${medDocs.length} fișiere (le atașez separat)` : `${medDocs.length} files (attaching separately)`) : (ro ? "niciunul" : "none")}`);
-    lines.push(`${ro ? "Acord GDPR" : "GDPR consent"}: ${gdprStatus === "completed" ? (ro ? `semnat de ${gdpr.name}, ${gdpr.date}` : `signed by ${gdpr.name}, ${gdpr.date}`) : (ro ? "necompletat" : "not completed")}`);
-    if (labDocs.length + medDocs.length > 0) {
-      lines.push("");
-      lines.push(ro
-        ? "Notă: vă rog să găsiți atașate fișierele menționate mai sus (analize / documente / jurnal foto)."
-        : "Note: please find attached the files mentioned above (tests / documents / journal photos).");
-    }
-    return lines.join("\n");
-  };
-
-  const handleSendPreparationEmail = () => {
-    const subject = encodeURIComponent(ro ? `Pregătire consultație – ${patient.name || "Pacient"}` : `Consultation prep – ${patient.name || "Patient"}`);
-    const body = encodeURIComponent(buildSummaryText());
-    window.location.href = `mailto:${CLINIC_EMAIL}?subject=${subject}&body=${body}`;
-    toast({ title: ro ? "Email deschis!" : "Email opened!", description: ro ? "Atașați fișierele relevante și trimiteți emailul." : "Attach the relevant files and send the email." });
-  };
-
-  const handleSendPreparationWhatsApp = () => {
-    const text = encodeURIComponent(buildSummaryText());
-    window.open(`https://wa.me/${CLINIC_WHATSAPP}?text=${text}`, "_blank");
-    toast({ title: ro ? "WhatsApp deschis!" : "WhatsApp opened!", description: ro ? "Atașați fișierele relevante direct în conversație." : "Attach the relevant files directly in the chat." });
   };
 
   const dayNames = ro
@@ -739,15 +601,14 @@ export default function Consultatii() {
               </h3>
             </div>
             <span className="text-sm font-medium text-muted-foreground">
-              {ro ? `${readySteps} din ${CHECKLIST.length} pași pregătiți` : `${readySteps} of ${CHECKLIST.length} steps ready`}
+              {ro ? `${completedDays} din 7 zile completate` : `${completedDays} of 7 days completed`}
             </span>
           </div>
 
           <div className="space-y-2">
             {CHECKLIST.map(item => {
               const Icon = item.icon;
-              const isDone = item.status === "completed" || item.status === "uploaded";
-              const isOptional = item.status === "optional";
+              const isDone = item.id === "jurnal" && (journalStatus === "completed" || journalStatus === "uploaded");
               return (
                 <button
                   key={item.id}
@@ -759,15 +620,17 @@ export default function Consultatii() {
                   {isDone ? (
                     <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
                   ) : (
-                    <Circle className={`w-5 h-5 shrink-0 ${isOptional ? "text-muted-foreground/40" : "text-muted-foreground/60"}`} />
+                    <Circle className="w-5 h-5 shrink-0 text-muted-foreground/60" />
                   )}
                   <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                   <span className="flex-1 text-sm font-medium text-foreground">{item.label}</span>
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                    isDone ? "bg-primary/10 text-primary" : isOptional ? "bg-muted text-muted-foreground" : "bg-amber-50 text-amber-700"
-                  }`}>
-                    {item.detail}
-                  </span>
+                  {item.detail && (
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                      isDone ? "bg-primary/10 text-primary" : "bg-amber-50 text-amber-700"
+                    }`}>
+                      {item.detail}
+                    </span>
+                  )}
                   <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
                 </button>
               );
@@ -797,6 +660,14 @@ export default function Consultatii() {
               : "For the most accurate nutritional assessment, please complete the food journal for 7 days before your consultation. Record meals, times, liquids consumed, approximate quantities, digestive symptoms and preferred or avoided foods."}
           </p>
         </motion.div>
+
+        {/* Confidentiality note — only true because the draft never leaves this browser */}
+        <p className="text-xs text-muted-foreground mb-8 -mt-4 flex items-start gap-1.5">
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          {ro
+            ? "Informațiile completate în jurnal sunt salvate doar pe dispozitivul tău și nu sunt transmise automat către Diet4Life."
+            : "Information entered in the journal is saved only on your device and is not automatically transmitted to Diet4Life."}
+        </p>
 
         {/* Tab navigation */}
         <div className="flex gap-2 mb-8 bg-muted/40 p-1.5 rounded-2xl">
@@ -953,7 +824,7 @@ export default function Consultatii() {
                 className="text-muted-foreground hover:text-destructive underline underline-offset-2"
                 data-testid="button-reset-draft"
               >
-                {ro ? "Șterge jurnalul și ia-o de la capăt" : "Clear journal and start over"}
+                {ro ? "Șterge jurnalul de pe acest dispozitiv" : "Delete the journal from this device"}
               </button>
             </div>
 
@@ -1401,8 +1272,8 @@ export default function Consultatii() {
           <CardContent className="p-8">
             <p className="text-sm text-foreground leading-relaxed mb-5">
               {ro
-                ? "Dacă ai analize medicale recente, le poți încărca înainte de consultație. Nu este necesar să repeți analize pe care le ai deja și nici să efectuezi toate investigațiile de mai jos înainte de prima întâlnire."
-                : "If you have recent medical tests, you can upload them before the consultation. There's no need to repeat tests you already have, or to get all the investigations below before the first meeting."}
+                ? "Dacă ai analize medicale recente, pregătește-le pentru consultație. Nu este necesar să repeți analize pe care le ai deja și nici să efectuezi toate investigațiile de mai jos înainte de prima întâlnire."
+                : "If you have recent medical tests, have them ready for the consultation. There's no need to repeat tests you already have, or to get all the investigations below before the first meeting."}
             </p>
 
             <Accordion type="single" collapsible className="mb-5 border border-border rounded-xl px-4">
@@ -1432,52 +1303,12 @@ export default function Consultatii() {
               </AccordionItem>
             </Accordion>
 
-            <div className="flex items-start gap-3 bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 mb-6 text-sm text-foreground">
+            <div className="flex items-start gap-3 bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 text-sm text-foreground">
               <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
               {ro
                 ? "Nu ai analize recente? Poți face consultația și fără ele. După evaluare putem stabili dacă sunt necesare investigații suplimentare."
                 : "No recent tests? You can still have the consultation without them. After the evaluation we can determine if further tests are needed."}
             </div>
-
-            <label
-              htmlFor="upload-lab-docs"
-              className="flex items-center justify-center gap-2 border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/30 rounded-xl px-6 py-5 cursor-pointer transition-colors text-sm text-muted-foreground"
-            >
-              <Upload className="w-4 h-4" />
-              {ro ? "Adaugă fișiere (PDF, JPG, PNG)" : "Add files (PDF, JPG, PNG)"}
-              <input
-                id="upload-lab-docs"
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                multiple
-                className="sr-only"
-                onChange={e => {
-                  Array.from(e.target.files ?? []).forEach(f => addDocMeta(setLabDocs, f, "Analize medicale"));
-                  e.target.value = "";
-                }}
-                data-testid="input-upload-lab-docs"
-              />
-            </label>
-            {labDocs.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {labDocs.map(doc => (
-                  <div key={doc.id} className="flex items-center gap-3 text-sm bg-secondary/30 rounded-lg px-3 py-2">
-                    <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <span className="flex-1 truncate text-foreground">{doc.name}</span>
-                    <span className="text-xs text-muted-foreground shrink-0">{doc.date}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeDocMeta(setLabDocs, doc.id)}
-                      className="text-muted-foreground hover:text-destructive shrink-0"
-                      aria-label={ro ? "Șterge" : "Remove"}
-                      data-testid={`button-remove-labdoc-${doc.id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -1488,74 +1319,11 @@ export default function Consultatii() {
         </div>
         <Card className="mb-10">
           <CardContent className="p-8">
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-sm text-foreground leading-relaxed">
               {ro
-                ? "Notează medicamentele și suplimentele pe care le iei în mod curent. Dacă nu iei nimic, poți sări peste acest pas."
-                : "List any medications or supplements you currently take. If you take none, you can skip this step."}
+                ? "Pregătește lista medicamentelor și suplimentelor pe care le iei în mod curent (denumire, doză, frecvență) — o vei avea la îndemână la consultație. Dacă nu iei nimic, poți sări peste acest pas."
+                : "Prepare the list of medications and supplements you currently take (name, dose, frequency) — have it ready for the consultation. If you take none, you can skip this step."}
             </p>
-            {medications.length === 0 && (
-              <p className="text-sm text-muted-foreground italic mb-4">
-                {ro ? "Niciun medicament adăugat încă." : "No medication added yet."}
-              </p>
-            )}
-            <div className="space-y-3 mb-4">
-              {medications.map((m, i) => (
-                <div key={i} className="grid grid-cols-2 sm:grid-cols-5 gap-3 items-end p-3 rounded-xl bg-secondary/20 border border-border">
-                  <div className="col-span-2 sm:col-span-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">{ro ? "Denumire" : "Name"}</label>
-                    <Input
-                      value={m.name}
-                      onChange={e => updateMedication(i, "name", e.target.value)}
-                      placeholder={ro ? "ex. Metformin" : "e.g. Metformin"}
-                      className="rounded-lg text-sm h-9"
-                      data-testid={`input-medication-name-${i}`}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">{ro ? "Doză" : "Dose"}</label>
-                    <Input
-                      value={m.dose}
-                      onChange={e => updateMedication(i, "dose", e.target.value)}
-                      placeholder="500mg"
-                      className="rounded-lg text-sm h-9"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">{ro ? "Frecvență" : "Frequency"}</label>
-                    <Input
-                      value={m.frequency}
-                      onChange={e => updateMedication(i, "frequency", e.target.value)}
-                      placeholder={ro ? "2x/zi" : "2x/day"}
-                      className="rounded-lg text-sm h-9"
-                    />
-                  </div>
-                  <div className="col-span-2 sm:col-span-1 flex gap-2 items-end">
-                    <div className="flex-1">
-                      <label className="text-xs text-muted-foreground mb-1 block">{ro ? "Observații" : "Notes"}</label>
-                      <Input
-                        value={m.notes}
-                        onChange={e => updateMedication(i, "notes", e.target.value)}
-                        placeholder={ro ? "opțional" : "optional"}
-                        className="rounded-lg text-sm h-9"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeMedication(i)}
-                      className="text-muted-foreground hover:text-destructive p-2 shrink-0"
-                      aria-label={ro ? "Șterge" : "Remove"}
-                      data-testid={`button-remove-medication-${i}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Button variant="outline" size="sm" className="rounded-xl gap-1.5" onClick={addMedication} data-testid="button-add-medication">
-              <Plus className="w-4 h-4" />
-              {ro ? "Adaugă medicament / supliment" : "Add medication / supplement"}
-            </Button>
           </CardContent>
         </Card>
 
@@ -1569,158 +1337,36 @@ export default function Consultatii() {
           <CardContent className="p-8">
             <p className="text-sm text-foreground leading-relaxed mb-2">
               {ro
-                ? "Dacă ai afecțiuni diagnosticate sau ești urmărit de un medic specialist, poți încărca documentele relevante pentru consultație: scrisori medicale, bilete de externare, investigații sau recomandări medicale."
-                : "If you have diagnosed conditions or are followed by a specialist, you can upload the documents relevant to the consultation: medical letters, discharge notes, investigations or medical recommendations."}
+                ? "Dacă ai afecțiuni diagnosticate sau ești urmărit de un medic specialist, pregătește documentele relevante pentru consultație: scrisori medicale, bilete de externare, investigații sau recomandări medicale."
+                : "If you have diagnosed conditions or are followed by a specialist, prepare the documents relevant to the consultation: medical letters, discharge notes, investigations or medical recommendations."}
             </p>
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-sm text-muted-foreground">
               {ro
-                ? "Nu este necesar să încarci întregul istoric medical, ci doar documentele relevante pentru problema discutată."
-                : "There's no need to upload your entire medical history — just the documents relevant to the issue at hand."}
+                ? "Nu este necesar să pregătești întregul istoric medical, ci doar documentele relevante pentru problema discutată."
+                : "There's no need to prepare your entire medical history — just the documents relevant to the issue at hand."}
             </p>
-
-            <div className="mb-4 max-w-xs">
-              <label className="text-xs text-muted-foreground mb-1.5 block">{ro ? "Tip document" : "Document type"}</label>
-              <select
-                value={medDocType}
-                onChange={e => setMedDocType(e.target.value)}
-                className="rounded-lg text-sm h-9 border border-input bg-background px-3 w-full"
-                data-testid="select-med-doc-type"
-              >
-                {DOC_TYPES_MEDICAL.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-
-            <label
-              htmlFor="upload-med-docs"
-              className="flex items-center justify-center gap-2 border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/30 rounded-xl px-6 py-5 cursor-pointer transition-colors text-sm text-muted-foreground"
-            >
-              <Upload className="w-4 h-4" />
-              {ro ? "Adaugă fișiere (PDF, JPG, PNG)" : "Add files (PDF, JPG, PNG)"}
-              <input
-                id="upload-med-docs"
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                multiple
-                className="sr-only"
-                onChange={e => {
-                  Array.from(e.target.files ?? []).forEach(f => addDocMeta(setMedDocs, f, medDocType));
-                  e.target.value = "";
-                }}
-                data-testid="input-upload-med-docs"
-              />
-            </label>
-            {medDocs.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {medDocs.map(doc => (
-                  <div key={doc.id} className="flex items-center gap-3 text-sm bg-secondary/30 rounded-lg px-3 py-2">
-                    <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <span className="flex-1 truncate text-foreground">{doc.name}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground shrink-0">{doc.docType}</span>
-                    <span className="text-xs text-muted-foreground shrink-0">{doc.date}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeDocMeta(setMedDocs, doc.id)}
-                      className="text-muted-foreground hover:text-destructive shrink-0"
-                      aria-label={ro ? "Șterge" : "Remove"}
-                      data-testid={`button-remove-meddoc-${doc.id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* ── Step 5: Acord GDPR ── */}
-        <div id="gdpr" className="scroll-mt-24 mb-3 mt-14 flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">5</span>
-          <h2 className="text-lg font-serif font-bold text-foreground">{ro ? "Acord privind prelucrarea datelor (GDPR)" : "Data processing consent (GDPR)"}</h2>
-        </div>
-        <Card className="mb-10">
-          <CardContent className="p-8">
-            <div className="bg-secondary/30 border border-border rounded-xl p-5 mb-5 text-sm text-muted-foreground leading-relaxed max-h-48 overflow-y-auto">
-              {GDPR_CONSENT_TEXT}
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4 mb-5">
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">{ro ? "Nume complet" : "Full name"}</label>
-                <Input
-                  value={gdpr.name}
-                  onChange={e => setGdpr(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder={ro ? "Numele tău" : "Your name"}
-                  className="rounded-lg"
-                  data-testid="input-gdpr-name"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">{ro ? "Data" : "Date"}</label>
-                <Input
-                  value={gdpr.date}
-                  onChange={e => setGdpr(prev => ({ ...prev, date: e.target.value }))}
-                  placeholder="DD.MM.YYYY"
-                  className="rounded-lg"
-                  data-testid="input-gdpr-date"
-                />
-              </div>
-            </div>
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={gdpr.agreed}
-                onChange={e => setGdpr(prev => ({
-                  ...prev,
-                  agreed: e.target.checked,
-                  date: prev.date || new Date().toLocaleDateString("ro-RO"),
-                }))}
-                className="mt-1 w-4 h-4 rounded border-border accent-primary"
-                data-testid="checkbox-gdpr-agree"
-              />
-              <span className="text-sm text-foreground">
-                {ro
-                  ? "Am citit și sunt de acord cu prelucrarea datelor mele cu caracter personal, conform textului de mai sus."
-                  : "I have read and agree to the processing of my personal data, as described above."}
-              </span>
-            </label>
-            {gdprStatus === "completed" && (
-              <div className="flex items-center gap-2 mt-4 text-sm text-primary">
-                <CheckCircle2 className="w-4 h-4" />
-                {ro ? "Acord înregistrat." : "Consent recorded."}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* ── Send preparation to the clinic ── */}
+        {/* ── Send before the consultation ── */}
         <div id="trimite" className="scroll-mt-24 mb-3 mt-14 flex items-center gap-2">
           <Send className="w-5 h-5 text-primary shrink-0" />
-          <h2 className="text-lg font-serif font-bold text-foreground">{ro ? "Trimite pregătirea către cabinet" : "Send your preparation to the clinic"}</h2>
+          <h2 className="text-lg font-serif font-bold text-foreground">{ro ? "Trimite pregătirea" : "Send your preparation"}</h2>
         </div>
         <Card className="border-primary/20 bg-primary/5 mb-4">
           <CardContent className="p-8">
-            <p className="text-sm text-foreground leading-relaxed mb-2">
+            <p className="text-sm text-foreground leading-relaxed">
               {ro
-                ? "Trimite un rezumat al pregătirii tale — jurnal, medicație, acord GDPR — direct pe email sau WhatsApp."
-                : "Send a summary of your preparation — journal, medication, GDPR consent — directly by email or WhatsApp."}
+                ? "Trimite jurnalul și documentele relevante înainte de consultație prin canalul de comunicare stabilit cu dieteticianul."
+                : "Send the journal and any relevant documents before your consultation through the communication channel established with your dietitian."}
             </p>
-            <p className="text-xs text-muted-foreground mb-6">
-              {ro
-                ? "Important: fișierele (analize, documente, poze cu jurnalul completat pe hârtie) nu se atașează automat — trebuie să le atașezi tu manual în emailul sau conversația care se deschide."
-                : "Important: files (tests, documents, photos of the handwritten journal) aren't attached automatically — you'll need to attach them yourself in the email or chat that opens."}
+            <p className="text-sm text-muted-foreground mt-2">
+              {ro ? (
+                <>Nu ai încă datele de contact? Le găsești pe pagina de <Link href="/contact" className="text-primary underline underline-offset-2">Contact</Link>.</>
+              ) : (
+                <>Don't have the contact details yet? You'll find them on the <Link href="/contact" className="text-primary underline underline-offset-2">Contact</Link> page.</>
+              )}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button size="lg" className="rounded-xl gap-2 flex-1" onClick={handleSendPreparationEmail} data-testid="button-send-prep-email">
-                <Mail className="w-4 h-4" />
-                {ro ? "Trimite pe Email" : "Send by Email"}
-              </Button>
-              <Button size="lg" variant="outline" className="rounded-xl gap-2 flex-1" onClick={handleSendPreparationWhatsApp} data-testid="button-send-prep-whatsapp">
-                <MessageCircle className="w-4 h-4" />
-                {ro ? "Trimite pe WhatsApp" : "Send by WhatsApp"}
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
