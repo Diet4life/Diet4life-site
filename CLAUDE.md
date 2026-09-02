@@ -248,13 +248,69 @@ user:
   longer used); new copy uses inline `language === 'ro' ? ... : ...` like most
   other pages, not the `t()` helper.
 
+## NutriHub — done
+
+`/nutrihub` (hub index) + `/nutrihub/nutritie-echilibrata` + `/nutrihub/controlul-greutatii`
+are built and routed in `App.tsx`. Homepage cards (`Home.tsx`) and the "Explorează
+NutriHub" button now link there for real (previously: static `<div>`s / scroll-to-section).
+Nav (`Layout.tsx`) has a "NutriHub" link between Servicii and Calculator, matching the
+live site's nav order.
+
+**Content pipeline that produced these two articles**: user ran the same detailed
+editorial-strategy prompt through both Claude and Gemini independently (13-question
+critique of structure/length/graphics/SEO for pillar nutrition articles), compared
+the two responses herself, added her own medical corrections (WHO's four pillars —
+adequacy/balance/moderation/diversity — not "flexibility"; toned down the weight-loss-rate
+claim; grounded metabolic adaptation in a systematic review of 33 studies rather than
+the Biggest Loser case; moved eating-disorder safety-net to a small discreet block, not
+the article body; dropped FAQPage-as-SEO-trick reasoning since Google retired FAQ rich
+results in 2026; reworded the plate's source-attribution), and delivered final Romanian
+copy for both articles verbatim. That text is what's now live in the two page components
+— **do not rewrite or "improve" it** without the user asking; it already went through two
+independent AI reviews plus her own editorial pass.
+
+**Architecture**:
+- `src/components/nutrihub/ArticleShell.tsx` — shared reader shell (hero, byline, "Pe
+  scurt", key-takeaways box, FAQ accordion, related-articles grid, sources accordion)
+  plus small exported building blocks (`ArticleH2`, `ArticleP`, `ArticleCallout`,
+  `ArticleList`) that each article page composes into its own `<section>`s. Built once,
+  meant to be reused for every future NutriHub article — don't duplicate this structure
+  per-page.
+- `src/components/nutrihub/PlateDiagram.tsx` — the "Farfuria Diet4Life" visual: a CSS
+  `conic-gradient` circle (50% legume / 25% proteină / 25% carbohidrați) + legend, colors
+  reused from the site's real `--primary` (green) and `--accent` (blue) tokens as literal
+  hex (conic-gradient can't reference `hsl(var(--x))` directly). No external image.
+- `src/components/nutrihub/WeightFactorsGrid.tsx` — 2×3 icon grid for the six factors
+  influencing weight (alimentație/mișcare/somn/comportament/medicație/biologie).
+  Deliberately **not** a radial "factors around a center" diagram — flagged during the
+  Claude/Gemini comparison as compressing poorly on mobile; the 2×3 grid was the agreed
+  fix.
+- **No byline name yet** — user explicitly said not to add one now ("Nu vreau acum sa
+  punem numele, vedem uktwrior"/later). `ArticleShell` currently shows a generic
+  "Documentat de echipa Diet4Life" / "Documented by the Diet4Life team" line instead of
+  a name. Separately, `About.tsx` has a placeholder name/photo — **"Dr. Andreea Ionescu"**
+  — that is almost certainly wrong (the real practitioner's first name is Camelia, per
+  her own messages this session); flagged to the user, not yet corrected anywhere. Don't
+  invent a name for either spot — wait for the real one, then update both places at once.
+- **Romanian-only for now.** Both article pages check `language`; if not `"ro"`, they
+  render a short "this article is only available in Romanian" notice instead of the
+  article, rather than machine-translating unreviewed medical content. Fix once real
+  English copy exists.
+- Related-article links without an `href` in the `related` array render as a
+  non-clickable "în curând"/"coming soon" chip — used for all the secondary articles
+  listed in "Still open" below that don't exist yet.
+
 ## Still open / not yet done
 
-- NutriHub topic cards ("Controlul greutății", "Nutriție echilibrată") don't
-  link anywhere yet — live site has real subpages at `/nutrihub/<slug>`;
-  building those out is a separate, bigger task, not started.
-- The "De ce nu toate caloriile sunt la fel?" article itself doesn't exist
-  anywhere (live or git) — content to be written together later.
+- The secondary/deep-dive articles referenced from "Citește și" on both NutriHub
+  pillar pages don't exist yet: "Câtă proteină am nevoie?", "Fibrele alimentare...",
+  "Câte calorii am nevoie?", "Sunt toate caloriile la fel?", "De ce nu slăbesc deși
+  mănânc puțin?", "Ce este platoul ponderal?", "Produsele pentru slăbit...". Each is
+  currently a disabled "coming soon" chip in the `related` list, not a broken link.
+- The byline name and `About.tsx`'s placeholder name/photo ("Dr. Andreea Ionescu") —
+  see above, waiting on the user.
+- The "De ce nu toate caloriile sunt la fel?" article (linked from the homepage
+  spotlight, not NutriHub) still doesn't exist anywhere (live or git) — separate task.
 - Hero image (`/images/hero.png`) is still broken/missing — user is separately
   regenerating it with an AI image tool; reused the same path so it'll pick up
   automatically once they drop the file in.

@@ -15,6 +15,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: t("nav.home") },
     { href: "/about", label: t("nav.about") },
     { href: "/services", label: t("nav.services") },
+    { href: "/nutrihub", label: t("nav.nutrihub") },
     { href: "/calculator", label: t("nav.calculator") },
     { href: "/blog", label: t("nav.blog") },
     { href: "/products", label: t("nav.products") },

@@ -14,6 +14,7 @@ const translations: Translations = {
   "nav.home": { ro: "Acasă", en: "Home" },
   "nav.about": { ro: "Despre Mine", en: "About Me" },
   "nav.services": { ro: "Servicii", en: "Services" },
+  "nav.nutrihub": { ro: "NutriHub", en: "NutriHub" },
   "nav.calculator": { ro: "Calculator", en: "Calculator" },
   "nav.blog": { ro: "Blog", en: "Blog" },
   "nav.products": { ro: "Produse", en: "Products" },

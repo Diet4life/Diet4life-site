@@ -21,6 +21,9 @@ import EducationPrevention from "@/pages/EducationPrevention";
 import EducationKids from "@/pages/EducationKids";
 import EducationFun from "@/pages/EducationFun";
 import Consultatii from "@/pages/Consultatii";
+import NutriHub from "@/pages/nutrihub";
+import NutritieEchilibrata from "@/pages/nutrihub/NutritieEchilibrata";
+import ControlulGreutatii from "@/pages/nutrihub/ControlulGreutatii";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +45,9 @@ function Router() {
         <Route path="/education/kids" component={EducationKids} />
         <Route path="/education/fun" component={EducationFun} />
         <Route path="/consultatii" component={Consultatii} />
+        <Route path="/nutrihub" component={NutriHub} />
+        <Route path="/nutrihub/nutritie-echilibrata" component={NutritieEchilibrata} />
+        <Route path="/nutrihub/controlul-greutatii" component={ControlulGreutatii} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

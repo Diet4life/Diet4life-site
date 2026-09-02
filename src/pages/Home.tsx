@@ -25,8 +25,8 @@ const quickQuestions = [
 ];
 
 const nutriHubTopics = [
-  { icon: Scale, ro: "Controlul greutății", en: "Weight control" },
-  { icon: Salad, ro: "Nutriție echilibrată", en: "Balanced nutrition" },
+  { icon: Scale, ro: "Controlul greutății", en: "Weight control", slug: "controlul-greutatii" },
+  { icon: Salad, ro: "Nutriție echilibrată", en: "Balanced nutrition", slug: "nutritie-echilibrata" },
 ];
 
 export default function Home() {
@@ -86,14 +86,13 @@ export default function Home() {
                 ))}
               </div>
 
-              <button
-                type="button"
-                onClick={() => document.getElementById("nutrihub")?.scrollIntoView({ behavior: "smooth" })}
+              <Link
+                href="/nutrihub"
                 className="inline-flex items-center justify-center rounded-full bg-orange-600 hover:bg-orange-700 active:scale-[0.97] text-white font-medium px-8 h-12 transition-all"
                 data-testid="button-explore-nutrihub"
               >
                 {ro ? "Explorează NutriHub" : "Explore NutriHub"}
-              </button>
+              </Link>
             </motion.div>
 
             <motion.div
@@ -149,8 +148,9 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
               >
-                <div
-                  className="rounded-2xl bg-card border border-border p-8 text-center hover:shadow-md transition-shadow"
+                <Link
+                  href={`/nutrihub/${topic.slug}`}
+                  className="block rounded-2xl bg-card border border-border p-8 text-center hover:border-orange-300 hover:shadow-md transition-all"
                   data-testid={`card-nutrihub-topic-${i}`}
                 >
                   <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
@@ -159,7 +159,7 @@ export default function Home() {
                   <h3 className="font-serif font-bold text-foreground text-lg">
                     {ro ? topic.ro : topic.en}
                   </h3>
-                </div>
+                </Link>
               </motion.div>
             ))}
           </div>
