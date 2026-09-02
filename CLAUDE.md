@@ -50,10 +50,11 @@ deliberately excluding serum protein electrophoresis, zinc, and abdominal
 ultrasound per their explicit instruction — don't add those back without
 asking.
 
-**No GDPR consent form on this page currently.** If the clinic still wants a
-per-patient GDPR record, that now needs a separate mechanism (e.g. signed
-during/after the online consultation itself) — not decided yet, revisit if
-asked.
+**No GDPR consent form on this page/site.** User decided explicitly: since
+every patient is seen online (no in-person visit), GDPR consent is collected
+by the dietitian directly during the consultation itself, not through the
+website. So this is intentionally out of scope for `Consultatii.tsx` (and for
+this codebase generally) — don't add a GDPR form back here unless asked.
 
 ## Environment constraint — read this first
 
