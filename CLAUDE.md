@@ -302,6 +302,59 @@ independent AI reviews plus her own editorial pass.
   non-clickable "în curând"/"coming soon" chip — used for all the secondary articles
   listed in "Still open" below that don't exist yet.
 
+## "De cât am nevoie?" calculator — done, replaces the old `/calculator`
+
+The old BMI/deficit/goal-based calculator at `/calculator` is **fully replaced**
+(not added alongside) by a spec-driven educational energy/nutrient calculator, per
+explicit user decision when asked "keep both or replace" — she chose replace, since
+the old one did exactly what the new spec forbids (−500 kcal deficit, "slăbește X kg"
+goal picker, BMI shown as a medical verdict with red/green categories).
+
+**The spec (pasted in full by the user) is the source of truth for every formula,
+constant, and exclusion — do not change any of them without her explicit approval.**
+Medical logic lives entirely outside the page component:
+
+- `src/lib/necesar-energetic/constants.ts` — every numeric constant, each with a
+  `DO NOT CHANGE WITHOUT MEDICAL REVIEW` comment: `PAL` (1.4/1.6/1.8/2.0),
+  `PROTEIN_G_PER_KG_ADULT` (0.83), `PROTEIN_G_PER_KG_SENIOR_MIN/MAX` (1.0–1.2),
+  `CARB_PCT_MIN/MAX` (45–60%), `FAT_PCT_MIN/MAX` (20–35%), `FIBER_MIN_G` (25),
+  `WATER_MIN_L/MAX_L` (1.5–2.0), `SENIOR_AGE_THRESHOLD` (65), `MIN_AGE` (18).
+- `src/lib/necesar-energetic/calculations.ts` — pure functions only: Mifflin–St Jeor
+  REE, TEE = REE×PAL, `truncateKcal` (`Math.trunc`, never rounds — the spec is explicit
+  that 2137.92 must display as 2137, not 2138/2150/2100), protein (single reper
+  18–64y, range ≥65y), carb/fat gram conversion from the displayed (truncated) kcal.
+- `src/lib/necesar-energetic/eligibility.ts` — `isEligibleAge` (<18 blocks) and the
+  7-item `SAFETY_EXCLUSIONS` safety filter (pregnancy, breastfeeding, bariatric
+  surgery, kidney/liver disease, fluid restriction, eating disorder) — selecting any
+  one blocks the standard calculation for everyone, including ≥65y, with the exact
+  non-alarmist copy from the spec.
+- Both have `.test.ts` files next to them (vitest — added as a new devDependency,
+  `npm run test`; pinned to v2 because the project is on Vite 5 and vitest 3+
+  requires Vite 6/7/8). 27 tests, all passing, including the spec's own worked
+  example (`truncateKcal(2137.92) === 2137`, explicitly not 2138).
+- `src/pages/Calculator.tsx` — full rewrite: intro → form (personal data + activity
+  level with an inline "help me choose" panel, not a modal + safety filter
+  checkboxes) → results (Energie/Proteină/Carbohidrați/Grăsimi/Fibre/Apă, in that
+  order, no red/green scoring) → practical food examples (no quantities) →
+  **reuses `PlateDiagram` from `@/components/nutrihub/PlateDiagram`** for the
+  "Farfuria Diet4Life" section instead of building a second copy → real Romanian
+  meal examples → links into the 2 existing NutriHub articles + "coming soon" chips
+  for the not-yet-written ones → sources accordion → disclaimer.
+- Carbs/fat cards show the percentage range as the primary value with a "Vezi și în
+  grame" toggle for the gram conversion, per spec ("prezintă intervalul, nu o țintă
+  unică").
+- Age <18 is blocked via the same message used as the Zod field-validation error
+  (shows inline under the age input, not a separate screen) — it's the same text
+  the spec gives verbatim, just delivered as a validation message rather than a
+  full block, since that's what "the standard calculator must not continue" means
+  for a single required field.
+- Verified end-to-end with Playwright: age-block path, safety-filter-block path, and
+  a real calculation path (hand-checked the arithmetic: F/30/55kg/160cm/moderate →
+  REE 1239 → TEE 1982.4 → 1982 kcal, protein 55×0.83=45.65→46g) — all correct.
+  Checked mobile (390px) and desktop viewports.
+- Home.tsx's "Calculator necesar caloric" card still points at `/calculator` —
+  nothing to change there, same route, new content behind it.
+
 ## Still open / not yet done
 
 - The secondary/deep-dive articles referenced from "Citește și" on both NutriHub
@@ -348,9 +401,6 @@ independent AI reviews plus her own editorial pass.
   (`src/components/SmoothScroll.tsx`), respects `prefers-reduced-motion`.
 - `ScrollToTop` component resets scroll via the Lenis instance on route change.
 - Subtle `active:scale` tactile feedback added to the shared `Button` component.
-- BMI/IMC section added to `/calculator` (`src/pages/Calculator.tsx`): computed
-  from the weight/height already in the form, WHO-range segmented bar with a
-  position marker, bilingual category label.
 - `.gitignore` added (didn't exist before; `node_modules`/`dist` were untracked
   by accident).
 
