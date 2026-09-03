@@ -17,7 +17,7 @@ export default function About() {
             <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl">
               <img 
                 src="/images/portrait.png" 
-                alt="Dr. Andreea Ionescu" 
+                alt="Camelia Amuza"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -30,7 +30,7 @@ export default function About() {
             className="w-full lg:w-7/12"
           >
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-              Dr. Andreea Ionescu
+              Camelia Amuza
             </h1>
             <p className="text-xl text-primary font-medium mb-8">
               {language === 'ro' ? 'Dietetician-Nutriționist' : 'Dietitian-Nutritionist'}

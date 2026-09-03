@@ -77,7 +77,9 @@ export function ArticleShell({
             {subtitle}
           </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-            <span>{ro ? "Documentat de echipa Diet4Life" : "Documented by the Diet4Life team"}</span>
+            <span>
+              {ro ? "Scris de Camelia Amuza — nutriționist-dietetician autorizat" : "Written by Camelia Amuza — licensed dietitian-nutritionist"}
+            </span>
             <span className="text-border">·</span>
             <span>{updated}</span>
             <span className="text-border">·</span>

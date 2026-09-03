@@ -285,13 +285,15 @@ independent AI reviews plus her own editorial pass.
   Deliberately **not** a radial "factors around a center" diagram — flagged during the
   Claude/Gemini comparison as compressing poorly on mobile; the 2×3 grid was the agreed
   fix.
-- **No byline name yet** — user explicitly said not to add one now ("Nu vreau acum sa
-  punem numele, vedem uktwrior"/later). `ArticleShell` currently shows a generic
-  "Documentat de echipa Diet4Life" / "Documented by the Diet4Life team" line instead of
-  a name. Separately, `About.tsx` has a placeholder name/photo — **"Dr. Andreea Ionescu"**
-  — that is almost certainly wrong (the real practitioner's first name is Camelia, per
-  her own messages this session); flagged to the user, not yet corrected anywhere. Don't
-  invent a name for either spot — wait for the real one, then update both places at once.
+- **Real name confirmed: Camelia Amuza.** Applied both places: `ArticleShell.tsx`'s
+  byline now reads "Scris de Camelia Amuza — nutriționist-dietetician autorizat" /
+  "Written by Camelia Amuza — licensed dietitian-nutritionist"; `About.tsx`'s h1 and
+  portrait `alt` were "Dr. Andreea Ionescu" (a wrong AI-site-builder placeholder) and
+  are now "Camelia Amuza". Deliberately **no "Dr." title** — every other reference to
+  her on the site (including her own wording) says "nutriționist-dietetician autorizat",
+  never "doctor", so "Dr." would be an invented credential; dropped it rather than
+  carrying it over from the old placeholder. `About.tsx`'s portrait image itself
+  (`/images/portrait.png`) is still missing — see the image list below.
 - **Romanian-only for now.** Both article pages check `language`; if not `"ro"`, they
   render a short "this article is only available in Romanian" notice instead of the
   article, rather than machine-translating unreviewed medical content. Fix once real
@@ -307,8 +309,6 @@ independent AI reviews plus her own editorial pass.
   "Câte calorii am nevoie?", "Sunt toate caloriile la fel?", "De ce nu slăbesc deși
   mănânc puțin?", "Ce este platoul ponderal?", "Produsele pentru slăbit...". Each is
   currently a disabled "coming soon" chip in the `related` list, not a broken link.
-- The byline name and `About.tsx`'s placeholder name/photo ("Dr. Andreea Ionescu") —
-  see above, waiting on the user.
 - The "De ce nu toate caloriile sunt la fel?" article (linked from the homepage
   spotlight, not NutriHub) still doesn't exist anywhere (live or git) — separate task.
 - Hero image (`/images/hero.png`) is still broken/missing — user is separately
