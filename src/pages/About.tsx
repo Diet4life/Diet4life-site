@@ -48,19 +48,6 @@ export default function About() {
                   : 'I strongly believe that nutrition is not about severe restrictions, but about understanding how food interacts with your body. Whether you are looking to lose weight or simply want to improve your overall health, my approach is empathetic and professional.'}
               </p>
             </div>
-            
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { ro: 'Managementul Greutății', en: 'Weight Management' },
-                { ro: 'Nutriție Sportivă', en: 'Sports Nutrition' },
-                { ro: 'Sănătate Femeii', en: "Women's Health" }
-              ].map((spec, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                  <span className="text-foreground font-medium">{language === 'ro' ? spec.ro : spec.en}</span>
-                </div>
-              ))}
-            </div>
           </motion.div>
         </div>
       </div>

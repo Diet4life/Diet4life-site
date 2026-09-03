@@ -307,6 +307,14 @@ independent AI reviews plus her own editorial pass.
   never "doctor", so "Dr." would be an invented credential; dropped it rather than
   carrying it over from the old placeholder. `About.tsx`'s portrait image itself
   (`/images/portrait.png`) is still missing — see the image list below.
+- **The 3 "specialty" tags removed.** `About.tsx` had a generic AI-site-builder
+  chip row under the bio — "Managementul Greutății", "Nutriție Sportivă",
+  "Sănătate Femeii" — that the user called out as made-up ("prostiile alea"),
+  same category of placeholder as the wrong name/portrait. Deleted outright,
+  not replaced. She separately flagged that the live site's "Despre Mine" page
+  has a real consultation-packages section that doesn't exist in git at all —
+  **still open**, needs a screenshot from her to rebuild accurately (same
+  process as NutriHub/homepage).
 - **Romanian-only for now.** Both article pages check `language`; if not `"ro"`, they
   render a short "this article is only available in Romanian" notice instead of the
   article, rather than machine-translating unreviewed medical content. Fix once real
