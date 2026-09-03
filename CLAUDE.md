@@ -341,15 +341,39 @@ independent AI reviews plus her own editorial pass.
 - `.gitignore` added (didn't exist before; `node_modules`/`dist` were untracked
   by accident).
 
+## Site images
+
+`public/images/` now exists with 3 of the 4 missing files, added this session:
+- **`portrait.png`** — real photo of Camelia Amuza (About.tsx). The user first shared a
+  different "portrait" candidate (studio-style, books + sunflowers on a desk) that was
+  flagged and **rejected**: one book spine in a companion photo from the same set read
+  "Dind Dietrition Cand Nutrition Case Studies" — garbled nonsense text, a classic AI
+  image-generation tell — so that whole set was very likely AI-generated, not real
+  photos of her. Using a fake photo as a named healthcare provider's identity photo on
+  a medical site was flagged as a trust issue, not just aesthetics. The user then sent
+  an actual phone photo (real, unstaged, plain background) which is what's live now.
+  It arrived rotated 90°; fixed with Pillow (`img.rotate(-90, expand=True)`) before
+  saving, resized to 900×1200 (native ratio was already exactly 3:4).
+- **`blog-myths.png`** / **`blog-med.png`** (`Blog.tsx`) — real food photography the
+  user provided (flat-lay ingredients / protein+carb+fat plates split by source),
+  already 16:9, resized to 1280×720. No AI-artifact concerns on these two (no legible
+  text to check, styling reads as genuine editorial/stock photography).
+- **`hero.png`** — still missing. Two other candidate photos from the same rejected
+  AI-generated set (a "Diet4Life journal" product mockup — bound book, English text,
+  sections like hydration/stress/sleep/weekly-reflection that don't exist in the
+  actual site's PDF journal) were also flagged and **not used**: using them as the
+  homepage hero would visually promise a product different from what `/consultatii`
+  actually generates (Romanian, loose A4 PDF, no those sections). User's call: leave
+  `hero.png` broken for now ("La hero lasam încă asa"), she's handling it separately.
+
 ## Known pre-existing issues (not caused by us, not yet fixed)
 
 - `src/pages/*.tsx` reference `/images/hero.png`, `/images/portrait.png`,
   `/images/blog-*.png`, `/images/recipe-*.png` (recipe ones now moot, page
-  removed) — **none of these files exist**, there is no `public/` directory at
-  all. Every such image is a broken 404 on the actual built site. User decided
-  (earlier in this session) to leave this alone for now — was in the middle of
-  regenerating the hero image via an AI image tool when this conversation moved
-  on to the live-site reconciliation work above.
+  removed). **`portrait.png`, `blog-myths.png` and `blog-med.png` are now in
+  `public/images/` and live** (see next section). **`hero.png` is still
+  missing/broken** — user explicitly said to leave it as-is for now
+  ("La hero lasam încă asa"), separately regenerating it herself.
 - `tsc --noEmit` reports one pre-existing error unrelated to any of our changes:
   `src/App.tsx: Property 'env' does not exist on type 'ImportMeta'` (missing
   Vite client types in `tsconfig.json`) — vite build itself succeeds fine.
