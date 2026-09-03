@@ -532,6 +532,43 @@ Medical logic lives entirely outside the page component:
 - `.gitignore` added (didn't exist before; `node_modules`/`dist` were untracked
   by accident).
 
+## Real logo installed — done
+
+`src/components/Logo.tsx` previously rendered a generic AI-site-builder placeholder
+(a circle+checkmark SVG icon next to "Diet4Life / Concept" text) — not a real brand
+asset. Replaced with the actual logo: a "D" monogram with a gold cursive "4life"
+script through it and "CONCEPT" underneath. The user sent a brand-presentation
+image (`78b8d012-image.png`, a moodboard-style mockup on a dark background showing
+both color variants plus captions/swatches/font samples — not a clean export), not
+an isolated logo file, so the two variants had to be extracted:
+- Cropped each variant's logo mark out of its panel (charcoal+gold on ivory =
+  "premium"; white on charcoal = "inverted"), excluding the caption text and color
+  swatches below each panel and the vignette/blur along the mockup's outer edges
+  (confirmed by sampling pixel brightness row-by-row — the vignette reliably stays
+  above ~186 brightness even at its darkest, while the real logo strokes/script sit
+  well below 180, and it fades out entirely by ~35px in from any edge — the crop
+  boxes were chosen to land inside that safe zone).
+- Then built actual alpha transparency (not just a flat rectangle): estimated each
+  crop's flat background color from its four corners, and set each pixel's alpha by
+  its color distance from that background (smooth ramp between two thresholds, not
+  a hard cutout), so anti-aliased edges on the thin script strokes fade out cleanly
+  instead of leaving a visible box or a light/dark fringe. Verified by compositing
+  the result onto white, gray, and the site's actual `--background` (`hsl(0 0% 98%)`)
+  — no visible edge in any case.
+- Saved as `public/images/logo.png` (premium variant, transparent — this is the one
+  actually used, since every current surface on the site is light) and
+  `public/images/logo-inverse.png` (white variant, transparent — not wired in
+  anywhere yet, saved for if a dark section is ever added).
+- `Logo.tsx` is now just an `<img src="/images/logo.png">` at `h-16 w-auto` (was
+  sized smaller at first, `h-11`, but "CONCEPT" was barely legible at that size in
+  the 80px header — sized up until it read clearly without overflowing the header).
+  Both call sites (`Layout.tsx` header and footer) needed no changes beyond that —
+  the footer's `grayscale opacity-60` treatment still applies via `cn()` merging
+  onto the new `<img>` exactly as it did onto the old icon+text markup.
+- Verified with `tsc --noEmit` (clean, same pre-existing `ImportMeta.env` error
+  only), `npm run build`, and Playwright screenshots of the header (desktop 1280px
+  and mobile 390px) and footer.
+
 ## Site images
 
 `public/images/` now exists with 3 of the 4 missing files, added this session:
