@@ -17,53 +17,7 @@ const translations: Translations = {
   "nav.nutrihub": { ro: "NutriHub", en: "NutriHub" },
   "nav.calculator": { ro: "Calculator", en: "Calculator" },
   "nav.products": { ro: "Produse", en: "Products" },
-  "nav.education": { ro: "Educație", en: "Education" },
   "nav.contact": { ro: "Contact", en: "Contact" },
-
-  // Education Hub
-  "edu.hero.title": { ro: "Educație", en: "Education" },
-  "edu.hero.subtitle": {
-    ro: "Cunoașterea este primul pas spre o viață sănătoasă. Explorați resursele noastre educaționale bazate pe dovezi științifice, concepute pentru adulți și copii deopotrivă.",
-    en: "Knowledge is the first step toward a healthy life. Explore our evidence-based educational resources, designed for adults and children alike."
-  },
-  "edu.intro.title": { ro: "De ce contează educația nutrițională?", en: "Why does nutrition education matter?" },
-  "edu.intro.text": {
-    ro: "Înțelegerea principiilor nutriției te ajută să iei decizii mai bune pentru sănătatea ta pe termen lung. Diet4Life Concept se poziționează ca un centru de autoritate medicală și educațională în nutriție — pentru adulți, părinți și copii.",
-    en: "Understanding nutrition principles helps you make better decisions for your long-term health. Diet4Life Concept positions itself as a center of medical and educational authority in nutrition — for adults, parents, and children."
-  },
-  "edu.card.nutredu.title": { ro: "Educație Nutrițională", en: "Nutrition Education" },
-  "edu.card.nutredu.desc": { ro: "Principii de bază, macronutrienți, ghiduri pentru adulți", en: "Basic principles, macronutrients, adult guides" },
-  "edu.card.kids.title": { ro: "Nutriție pentru Copii", en: "Kids Nutrition" },
-  "edu.card.kids.desc": { ro: "Ghiduri pentru părinți, idei de mese, sfaturi practice", en: "Parent guides, meal ideas, practical tips" },
-  "edu.card.fun.title": { ro: "Învățare prin Joc", en: "Learning & Fun" },
-  "edu.card.fun.desc": { ro: "Materiale educaționale vizuale pentru copii", en: "Visual educational materials for children" },
-  "edu.cta.consult": { ro: "Programează o Consultație", en: "Book a Consultation" },
-  "edu.cta.download": { ro: "Descarcă Ghidul", en: "Download Guide" },
-  "edu.cta.contact": { ro: "Plan Personalizat", en: "Personalized Plan" },
-  "edu.badge.free": { ro: "Gratuit", en: "Free" },
-  "edu.badge.guide": { ro: "Ghid", en: "Guide" },
-  "edu.badge.new": { ro: "Nou", en: "New" },
-  "edu.readmore": { ro: "Citește mai mult", en: "Read more" },
-  "edu.backhub": { ro: "Înapoi la Educație", en: "Back to Education" },
-  "edu.stats.articles": { ro: "Articole educaționale", en: "Educational articles" },
-  "edu.stats.guides": { ro: "Ghiduri descărcabile", en: "Downloadable guides" },
-  "edu.stats.patients": { ro: "Pacienți educați", en: "Educated patients" },
-
-  // Nutrition Education sub-page
-  "nutredu.title": { ro: "Educație Nutrițională", en: "Nutrition Education" },
-  "nutredu.subtitle": { ro: "Înțelege nutriția pentru a-ți transforma sănătatea", en: "Understand nutrition to transform your health" },
-  "nutredi.intro": {
-    ro: "Educația nutrițională este fundamentul oricărei schimbări durabile. Înțelegând cum funcționează alimentele în corpul nostru, putem face alegeri mai bune în fiecare zi.",
-    en: "Nutrition education is the foundation of any lasting change. By understanding how food works in our bodies, we can make better choices every day."
-  },
-
-  // Kids sub-page
-  "kids.title": { ro: "Nutriție pentru Copii", en: "Kids Nutrition" },
-  "kids.subtitle": { ro: "Construiți împreună obiceiuri alimentare sănătoase", en: "Build healthy eating habits together" },
-
-  // Fun sub-page
-  "fun.title": { ro: "Învățare prin Joc", en: "Learning & Fun" },
-  "fun.subtitle": { ro: "Nutriția devine aventură — pentru copii curioși", en: "Nutrition becomes an adventure — for curious kids" },
 
   // Footer
   "footer.rights": { ro: "Toate drepturile rezervate.", en: "All rights reserved." },

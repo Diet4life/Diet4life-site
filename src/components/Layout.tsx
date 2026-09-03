@@ -18,7 +18,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/nutrihub", label: t("nav.nutrihub") },
     { href: "/calculator", label: t("nav.calculator") },
     { href: "/products", label: t("nav.products") },
-    { href: "/education", label: t("nav.education") },
     { href: "/consultatii", label: language === "ro" ? "Consultații" : "Appointments" },
   ];
 

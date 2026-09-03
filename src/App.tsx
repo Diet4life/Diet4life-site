@@ -14,14 +14,13 @@ import Services from "@/pages/Services";
 import Calculator from "@/pages/Calculator";
 import Products from "@/pages/Products";
 import Contact from "@/pages/Contact";
-import Education from "@/pages/Education";
-import EducationNutrition from "@/pages/EducationNutrition";
-import EducationKids from "@/pages/EducationKids";
-import EducationFun from "@/pages/EducationFun";
 import Consultatii from "@/pages/Consultatii";
 import NutriHub from "@/pages/nutrihub";
 import NutritieEchilibrata from "@/pages/nutrihub/NutritieEchilibrata";
 import ControlulGreutatii from "@/pages/nutrihub/ControlulGreutatii";
+import CataProteinaAmNevoie from "@/pages/nutrihub/CataProteinaAmNevoie";
+import CateCaloriiAmNevoie from "@/pages/nutrihub/CateCaloriiAmNevoie";
+import FibreleAlimentare from "@/pages/nutrihub/FibreleAlimentare";
 
 const queryClient = new QueryClient();
 
@@ -36,14 +35,13 @@ function Router() {
         <Route path="/calculator" component={Calculator} />
         <Route path="/products" component={Products} />
         <Route path="/contact" component={Contact} />
-        <Route path="/education" component={Education} />
-        <Route path="/education/nutrition" component={EducationNutrition} />
-        <Route path="/education/kids" component={EducationKids} />
-        <Route path="/education/fun" component={EducationFun} />
         <Route path="/consultatii" component={Consultatii} />
         <Route path="/nutrihub" component={NutriHub} />
         <Route path="/nutrihub/nutritie-echilibrata" component={NutritieEchilibrata} />
         <Route path="/nutrihub/controlul-greutatii" component={ControlulGreutatii} />
+        <Route path="/nutrihub/cata-proteina-am-nevoie" component={CataProteinaAmNevoie} />
+        <Route path="/nutrihub/cate-calorii-am-nevoie" component={CateCaloriiAmNevoie} />
+        <Route path="/nutrihub/fibrele-alimentare" component={FibreleAlimentare} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

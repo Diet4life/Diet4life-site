@@ -1,26 +1,58 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Scale, Salad, ChevronRight } from "lucide-react";
+import { Scale, Salad, Dumbbell, Flame, Wheat, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const TOPICS = [
   {
     slug: "nutritie-echilibrata",
     icon: Salad,
+    categoryRo: "Nutriție echilibrată",
+    categoryEn: "Balanced nutrition",
     titleRo: "Nutriție echilibrată",
     titleEn: "Balanced nutrition",
     excerptRo: "Cum arată în viața reală o alimentație echilibrată — fără cântărit, fără interdicții, cu exemple din bucătăria de zi cu zi.",
     excerptEn: "What balanced eating actually looks like in real life — no weighing, no forbidden foods, with everyday meal examples.",
-    available: true,
   },
   {
     slug: "controlul-greutatii",
     icon: Scale,
+    categoryRo: "Controlul greutății",
+    categoryEn: "Weight control",
     titleRo: "Controlul greutății",
     titleEn: "Weight control",
     excerptRo: "De ce controlul greutății nu este doar despre a mânca mai puțin — și ce influențează cu adevărat cântarul.",
     excerptEn: "Why weight control isn't just about eating less — and what actually influences the scale.",
-    available: true,
+  },
+  {
+    slug: "cata-proteina-am-nevoie",
+    icon: Dumbbell,
+    categoryRo: "Macronutrienți",
+    categoryEn: "Macronutrients",
+    titleRo: "Câtă proteină am nevoie?",
+    titleEn: "How much protein do I need?",
+    excerptRo: "0,8 g/kg corp e reperul cunoscut — dar nu e reperul potrivit pentru toată lumea. Cine are, de regulă, nevoie de mai mult.",
+    excerptEn: "0.8 g/kg is the well-known reference — but it isn't the right one for everyone. Who typically needs more.",
+  },
+  {
+    slug: "cate-calorii-am-nevoie",
+    icon: Flame,
+    categoryRo: "Controlul greutății",
+    categoryEn: "Weight control",
+    titleRo: "Câte calorii am nevoie, de fapt?",
+    titleEn: "How many calories do I actually need?",
+    excerptRo: "Necesarul caloric nu e un număr magic fix — e o estimare construită din mai mulți factori, care se schimbă în timp.",
+    excerptEn: "Caloric need isn't a fixed magic number — it's an estimate built from several factors, and it changes over time.",
+  },
+  {
+    slug: "fibrele-alimentare",
+    icon: Wheat,
+    categoryRo: "Macronutrienți",
+    categoryEn: "Macronutrients",
+    titleRo: "Fibrele alimentare",
+    titleEn: "Dietary fiber",
+    excerptRo: "Cât ai nevoie și de ce nu trebuie să exagerezi — despre trendul „fibermaxxing” de pe rețelele sociale.",
+    excerptEn: "How much you need and why more isn't automatically better — on the \"fibermaxxing\" social media trend.",
   },
 ];
 
@@ -49,8 +81,8 @@ export default function NutriHub() {
       </section>
 
       <section className="py-16 md:py-20">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <div className="grid sm:grid-cols-2 gap-6">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {TOPICS.map((topic, i) => {
               const Icon = topic.icon;
               return (
@@ -69,6 +101,9 @@ export default function NutriHub() {
                     <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-5">
                       <Icon className="w-6 h-6 text-primary" />
                     </div>
+                    <span className="inline-block text-xs font-semibold tracking-wide uppercase text-primary mb-2">
+                      {ro ? topic.categoryRo : topic.categoryEn}
+                    </span>
                     <h2 className="font-serif font-bold text-foreground text-xl mb-2">
                       {ro ? topic.titleRo : topic.titleEn}
                     </h2>

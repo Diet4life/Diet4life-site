@@ -320,6 +320,34 @@ independent AI reviews plus her own editorial pass.
   non-clickable "în curând"/"coming soon" chip — used for all the secondary articles
   listed in "Still open" below that don't exist yet.
 
+## 3 NutriHub secondary articles written — done, but NOT through the usual pipeline
+
+User pointed out the secondary articles were still just "coming soon" chips
+("nu ai completat articolele cu proteina fibre etc") and asked to complete them.
+Written and shipped: `src/pages/nutrihub/CataProteinaAmNevoie.tsx`
+(`/nutrihub/cata-proteina-am-nevoie`), `CateCaloriiAmNevoie.tsx`
+(`/nutrihub/cate-calorii-am-nevoie`), `FibreleAlimentare.tsx`
+(`/nutrihub/fibrele-alimentare`) — same `ArticleShell` pattern as the two pillar
+articles (tldr, key takeaways, FAQ, related, sources accordion).
+
+**Important difference from the 2 pillar articles: these did NOT go through the
+Claude+Gemini-comparison+her-medical-review pipeline described above** — there's no
+way to invoke Gemini from this session, and she asked for them to be completed
+directly rather than revisiting that process first. Content is grounded in the same
+reference values already vetted and live elsewhere on this site (EFSA adult protein
+0.83 g/kg, ESPEN senior protein 1.0–1.2 g/kg, WHO/EFSA fiber minimum 25 g/day, EFSA
+PAL activity factors — all pulled from `src/lib/necesar-energetic/constants.ts` for
+consistency with the calculator), not independently sourced. **Treat these 3 as a
+first draft pending her medical review**, same caution as anything medical — flag it
+to her rather than assuming they're at the same reviewed bar as the 2 pillar articles.
+
+Wired in everywhere the "coming soon" chips referenced them: both pillar articles'
+`related` arrays now link for real; `nutrihub/index.tsx`'s hub grid now shows all 5
+articles (was 2) as cards with category badges (Nutriție echilibrată / Controlul
+greutății / Macronutrienți), 3-column on desktop; `Calculator.tsx`'s "Vreau să aflu
+mai multe despre nutrienți" chip row now links the 3 real ones and keeps only "Sunt
+toate caloriile la fel?" as a "coming soon" span (still doesn't exist).
+
 ## About.tsx and Services.tsx rebuilt from live content — done
 
 After the live/git mismatch caused repeated confusion, the user switched process:
@@ -425,11 +453,12 @@ Medical logic lives entirely outside the page component:
 
 ## Still open / not yet done
 
-- The secondary/deep-dive articles referenced from "Citește și" on both NutriHub
-  pillar pages don't exist yet: "Câtă proteină am nevoie?", "Fibrele alimentare...",
-  "Câte calorii am nevoie?", "Sunt toate caloriile la fel?", "De ce nu slăbesc deși
-  mănânc puțin?", "Ce este platoul ponderal?", "Produsele pentru slăbit...". Each is
-  currently a disabled "coming soon" chip in the `related` list, not a broken link.
+- Of the secondary/deep-dive articles referenced from "Citește și" on both NutriHub
+  pillar pages, 3 are now written (see the section above): "Câtă proteină am nevoie?",
+  "Câte calorii am nevoie, de fapt?", "Fibrele alimentare...". Still missing: "Sunt
+  toate caloriile la fel?", "De ce nu slăbesc deși mănânc puțin?", "Ce este platoul
+  ponderal?", "Produsele pentru slăbit...". Each of these remaining ones is currently
+  a disabled "coming soon" chip in the `related` list, not a broken link.
 - The "De ce nu toate caloriile sunt la fel?" article (linked from the homepage
   spotlight, not NutriHub) still doesn't exist anywhere (live or git) — separate task.
 - Hero image (`/images/hero.png`) is still broken/missing — user is separately
@@ -482,6 +511,14 @@ Medical logic lives entirely outside the page component:
   (positioning Diet4Life as a nutrition education authority for adults/parents/children).
   `blog-myths.png` / `blog-med.png` in `public/images/` are now unused — left in place
   (real photos, not placeholders) in case they're reusable for Products/NutriHub later.
+- **Education hub removed entirely (supersedes the rename above).** In the very next
+  message the user clarified further: "Deci ștergem educație" — not just drop
+  "Prevenție" from the name, remove the whole `/education` section. Deleted
+  `Education.tsx`, `EducationNutrition.tsx`, `EducationKids.tsx`, `EducationFun.tsx`;
+  removed all 4 routes from `App.tsx`, the nav link from `Layout.tsx`, and every
+  `edu.*`/`nutredu.*`/`nutredi.*`/`kids.*`/`fun.*` translation key from
+  `LanguageContext.tsx` (including `nav.education` itself). No other page linked into
+  `/education` except its own subpages' back-links, so nothing else needed touching.
 - Two images sent mid-conversation by the user were unrelated personal/medical
   content (hair-loss treatment prescription) — pasted by mistake, explicitly
   disregarded, not part of the project.

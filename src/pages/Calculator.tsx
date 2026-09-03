@@ -798,14 +798,26 @@ export default function Calculator() {
                   {ro ? "Vreau să aflu mai multe despre nutrienți" : "I want to learn more about nutrients"}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {(ro
-                    ? ["Proteine", "Fibre", "Câte calorii am nevoie?", "Sunt toate caloriile la fel?"]
-                    : ["Protein", "Fiber", "How many calories do I need?", "Are all calories the same?"]
-                  ).map((label) => (
-                    <span key={label} className="text-xs px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
-                      {label} · {ro ? "în curând" : "coming soon"}
-                    </span>
-                  ))}
+                  {[
+                    { ro: "Câtă proteină am nevoie?", en: "How much protein do I need?", href: "/nutrihub/cata-proteina-am-nevoie" },
+                    { ro: "Fibrele alimentare", en: "Dietary fiber", href: "/nutrihub/fibrele-alimentare" },
+                    { ro: "Câte calorii am nevoie, de fapt?", en: "How many calories do I actually need?", href: "/nutrihub/cate-calorii-am-nevoie" },
+                    { ro: "Sunt toate caloriile la fel?", en: "Are all calories the same?", href: undefined },
+                  ].map((item) =>
+                    item.href ? (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      >
+                        {ro ? item.ro : item.en}
+                      </Link>
+                    ) : (
+                      <span key={item.ro} className="text-xs px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
+                        {ro ? item.ro : item.en} · {ro ? "în curând" : "coming soon"}
+                      </span>
+                    )
+                  )}
                 </div>
               </div>
             </div>

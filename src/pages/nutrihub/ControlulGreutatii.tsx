@@ -64,10 +64,10 @@ export default function ControlulGreutatii() {
       ]}
       related={[
         { label: "Nutriție echilibrată: cum arată în viața reală?", href: "/nutrihub/nutritie-echilibrata" },
-        { label: "Câte calorii am nevoie?" },
+        { label: "Câte calorii am nevoie, de fapt?", href: "/nutrihub/cate-calorii-am-nevoie" },
         { label: "Sunt toate caloriile la fel?" },
-        { label: "Câtă proteină am nevoie?" },
-        { label: "Fibrele alimentare: cât avem nevoie și de unde le luăm?" },
+        { label: "Câtă proteină am nevoie?", href: "/nutrihub/cata-proteina-am-nevoie" },
+        { label: "Fibrele alimentare: cât ai nevoie și de ce nu trebuie să exagerezi", href: "/nutrihub/fibrele-alimentare" },
         { label: "De ce nu slăbesc deși mănânc puțin?" },
         { label: "Ce este platoul ponderal?" },
         { label: "Produsele pentru slăbit: ce se întâmplă după ce nu le mai folosești?" },

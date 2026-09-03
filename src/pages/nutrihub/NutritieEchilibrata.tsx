@@ -60,8 +60,9 @@ export default function NutritieEchilibrata() {
       ]}
       related={[
         { label: "Controlul greutății: de ce nu este doar despre a mânca mai puțin", href: "/nutrihub/controlul-greutatii" },
-        { label: "Câtă proteină am nevoie?" },
-        { label: "Fibrele alimentare: cât avem nevoie și de unde le luăm?" },
+        { label: "Câtă proteină am nevoie?", href: "/nutrihub/cata-proteina-am-nevoie" },
+        { label: "Fibrele alimentare: cât ai nevoie și de ce nu trebuie să exagerezi", href: "/nutrihub/fibrele-alimentare" },
+        { label: "Câte calorii am nevoie, de fapt?", href: "/nutrihub/cate-calorii-am-nevoie" },
         { label: "Sunt toate caloriile la fel?" },
       ]}
       sources="Articol bazat pe recomandări și principii actuale privind alimentația sănătoasă formulate de Organizația Mondială a Sănătății și pe modele internaționale de educație nutrițională. Sursele științifice complete pot fi consultate în secțiunea dedicată referințelor."
