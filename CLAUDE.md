@@ -435,6 +435,17 @@ Medical logic lives entirely outside the page component:
 - Hero image (`/images/hero.png`) is still broken/missing — user is separately
   regenerating it with an AI image tool; reused the same path so it'll pick up
   automatically once they drop the file in.
+- **Products page — new adult content line, not yet scoped or built.** User wants to
+  add, for adults: mini-ghiduri (mini-guides) and possibly digital rețete (recipes),
+  plus "cărțile lui Nutri" (Nutri's books). "Nutri" does not exist anywhere in this
+  codebase yet — no character, no copy, no assets — this is a new concept she's
+  introducing, not something pulled from the live site. She explicitly said *she*
+  still needs to write the Nutri backstory ("aici treb sa scriu ceva despre povestea
+  lui Nutri") — don't invent that backstory or any Nutri copy/character details;
+  wait for her text, same reasoning as the About credentials and Services pricing
+  earlier this session. Note this is a different thing from the homepage's excluded
+  "Cărți și resurse pentru copii" section (see Homepage rebuild status below) — that
+  one was explicitly cut; this Nutri/Products idea is a fresh ask, unrelated.
 
 ## Content policy decided this session
 
@@ -456,9 +467,21 @@ Medical logic lives entirely outside the page component:
   rather than maintain it as a second, unreviewed education track. Adjusted the
   now-3-category hub copy accordingly ("Trei domenii esențiale...", article-count stat
   35+→26+, and the "Prevenție activă" bullet swapped for "Sfaturi practice"/lightbulb
-  icon). Note: the *hub's own name* stays "Educație & Prevenție" (`nav.education`,
-  `edu.hero.title`, `edu.backhub`) — that's the section's general nav label, distinct
-  from the specific subpage that was removed, and wasn't touched.
+  icon). At the time, the *hub's own name* stayed "Educație & Prevenție" (`nav.education`,
+  `edu.hero.title`, `edu.backhub`) since that was the section's general nav label, distinct
+  from the specific subpage that was removed.
+- **Blog section removed entirely, and "Prevenție" dropped from the Education hub's
+  name too — both per explicit user instruction this session** ("sa scoatem secțiunea
+  blog, prevenție"). `Blog.tsx` deleted; `/blog` route, its nav link, and the `nav.blog`
+  translation key all removed. Separately, now that the "Prevenție & Stil de Viață"
+  subpage no longer exists (see above), the user wants the *hub label itself* to stop
+  implying a prevention track: `nav.education`, `edu.hero.title`, and `edu.backhub` are
+  now just "Educație" / "Education" (was "Educație & Prevenție" / "Education &
+  Prevention"), and `edu.intro.text`'s opening sentence was reworded to drop its
+  "Prevenția este mai eficientă..." framing while keeping the rest of the paragraph
+  (positioning Diet4Life as a nutrition education authority for adults/parents/children).
+  `blog-myths.png` / `blog-med.png` in `public/images/` are now unused — left in place
+  (real photos, not placeholders) in case they're reusable for Products/NutriHub later.
 - Two images sent mid-conversation by the user were unrelated personal/medical
   content (hair-loss treatment prescription) — pasted by mistake, explicitly
   disregarded, not part of the project.

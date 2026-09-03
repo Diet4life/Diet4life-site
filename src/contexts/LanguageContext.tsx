@@ -16,21 +16,20 @@ const translations: Translations = {
   "nav.services": { ro: "Servicii", en: "Services" },
   "nav.nutrihub": { ro: "NutriHub", en: "NutriHub" },
   "nav.calculator": { ro: "Calculator", en: "Calculator" },
-  "nav.blog": { ro: "Blog", en: "Blog" },
   "nav.products": { ro: "Produse", en: "Products" },
-  "nav.education": { ro: "Educație & Prevenție", en: "Education & Prevention" },
+  "nav.education": { ro: "Educație", en: "Education" },
   "nav.contact": { ro: "Contact", en: "Contact" },
 
   // Education Hub
-  "edu.hero.title": { ro: "Educație & Prevenție", en: "Education & Prevention" },
+  "edu.hero.title": { ro: "Educație", en: "Education" },
   "edu.hero.subtitle": {
     ro: "Cunoașterea este primul pas spre o viață sănătoasă. Explorați resursele noastre educaționale bazate pe dovezi științifice, concepute pentru adulți și copii deopotrivă.",
     en: "Knowledge is the first step toward a healthy life. Explore our evidence-based educational resources, designed for adults and children alike."
   },
   "edu.intro.title": { ro: "De ce contează educația nutrițională?", en: "Why does nutrition education matter?" },
   "edu.intro.text": {
-    ro: "Prevenția este mai eficientă și mai accesibilă decât tratamentul. Prin înțelegerea principiilor nutriției, fiecare persoană poate lua decizii mai bune pentru sănătatea sa pe termen lung. Diet4Life Concept se poziționează ca un centru de autoritate medicală și educațională în nutriție — pentru adulți, părinți și copii.",
-    en: "Prevention is more effective and accessible than treatment. By understanding nutrition principles, every person can make better decisions for their long-term health. Diet4Life Concept positions itself as a center of medical and educational authority in nutrition — for adults, parents, and children."
+    ro: "Înțelegerea principiilor nutriției te ajută să iei decizii mai bune pentru sănătatea ta pe termen lung. Diet4Life Concept se poziționează ca un centru de autoritate medicală și educațională în nutriție — pentru adulți, părinți și copii.",
+    en: "Understanding nutrition principles helps you make better decisions for your long-term health. Diet4Life Concept positions itself as a center of medical and educational authority in nutrition — for adults, parents, and children."
   },
   "edu.card.nutredu.title": { ro: "Educație Nutrițională", en: "Nutrition Education" },
   "edu.card.nutredu.desc": { ro: "Principii de bază, macronutrienți, ghiduri pentru adulți", en: "Basic principles, macronutrients, adult guides" },
@@ -45,7 +44,7 @@ const translations: Translations = {
   "edu.badge.guide": { ro: "Ghid", en: "Guide" },
   "edu.badge.new": { ro: "Nou", en: "New" },
   "edu.readmore": { ro: "Citește mai mult", en: "Read more" },
-  "edu.backhub": { ro: "Înapoi la Educație & Prevenție", en: "Back to Education & Prevention" },
+  "edu.backhub": { ro: "Înapoi la Educație", en: "Back to Education" },
   "edu.stats.articles": { ro: "Articole educaționale", en: "Educational articles" },
   "edu.stats.guides": { ro: "Ghiduri descărcabile", en: "Downloadable guides" },
   "edu.stats.patients": { ro: "Pacienți educați", en: "Educated patients" },
