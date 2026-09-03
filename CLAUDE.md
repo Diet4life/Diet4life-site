@@ -311,10 +311,7 @@ independent AI reviews plus her own editorial pass.
   chip row under the bio — "Managementul Greutății", "Nutriție Sportivă",
   "Sănătate Femeii" — that the user called out as made-up ("prostiile alea"),
   same category of placeholder as the wrong name/portrait. Deleted outright,
-  not replaced. She separately flagged that the live site's "Despre Mine" page
-  has a real consultation-packages section that doesn't exist in git at all —
-  **still open**, needs a screenshot from her to rebuild accurately (same
-  process as NutriHub/homepage).
+  not replaced.
 - **Romanian-only for now.** Both article pages check `language`; if not `"ro"`, they
   render a short "this article is only available in Romanian" notice instead of the
   article, rather than machine-translating unreviewed medical content. Fix once real
@@ -322,6 +319,56 @@ independent AI reviews plus her own editorial pass.
 - Related-article links without an `href` in the `related` array render as a
   non-clickable "în curând"/"coming soon" chip — used for all the secondary articles
   listed in "Still open" below that don't exist yet.
+
+## About.tsx and Services.tsx rebuilt from live content — done
+
+After the live/git mismatch caused repeated confusion, the user switched process:
+she photographed every live page and pasted the exact text for the pages that still
+needed it (About, Services), rather than more back-and-forth guessing. Both pages
+are now rebuilt from that verbatim text, with one deliberate edit applied to both:
+
+- **Bariatric content excluded from both, per explicit re-confirmation this
+  session.** Live About mentions "pacienți aflați după operație bariatrică" in the
+  opening bio line, and live Services has a full "Pacienți bariatrici" section
+  naming an external surgeon ("Dr. Dejeu") to collaborate with. Both directly
+  contradict the standing site-wide policy (see "Content policy decided this
+  session" below) of excluding all bariatric content until a partnership agreement
+  exists. Asked the user explicitly (exclude entirely / include without the doctor's
+  name / include as-is) — she chose **exclude entirely**. Applied by dropping the
+  bariatric clause from the About bio paragraph (kept the surrounding sentence about
+  working with obesity, which is not bariatric-surgery-specific) and omitting the
+  "Pacienți bariatrici" section from Services outright — not softened, not
+  anonymized, not present.
+- **Live shows "Camelia Mandiuc" on About; kept as "Camelia Amuza" everywhere.**
+  The pasted live text itself says "Camelia Mandiuc" — same wrong-name issue
+  identified earlier this session and already resolved (user confirmed "Amuza" is
+  correct). Did not carry the live typo/error back into git.
+- `About.tsx` now has, in order: hero (portrait + name + bio, bariatric clause
+  removed), "Ce am învățat din practică", a 2-column `Studii și formare` /
+  `Implicare profesională` card row (Master + Licență both from UMF „Victor Babeș"
+  Timișoara, ESPEN + Colegiul Dieteticienilor Timiș + Comisia de creditare EMCD
+  memberships), "De ce Diet4Life Concept", "Filozofia mea", and a "Hai să ne
+  cunoaștem" CTA button linking to `/contact`. All sections are the user's own
+  pasted text (translated to English for the `en` branch of each string), not
+  invented — do not add unverified credentials/affiliations to this page without
+  her providing the exact text first, same reasoning as the bariatric exclusion.
+- `Services.tsx` **fully replaced** the old generic 2-service accordion (Consultație
+  personalizată / Program de slăbire — no real pricing, placeholder AI-site-builder
+  copy) with the real live pricing: Consultație de nutriție 300 lei, Ghidaj WhatsApp
+  pe 7 zile 150 lei (with its 4-step "Cum funcționează" and the "nu înlocuiește o
+  consultație completă" caveat), and 3 Pachete cards (Start 450/500 lei·4 săpt.,
+  Echilibru 750/850 lei·8 săpt. — marked "Recomandat", Transformare 950/1100
+  lei·12 săpt.), each with its real feature list and strikethrough original price.
+  CTA links all point to `/contact`, matching the live site exactly (the WhatsApp
+  card's CTA literally says "Începe cu jurnalul" but links to `/contact`, not
+  `/consultatii` — kept faithful to live rather than "fixed", since this is a
+  reconciliation task, not a redesign).
+- Verified with `tsc --noEmit` (clean, same pre-existing `ImportMeta.env` error
+  only), `npm run build`, and Playwright screenshots of both pages at 1280px
+  (scrolled through to trigger `whileInView` — a full-page screenshot taken without
+  scrolling shows blank gaps where those sections haven't animated in yet; that's a
+  screenshot-timing artifact, not a real rendering bug, confirmed by checking the
+  DOM content and re-shooting with scroll).
 
 ## "De cât am nevoie?" calculator — done, replaces the old `/calculator`
 
