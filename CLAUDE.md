@@ -79,6 +79,19 @@ CloudFront, or basically anything outside the allowlist** (verified: `curl` to
 from this environment — screenshots from the user are the only way to see it.**
 Don't re-attempt fetching it; ask for a screenshot instead.
 
+**This also blocks deploying from here, not just viewing.** Tried the
+`mcp__Netlify__netlify-deploy-services-updater` (`deploy-site`) tool to make a
+draft/preview deploy (explicitly requested by the user: "doar un preview, fără
+să ating main") — it hands back an `npx -y @netlify/mcp@latest --proxy-path
+https://netlify-mcp.netlify.app/...` command to run locally. Running it fails
+the same way: `CONNECT tunnel failed, response 403` to `netlify-mcp.netlify.app`
+— confirmed directly with a plain `curl -v` CONNECT to that host, same error.
+Any `*.netlify.app` host is unreachable from this sandbox, deploy proxy included.
+**Don't re-attempt any Netlify deploy from this environment — it cannot work.**
+If the user wants a preview without touching `main`, she needs to either run
+`netlify deploy` (no `--prod`) herself locally, or open a PR from the working
+branch on GitHub if Netlify's Deploy Previews are enabled for this site.
+
 ## The live-site vs. git-repo mismatch
 
 The Netlify project (`diet4life`, site id `fb46b783-0032-4b51-971b-b255c590f8b8`)
