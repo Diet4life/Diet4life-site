@@ -34,8 +34,6 @@ const translations: Translations = {
   },
   "edu.card.nutredu.title": { ro: "Educație Nutrițională", en: "Nutrition Education" },
   "edu.card.nutredu.desc": { ro: "Principii de bază, macronutrienți, ghiduri pentru adulți", en: "Basic principles, macronutrients, adult guides" },
-  "edu.card.prevention.title": { ro: "Prevenție & Stil de Viață", en: "Prevention & Lifestyle" },
-  "edu.card.prevention.desc": { ro: "Sănătate metabolică, obezitate, obiceiuri durabile", en: "Metabolic health, obesity prevention, lasting habits" },
   "edu.card.kids.title": { ro: "Nutriție pentru Copii", en: "Kids Nutrition" },
   "edu.card.kids.desc": { ro: "Ghiduri pentru părinți, idei de mese, sfaturi practice", en: "Parent guides, meal ideas, practical tips" },
   "edu.card.fun.title": { ro: "Învățare prin Joc", en: "Learning & Fun" },
@@ -59,10 +57,6 @@ const translations: Translations = {
     ro: "Educația nutrițională este fundamentul oricărei schimbări durabile. Înțelegând cum funcționează alimentele în corpul nostru, putem face alegeri mai bune în fiecare zi.",
     en: "Nutrition education is the foundation of any lasting change. By understanding how food works in our bodies, we can make better choices every day."
   },
-
-  // Prevention sub-page
-  "prev.title": { ro: "Prevenție & Stil de Viață", en: "Prevention & Lifestyle" },
-  "prev.subtitle": { ro: "Investește în sănătatea ta de azi pentru un viitor mai bun", en: "Invest in your health today for a better tomorrow" },
 
   // Kids sub-page
   "kids.title": { ro: "Nutriție pentru Copii", en: "Kids Nutrition" },

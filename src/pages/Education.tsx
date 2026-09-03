@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   BookOpen,
-  ShieldCheck,
   Baby,
   Gamepad2,
   ArrowRight,
@@ -15,6 +14,7 @@ import {
   CalendarCheck,
   Download,
   HeartHandshake,
+  Lightbulb,
 } from "lucide-react";
 
 const fadeUp = {
@@ -37,17 +37,6 @@ const subcategories = [
     descKey: "edu.card.nutredu.desc",
     badge: { ro: "Adulți", en: "Adults" },
     articles: 12,
-  },
-  {
-    href: "/education/prevention",
-    icon: ShieldCheck,
-    color: "bg-accent/10 text-accent",
-    border: "border-accent/20 hover:border-accent/50",
-    badgeColor: "bg-accent/10 text-accent",
-    titleKey: "edu.card.prevention.title",
-    descKey: "edu.card.prevention.desc",
-    badge: { ro: "Sănătate", en: "Health" },
-    articles: 9,
   },
   {
     href: "/education/kids",
@@ -74,7 +63,7 @@ const subcategories = [
 ];
 
 const stats = [
-  { icon: FileText, valueKey: "35+", labelKey: "edu.stats.articles" },
+  { icon: FileText, valueKey: "26+", labelKey: "edu.stats.articles" },
   { icon: Download, valueKey: "12", labelKey: "edu.stats.guides" },
   { icon: Users, valueKey: "2,400+", labelKey: "edu.stats.patients" },
 ];
@@ -171,7 +160,7 @@ export default function Education() {
           <div className="grid grid-cols-2 gap-4">
             {[
               { icon: BookOpen, label: { ro: "Bazat pe dovezi", en: "Evidence-based" } },
-              { icon: ShieldCheck, label: { ro: "Prevenție activă", en: "Active prevention" } },
+              { icon: Lightbulb, label: { ro: "Sfaturi practice", en: "Practical tips" } },
               { icon: Baby, label: { ro: "Conținut pentru copii", en: "Content for children" } },
               { icon: Sparkles, label: { ro: "Scalabil spre Academie", en: "Scalable Academy" } },
             ].map((item, i) => (
@@ -204,8 +193,8 @@ export default function Education() {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             {language === "ro"
-              ? "Patru domenii esențiale pentru o nutriție completă și o viață sănătoasă."
-              : "Four essential areas for complete nutrition and a healthy life."}
+              ? "Trei domenii esențiale pentru o nutriție completă și o viață sănătoasă."
+              : "Three essential areas for complete nutrition and a healthy life."}
           </motion.p>
           <div className="grid sm:grid-cols-2 gap-6">
             {subcategories.map((cat, i) => (

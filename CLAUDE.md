@@ -325,6 +325,19 @@ independent AI reviews plus her own editorial pass.
   site (e.g. the "Nutriție bariatrică" NutriHub card above).
 - **Recipes section: removed from git** (route, nav link, page, translation key).
   Still appears live because that hasn't been redeployed yet — expected, not a bug.
+- **Education → "Prevenție & Stil de Viață" subpage: removed** (`EducationPrevention.tsx`
+  deleted; route, card in `Education.tsx`'s hub grid, and `prev.*`/`edu.card.prevention.*`
+  translation keys all removed). Same reasoning as Recipes and bariatric content: it was
+  thin placeholder-card content (5 excerpt-only cards, no real articles behind them,
+  nothing reviewed) duplicating ground NutriHub now covers properly (obesity/metabolic
+  health overlaps with the "Controlul greutății" pillar article). Decision: fold future
+  prevention content into NutriHub via the same Claude+Gemini+medical-review pipeline,
+  rather than maintain it as a second, unreviewed education track. Adjusted the
+  now-3-category hub copy accordingly ("Trei domenii esențiale...", article-count stat
+  35+→26+, and the "Prevenție activă" bullet swapped for "Sfaturi practice"/lightbulb
+  icon). Note: the *hub's own name* stays "Educație & Prevenție" (`nav.education`,
+  `edu.hero.title`, `edu.backhub`) — that's the section's general nav label, distinct
+  from the specific subpage that was removed, and wasn't touched.
 - Two images sent mid-conversation by the user were unrelated personal/medical
   content (hair-loss treatment prescription) — pasted by mistake, explicitly
   disregarded, not part of the project.

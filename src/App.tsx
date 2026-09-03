@@ -17,7 +17,6 @@ import Products from "@/pages/Products";
 import Contact from "@/pages/Contact";
 import Education from "@/pages/Education";
 import EducationNutrition from "@/pages/EducationNutrition";
-import EducationPrevention from "@/pages/EducationPrevention";
 import EducationKids from "@/pages/EducationKids";
 import EducationFun from "@/pages/EducationFun";
 import Consultatii from "@/pages/Consultatii";
@@ -41,7 +40,6 @@ function Router() {
         <Route path="/contact" component={Contact} />
         <Route path="/education" component={Education} />
         <Route path="/education/nutrition" component={EducationNutrition} />
-        <Route path="/education/prevention" component={EducationPrevention} />
         <Route path="/education/kids" component={EducationKids} />
         <Route path="/education/fun" component={EducationFun} />
         <Route path="/consultatii" component={Consultatii} />
