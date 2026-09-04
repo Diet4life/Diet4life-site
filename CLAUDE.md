@@ -597,17 +597,13 @@ tone. Applied in `Contact.tsx`:
 - Hero image (`/images/hero.png`) is still broken/missing — user is separately
   regenerating it with an AI image tool; reused the same path so it'll pick up
   automatically once they drop the file in.
-- **Products page — new adult content line, not yet scoped or built.** User wants to
-  add, for adults: mini-ghiduri (mini-guides) and possibly digital rețete (recipes),
-  plus "cărțile lui Nutri" (Nutri's books). "Nutri" does not exist anywhere in this
-  codebase yet — no character, no copy, no assets — this is a new concept she's
-  introducing, not something pulled from the live site. She explicitly said *she*
-  still needs to write the Nutri backstory ("aici treb sa scriu ceva despre povestea
-  lui Nutri") — don't invent that backstory or any Nutri copy/character details;
-  wait for her text, same reasoning as the About credentials and Services pricing
-  earlier this session. Note this is a different thing from the homepage's excluded
-  "Cărți și resurse pentru copii" section (see Homepage rebuild status below) — that
-  one was explicitly cut; this Nutri/Products idea is a fresh ask, unrelated.
+- **"Nutri pentru copii" — done, see the dedicated section below.** She came back
+  with the full backstory/spec herself, as promised, so this is no longer open.
+- **Products page ("cărțile lui Nutri" / mini-ghiduri / rețete digitale on
+  `/products`) — still not scoped or built.** The `/nutri-pentru-copii` page has
+  its own self-contained "Explorează lumea lui Nutri" products grid (see below),
+  which may or may not end up being the same thing as whatever she eventually
+  wants on `/products` — ask before merging the two rather than assuming.
 
 ## Content policy decided this session
 
@@ -701,6 +697,76 @@ an isolated logo file, so the two variants had to be extracted:
 - Verified with `tsc --noEmit` (clean, same pre-existing `ImportMeta.env` error
   only), `npm run build`, and Playwright screenshots of the header (desktop 1280px
   and mobile 390px) and footer.
+
+## "Nutri pentru copii" — new section — done
+
+User came back with a full, detailed spec for this (source of truth for wording/
+structure, same as the calculator specs — implemented essentially verbatim, not
+paraphrased) plus the official Nutri character image (an owl mascot with glasses
+and a green scarf, next to a plate of colorful produce). Per her instruction the
+image is an **official asset — not to be regenerated, redrawn, or cropped**;
+saved byte-for-byte as provided.
+
+**New:**
+- `public/images/nutri-hero.png` — the provided image, untouched (1672×941,
+  ~1.4MB — not compressed either, same "don't modify" reasoning; flag to her if
+  load time ever becomes a concern).
+- `src/pages/NutriPentruCopii.tsx` — new page at **`/nutri-pentru-copii`**: hero →
+  "De ce am creat Nutri" (her personal story, with a "Nu cu.../Ci cu..." visual
+  contrast block) → 5 "Ce învață copiii" cards → "Filosofia Nutri" (4 questions +
+  central message) → products grid (`NUTRI_PRODUCTS` array — 4 items now, The
+  Rainbow Plate / Understanding Nutrients with Nutri ("În curând" badge) / Food
+  Play Kit / Visual Meal Planner, add more by extending the array) → "Și pentru
+  părinți" → final CTA that scrolls back to the products grid. Copy is bilingual
+  (`ro ? ... : ...`) like every other page — spec text was RO-only, so the EN
+  side is my translation, not hers.
+- `src/hooks/use-document-head.ts` — new, small: sets `document.title` and the
+  `<meta name="description">` tag on mount, restores the previous values on
+  unmount. The site has no per-page SEO mechanism at all (no react-helmet, no
+  SSR) — this is the first one, added specifically because the spec asked for a
+  page title/description. It only affects the client-side tab/meta tag, not
+  what a non-JS crawler sees (that's still whatever `index.html` has statically)
+  — flag this limitation to her if SEO for this specific page matters a lot.
+- `Home.tsx` — new section **between "Explorează pe subiecte" (NutriHub) and
+  "Aplică în viața reală"**: eyebrow "Pentru cei mici", title "Descoperă lumea
+  lui Nutri", 2 paragraphs, highlight pill, CTA button → `/nutri-pentru-copii`,
+  small "Cărți • Activități • Jocuri • Resurse pentru părinți" line, and
+  `nutri-hero.png` on the right (desktop) / below (mobile) via a standard
+  `lg:grid-cols-2` split, same pattern as the page's own hero section.
+- `Layout.tsx` / `LanguageContext.tsx` — new nav link "Nutri pentru copii"
+  (`nav.nutriKids`), placed right after NutriHub in the nav order (both are
+  educational-content sections) and before Calculator/Products/Consultații.
+  **NutriHub itself was not touched or renamed**, per her explicit instruction —
+  the two are separate destinations.
+- `App.tsx` — new route.
+
+**Design notes:**
+- Used `bg-amber-50` (Tailwind's built-in warm-cream token, close to the image's
+  own ~`#FEF8E1` background) for the Nutri section/page backgrounds, kept
+  `text-primary`/`bg-primary` (the site's existing green) for every accent —
+  no new colors introduced. Turned out the image's own cream background reads
+  as almost the same tone as `amber-50`, so on both the homepage and the full
+  page the owl and the plate visually float on the section background rather
+  than sitting in an obvious image box — not planned, just a good coincidence
+  worth knowing about if the section background color ever changes.
+- The provided image already contains both the owl (left) and the plate
+  (right) side by side, with a wide empty gap between them — it reads as a
+  single wide banner graphic, not a "character on transparent background" cutout.
+  Spec called for a 2-column "text left / image right" layout, so that's what's
+  built (image scaled to fit the right column, `object-contain`-style, no
+  cropping) — but because of how the source image is composed, the owl and the
+  plate end up fairly small within that column on desktop. Flagged to her as
+  worth a look; if she'd rather it read as one full-width banner instead of a
+  half-width column image, or if she can provide the owl and the plate as two
+  separate assets, either is a quick follow-up.
+- Nothing else was touched — NutriHub copy, the calculator, Services, and every
+  other unrelated page/component are untouched, per her explicit "foarte
+  important" instruction in the spec.
+- Verified with `tsc --noEmit` (clean, same pre-existing error only), `npm run
+  build`, `npx vitest run` (41/41 unrelated tests still pass — nothing shared
+  was touched), and Playwright screenshots of the homepage section and the full
+  page at both 1280px and 390px, plus a direct check that the document title/
+  meta description actually change when the page mounts.
 
 ## Site images
 
