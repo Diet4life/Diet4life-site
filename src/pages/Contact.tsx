@@ -1,6 +1,6 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
-import { Phone, Mail, Clock, Video } from "lucide-react";
+import { Phone, Mail, Handshake, Video } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -210,16 +210,20 @@ export default function Contact() {
               {/* Program */}
               <div className="flex items-center gap-4 rounded-xl p-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <Clock className="w-5 h-5" />
+                  <Handshake className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
-                    {language === 'ro' ? 'Program' : 'Working hours'}
+                    {language === 'ro' ? 'Program' : 'Schedule'}
                   </p>
                   <p className="text-base font-semibold text-foreground">
-                    {language === 'ro' ? 'Luni – Vineri' : 'Monday – Friday'}
+                    {language === 'ro' ? 'Stabilit de comun acord' : 'Set by mutual agreement'}
                   </p>
-                  <p className="text-sm text-muted-foreground">09:00 – 18:00</p>
+                  <p className="text-sm text-muted-foreground">
+                    {language === 'ro'
+                      ? 'Fiind totul online, găsim împreună un interval potrivit pentru tine.'
+                      : "Since everything is online, we'll find a time that works for you together."}
+                  </p>
                 </div>
               </div>
 
@@ -238,11 +242,11 @@ export default function Contact() {
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                   {language === 'ro'
-                    ? 'Toate consultațiile se desfășoară online, prin Zoom sau Google Meet — poți participa de oriunde, fără deplasare.'
-                    : 'All consultations take place online, via Zoom or Google Meet — you can join from anywhere, no travel needed.'}
+                    ? 'Toate consultațiile se desfășoară online — prin Zoom, Google Meet sau WhatsApp, în funcție de ce ți se potrivește mai bine. Poți participa de oriunde, fără deplasare.'
+                    : "All consultations take place online — via Zoom, Google Meet or WhatsApp, whichever suits you best. You can join from anywhere, no travel needed."}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {['Zoom', 'Google Meet'].map(platform => (
+                  {['Zoom', 'Google Meet', 'WhatsApp'].map(platform => (
                     <span key={platform} className="text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">
                       {platform}
                     </span>

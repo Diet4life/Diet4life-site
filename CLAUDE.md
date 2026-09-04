@@ -550,13 +550,27 @@ worth catching now since they were being touched anyway:
   sau online**"; now just "...online." The "Consultații Online" card also implied
   online was an *alternative* to an in-person option ("Ideal dacă ești în altă
   localitate sau preferi confortul de acasă") — reworded to state plainly that
-  every consultation is online ("Toate consultațiile se desfășoară online, prin
-  Zoom sau Google Meet — poți participa de oriunde, fără deplasare"), since there
-  is no in-person option to compare against.
+  every consultation is online, since there is no in-person option to compare
+  against.
 - Confirmed clean otherwise: no address/map on the site, no "cabinet" references
   anywhere in `src/`. The remaining "clinică"/"Clinical Nutrition" hits are
   legitimate academic/institutional terms (About.tsx's "Master, Nutriție
   Clinică" degree name, ESPEN's full English name) — left untouched.
+
+**Follow-up in the same spirit — the "Program" block still implied fixed clinic
+hours.** User asked to drop the Luni–Vineri 09:00–18:00 block (scheduling is by
+mutual agreement, not office hours) and to have the online-consultation card name
+the actual platforms patients can use, not just Zoom/Google Meet — she explicitly
+mentioned WhatsApp. Asked me to propose the exact wording before implementing
+(gave 2 draft sentences), she approved with one steer: match the site's existing
+tone. Applied in `Contact.tsx`:
+- "Program" card: icon swapped `Clock` → `Handshake`; text now "Stabilit de comun
+  acord" / "Fiind totul online, găsim împreună un interval potrivit pentru tine."
+  — no more fixed hours anywhere on the page.
+- "Consultații Online" card: text now names all 3 channels ("Toate consultațiile
+  se desfășoară online — prin Zoom, Google Meet sau WhatsApp, în funcție de ce ți
+  se potrivește mai bine..."), platform badges list is now `['Zoom', 'Google
+  Meet', 'WhatsApp']` (was just the first two).
 - Verified with `tsc --noEmit` (clean, same pre-existing error only), `npm run
   build`, and Playwright screenshots of `/contact` and the footer.
 
