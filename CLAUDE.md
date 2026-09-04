@@ -768,6 +768,46 @@ saved byte-for-byte as provided.
   page at both 1280px and 390px, plus a direct check that the document title/
   meta description actually change when the page mounts.
 
+**Follow-up round — homepage-only visual polish on the Nutri section.** User sent
+a scoped adjustments list (Home only, exact same section position, don't touch
+NutriHub/Calculator/Products/Consultatii/footer/other copy/section order — all
+respected). Changes, all in `Home.tsx`'s Nutri section only:
+- **Image**: grid changed from an even `lg:grid-cols-2` split to
+  `lg:grid-cols-[1fr_1.2fr]` (text/image), giving the image column — and so the
+  whole `nutri-hero.png`, scaled as one piece — more room without cropping
+  anything. **First attempt used a `lg:-mr-6 xl:-mr-10` negative margin to push
+  the image further right for extra size, which caused a real 10px horizontal
+  overflow on the page (`scrollWidth` 1290 vs `clientWidth` 1280, confirmed via
+  a Playwright check) — removed it immediately, verified overflow is gone
+  (1280/1280) before screenshotting again.** Because the owl and the plate are
+  one merged image (see above — still true, still can't be resized
+  independently without cropping or new assets), this grid-ratio change is the
+  ceiling of what "make Nutri bigger" can do without violating her "don't crop"
+  instruction; said so plainly rather than overclaiming the owl now has more
+  visual weight than the plate specifically.
+- **Body text**: `text-muted-foreground leading-relaxed space-y-4` →
+  `text-base md:text-lg ... leading-relaxed space-y-5` (was relying on the
+  browser default size with no explicit class before).
+- **"Pentru cei mici" badge**: `bg-primary/10` → `bg-primary/15` plus a
+  `border-primary/20` outline, `font-semibold` → `font-bold`, for the requested
+  contrast bump.
+- **Highlight pill** ("Fără presiune..."): padding `px-4 py-2` → `px-5 py-3`,
+  `font-medium` → `font-semibold` — same colors/radius as before (already pale
+  primary/10 background, primary-colored text), just more present, not turned
+  into a loud banner.
+- **CTA button**: added an explicit `focus-visible:ring-2 focus-visible:ring-
+  primary/40` (it had none before — hover/active states were already there and
+  already matched sibling homepage CTAs); left size/color/copy unchanged, it
+  already met the ask.
+- **Main hero image placeholder and "Explorează pe subiecte"**: left completely
+  untouched. The hero's image container already was `object-cover` +
+  `aspect-square` + `rounded-3xl overflow-hidden`, i.e. already exactly what she
+  asked for ("prepare it for a future cover image, don't change the layout") —
+  confirmed via reading the code, no edit needed. The 2-card NutriHub teaser
+  grid (`sm:grid-cols-2 max-w-2xl mx-auto`) already reads as deliberately built
+  for 2 cards, not as a broken 3-card grid — confirmed via screenshot, also no
+  edit needed.
+
 ## Site images
 
 `public/images/` now exists with 3 of the 4 missing files, added this session:
