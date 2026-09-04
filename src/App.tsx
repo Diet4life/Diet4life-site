@@ -22,6 +22,10 @@ import CataProteinaAmNevoie from "@/pages/nutrihub/CataProteinaAmNevoie";
 import CateCaloriiAmNevoie from "@/pages/nutrihub/CateCaloriiAmNevoie";
 import FibreleAlimentare from "@/pages/nutrihub/FibreleAlimentare";
 import NutriPentruCopii from "@/pages/NutriPentruCopii";
+import Checkout from "@/pages/Checkout";
+import CheckoutReturn from "@/pages/CheckoutReturn";
+import Termeni from "@/pages/Termeni";
+import Confidentialitate from "@/pages/Confidentialitate";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +48,10 @@ function Router() {
         <Route path="/nutrihub/cate-calorii-am-nevoie" component={CateCaloriiAmNevoie} />
         <Route path="/nutrihub/fibrele-alimentare" component={FibreleAlimentare} />
         <Route path="/nutri-pentru-copii" component={NutriPentruCopii} />
+        <Route path="/checkout/retur" component={CheckoutReturn} />
+        <Route path="/checkout/:slug" component={Checkout} />
+        <Route path="/termeni" component={Termeni} />
+        <Route path="/confidentialitate" component={Confidentialitate} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
