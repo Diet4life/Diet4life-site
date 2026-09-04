@@ -19,9 +19,9 @@ import {
 } from "lucide-react";
 
 const quickQuestions = [
-  { icon: Clock, ro: "Fructele seara îngrașă?", en: "Do fruits at night make you gain weight?" },
+  { icon: Clock, ro: "De ce nu slăbesc deși mănânc puțin?", en: "Why am I not losing weight even though I eat little?" },
   { icon: Minus, ro: "Sunt toate caloriile la fel?", en: "Are all calories the same?" },
-  { icon: Heart, ro: "De ce mi-e foame", en: "Why am I hungry" },
+  { icon: Heart, ro: "Cum arată o masă echilibrată?", en: "What does a balanced meal look like?" },
 ];
 
 const nutriHubTopics = [
@@ -87,7 +87,7 @@ export default function Home() {
                     key={i}
                     type="button"
                     onClick={() => setSearch(ro ? q.ro : q.en)}
-                    className="min-h-11 lg:min-h-[42px] flex items-center gap-2 px-3 py-2.5 lg:px-[14px] rounded-xl border border-border bg-background hover:border-orange-300 hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 transition-all text-left"
+                    className={`${i === 0 ? "col-span-2" : ""} min-h-11 lg:min-h-[42px] flex items-center gap-2 px-3 py-2.5 lg:px-[14px] rounded-xl border border-border bg-background hover:border-orange-300 hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 transition-all text-left`}
                     data-testid={`button-quick-question-${i}`}
                   >
                     <q.icon className="w-4 h-4 text-orange-600 shrink-0" />

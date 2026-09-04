@@ -883,6 +883,28 @@ at 390px and 1440px against the spec's numbers (caught one miss this way — the
 subtitle was 16px at every breakpoint instead of 18px at desktop specifically;
 fixed and re-verified before considering this done).
 
+**Follow-up — the 3 quick-question chip texts swapped.** User asked to replace
+only the 3 `quickQuestions` strings (icons/layout/colors/spacing/everything
+else explicitly "do not touch"): "Fructele seara îngrașă?" → "De ce nu slăbesc
+deși mănânc puțin?", "De ce mi-e foame" → "Cum arată o masă echilibrată?",
+"Sunt toate caloriile la fel?" unchanged. Icons stay mapped to their original
+position (Clock/Minus/Heart) per her "don't change icons" instruction, even
+though Clock no longer thematically matches its new question — that's a
+deliberate literal-instruction-over-semantic-fit call, not an oversight.
+
+**Caught a real acceptance-criteria conflict before shipping**: the new first
+question is long enough that in the existing `grid-cols-2` mobile chip layout,
+it wrapped to 3 lines at 390px/360px — but she'd explicitly capped this at
+"maximum 2 rânduri" and separately forbidden shrinking the font to force fewer
+lines. Height alone (her suggested fix for "needs more space") can't reduce a
+width-bound line count. Resolved by giving just that first chip `col-span-2`
+(full-row width) on mobile only — same card style/height/icon/font, just its
+own row instead of sharing one with a second chip; chips 2–3 then share the
+next row. `col-span-2` is a no-op under the `lg:flex lg:flex-wrap` desktop
+layout, so desktop is unaffected. Re-verified: 1 line at 390px, 2 lines at
+360px, both within the cap; desktop unchanged (all 3 in one row). No horizontal
+overflow at either width.
+
 ## Site images
 
 `public/images/` now exists with 3 of the 4 missing files, added this session:
