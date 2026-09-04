@@ -50,3 +50,31 @@ export const FIBER_MIN_G = 25;
 /** General daily water intake reper, liters (EFSA). DO NOT CHANGE WITHOUT MEDICAL REVIEW. */
 export const WATER_MIN_L = 1.5;
 export const WATER_MAX_L = 2.0;
+
+// ─── BMI (WHO categories) ────────────────────────────────────────────────────
+// DO NOT CHANGE WITHOUT MEDICAL REVIEW.
+
+/** Category boundaries (WHO). A BMI below a given constant falls in that band. */
+export const BMI_UNDERWEIGHT_MAX = 18.5;
+export const BMI_OVERWEIGHT_MIN = 25.0;
+export const BMI_OBESE_I_MIN = 30.0;
+export const BMI_OBESE_II_MIN = 35.0;
+export const BMI_OBESE_III_MIN = 40.0;
+
+/**
+ * Reference weight-range formula bounds: weight = factor × height_m².
+ * 24.9 (not 25.0) is the spec's literal upper factor for this formula —
+ * intentionally distinct from BMI_OVERWEIGHT_MIN, do not conflate the two.
+ */
+export const BMI_REFERENCE_RANGE_MIN = 18.5;
+export const BMI_REFERENCE_RANGE_MAX = 24.9;
+
+// ─── Weight-loss orientative deficit (only computed for BMI ≥25) ────────────
+// DO NOT CHANGE WITHOUT MEDICAL REVIEW.
+
+/** 10–20% orientative deficit, expressed as multipliers of TEE. */
+export const WL_DEFICIT_LOW_FACTOR = 0.8;
+export const WL_DEFICIT_HIGH_FACTOR = 0.9;
+
+/** Safety floor: below this, no automatic caloric-deficit range is shown at all. */
+export const WL_FLOOR_KCAL = 1200;

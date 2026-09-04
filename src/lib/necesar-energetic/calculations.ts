@@ -67,18 +67,23 @@ export interface GramRange {
   max: number;
 }
 
-/** Carbohydrate range in grams, from the displayed (truncated) daily energy value. */
-export function calculateCarbsGrams(energyKcal: number): GramRange {
+/**
+ * Carbohydrate range in grams, from the kcal figures actually shown to the
+ * user for their direction — maintenance kcal (kcalLow === kcalHigh) or the
+ * weight-loss deficit range (kcalLow < kcalHigh). Never pass maintenance kcal
+ * when the person is shown a weight-loss range instead.
+ */
+export function calculateCarbsGrams(kcalLow: number, kcalHigh: number): GramRange {
   return {
-    min: Math.round((energyKcal * CARB_PCT_MIN) / KCAL_PER_G_CARB),
-    max: Math.round((energyKcal * CARB_PCT_MAX) / KCAL_PER_G_CARB),
+    min: Math.round((kcalLow * CARB_PCT_MIN) / KCAL_PER_G_CARB),
+    max: Math.round((kcalHigh * CARB_PCT_MAX) / KCAL_PER_G_CARB),
   };
 }
 
-/** Fat range in grams, from the displayed (truncated) daily energy value. */
-export function calculateFatGrams(energyKcal: number): GramRange {
+/** Fat range in grams — same kcalLow/kcalHigh convention as calculateCarbsGrams. */
+export function calculateFatGrams(kcalLow: number, kcalHigh: number): GramRange {
   return {
-    min: Math.round((energyKcal * FAT_PCT_MIN) / KCAL_PER_G_FAT),
-    max: Math.round((energyKcal * FAT_PCT_MAX) / KCAL_PER_G_FAT),
+    min: Math.round((kcalLow * FAT_PCT_MIN) / KCAL_PER_G_FAT),
+    max: Math.round((kcalHigh * FAT_PCT_MAX) / KCAL_PER_G_FAT),
   };
 }

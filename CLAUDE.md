@@ -451,6 +451,80 @@ Medical logic lives entirely outside the page component:
 - Home.tsx's "Calculator necesar caloric" card still points at `/calculator` —
   nothing to change there, same route, new content behind it.
 
+## Calculator v2 — BMI, direction, and orientative weight-loss range — done
+
+User sent a second, much more detailed spec (also pasted in full, also **source of
+truth for v1 of this expanded logic** — same "do not change without validation"
+rule as the original spec) asking to add BMI status, an orientative direction
+(maintain/lose/gain-needs-eval), and a direction-aware calorie range to the
+calculator that previously only ever showed maintenance kcal. Before touching
+code, flagged to her that the *previous* build had deliberately avoided a
+BMI-as-verdict display (red/green, "you should lose weight") per her own earlier
+instructions — she confirmed this new spec supersedes that, with much more careful
+non-alarmist framing than the old pre-rebuild calculator had (no BMI-as-diagnosis,
+no fixed deficit, a floor that blocks unsafe low-calorie output entirely).
+
+**New files / changes, split the same way as before (logic has no copy, copy has
+no logic):**
+- `src/lib/necesar-energetic/constants.ts` — added, each with the same
+  `DO NOT CHANGE WITHOUT MEDICAL REVIEW` marker: `BMI_UNDERWEIGHT_MAX` (18.5),
+  `BMI_OVERWEIGHT_MIN` (25.0), `BMI_OBESE_I_MIN` (30.0), `BMI_OBESE_II_MIN` (35.0),
+  `BMI_OBESE_III_MIN` (40.0), `BMI_REFERENCE_RANGE_MIN/MAX` (18.5/24.9 — the spec's
+  literal weight-range formula factors, kept distinct from `BMI_OVERWEIGHT_MIN`
+  even though 24.9 and 25.0 are adjacent, because the spec gives them as two
+  different numbers for two different formulas), `WL_DEFICIT_LOW_FACTOR/HIGH_FACTOR`
+  (0.80/0.90 — a 10–20% deficit), `WL_FLOOR_KCAL` (1200).
+- `src/lib/necesar-energetic/bmi.ts` — new file, pure functions only:
+  `calculateBmiRaw` (weight/height_m², unrounded), `formatBmi` (1 decimal,
+  **standard rounding**, not truncated — 27.36→27.4, explicitly the opposite
+  rounding rule from kcal display), `getBmiCategory` (6 WHO categories, classified
+  on the raw BMI), `getDirectionBranch` (collapses the 6 categories into the 4
+  status/direction message branches the spec defines — obese grades I/II/III all
+  share one status card message, even though the BMI badge itself still shows
+  the specific grade), `calculateWeightReferenceRange` (18.5–24.9 × height_m²,
+  1-decimal rounding — **never call this "greutate ideală"**, spec is explicit),
+  `calculateWeightLossRange` (TEE×0.80–TEE×0.90, `Math.trunc`, computed from
+  **actual** weight, never a reference/target weight — and returns `{blocked:
+  true}` with no numbers at all, not even the upper bound, when the raw low end
+  is `<= 1200`).
+- `src/lib/necesar-energetic/calculations.ts` — `calculateCarbsGrams` and
+  `calculateFatGrams` signatures changed from a single `energyKcal` to
+  `(kcalLow, kcalHigh)`, because the spec requires macro grams to be computed from
+  whichever kcal figure is actually shown to the user (maintenance kcal for
+  "reference" BMI, the weight-loss deficit range for BMI ≥25) — maintenance callers
+  now just pass the same value twice. Updated both call sites and both test files.
+- `src/pages/Calculator.tsx` — results section restructured to insert, ahead of
+  the existing "Reperele tale zilnice" cards: an IMC card (value + one of the 6
+  category badges + the "not a full diagnosis" disclaimer), a status+direction
+  card (4 branches, CTA only on the underweight and obese branches per spec —
+  **not** on the plain-overweight branch, even though overweight still gets the
+  weight-loss energy card with its own CTA below), and a weight-reference-range
+  card (always shown, regardless of direction). The energy card itself is now 4
+  variants keyed off direction: `maintenance` (unchanged from before), `loss`
+  (range + CTA), `loss_blocked` (amber advisory panel, no numbers, CTA — reuses
+  the same visual treatment as the existing safety-filter-blocked panel), and
+  `underweight_no_calc` (same advisory treatment, no automatic surplus ever
+  computed, CTA). Protein/fiber/water stay unconditional (they're weight/age
+  reference points, not tied to a direction); carbs/fat still always show their
+  %-range, but the "Vezi și în grame" gram-conversion toggle only renders when a
+  relevant kcal figure actually exists (i.e. not for `loss_blocked` or
+  `underweight_no_calc` — there's nothing to convert).
+- `src/lib/necesar-energetic/bmi.test.ts` — new, 12 tests: BMI formula, the
+  spec's 27.36→27.4 rounding example, all 6 category boundaries, the 4-branch
+  collapse, the weight-reference-range formula, and — the case most likely to be
+  gotten wrong — the 1200 floor check using the **raw** low value (a TEE chosen so
+  the low end is exactly 1200 still blocks; a TEE chosen so it's 1200.4 does not).
+  `calculations.test.ts` updated for the new two-argument carb/fat signature.
+  41/41 tests passing across all 3 files.
+- Verified end-to-end with Playwright across all 5 branches — reference (maintain,
+  no CTA), overweight (loss range + CTA, no status-card CTA), obese (loss range +
+  CTA on *both* cards, badge correctly shows the specific grade e.g. "Obezitate
+  grad II" while the status text uses the shared obese branch copy), the 1200-floor
+  block (hand-picked F/75y/60kg/150cm/low-activity to actually trigger it — TEE
+  1402 → low_raw 1121.7 ≤ 1200), and underweight (no auto surplus, protein/carbs
+  still shown as general reference points). Checked desktop (1280px) and mobile
+  (390px).
+
 ## Still open / not yet done
 
 - Of the secondary/deep-dive articles referenced from "Citește și" on both NutriHub

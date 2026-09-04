@@ -89,23 +89,35 @@ describe("protein — ≥65y (senior range, 1.0–1.2 g/kg)", () => {
 });
 
 describe("carbohydrates in grams (45–60% of energy, 4 kcal/g)", () => {
-  it("converts a round energy value", () => {
-    const r = calculateCarbsGrams(2000);
+  it("converts a round maintenance energy value (kcalLow === kcalHigh)", () => {
+    const r = calculateCarbsGrams(2000, 2000);
     expect(r.min).toBe(225); // 2000*0.45/4
     expect(r.max).toBe(300); // 2000*0.60/4
   });
 
   it("converts the spec's truncated example energy (2137)", () => {
-    const r = calculateCarbsGrams(2137);
+    const r = calculateCarbsGrams(2137, 2137);
     expect(r.min).toBe(Math.round((2137 * 0.45) / 4));
     expect(r.max).toBe(Math.round((2137 * 0.6) / 4));
+  });
+
+  it("uses the relevant (weight-loss) kcal range, not a single maintenance value", () => {
+    const r = calculateCarbsGrams(1700, 1912);
+    expect(r.min).toBe(Math.round((1700 * 0.45) / 4));
+    expect(r.max).toBe(Math.round((1912 * 0.6) / 4));
   });
 });
 
 describe("fat in grams (20–35% of energy, 9 kcal/g)", () => {
-  it("converts a round energy value", () => {
-    const r = calculateFatGrams(2000);
+  it("converts a round maintenance energy value (kcalLow === kcalHigh)", () => {
+    const r = calculateFatGrams(2000, 2000);
     expect(r.min).toBe(44); // 2000*0.20/9 = 44.44 -> 44
     expect(r.max).toBe(78); // 2000*0.35/9 = 77.78 -> 78
+  });
+
+  it("uses the relevant (weight-loss) kcal range, not a single maintenance value", () => {
+    const r = calculateFatGrams(1700, 1912);
+    expect(r.min).toBe(Math.round((1700 * 0.2) / 9));
+    expect(r.max).toBe(Math.round((1912 * 0.35) / 9));
   });
 });

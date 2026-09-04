@@ -24,6 +24,8 @@ import {
   AlertCircle,
   ArrowRight,
   Sparkles,
+  Scale,
+  Compass,
 } from "lucide-react";
 import { PlateDiagram } from "@/components/nutrihub/PlateDiagram";
 import {
@@ -36,6 +38,8 @@ import {
   CARB_PCT_MAX,
   FAT_PCT_MIN,
   FAT_PCT_MAX,
+  BMI_REFERENCE_RANGE_MIN,
+  BMI_REFERENCE_RANGE_MAX,
   type ActivityLevel,
 } from "@/lib/necesar-energetic/constants";
 import {
@@ -55,6 +59,17 @@ import {
   SAFETY_EXCLUSIONS,
   type SafetySelections,
 } from "@/lib/necesar-energetic/eligibility";
+import {
+  calculateBmiRaw,
+  formatBmi,
+  getBmiCategory,
+  getDirectionBranch,
+  calculateWeightReferenceRange,
+  calculateWeightLossRange,
+  type BmiCategory,
+  type DirectionBranch,
+  type WeightRange,
+} from "@/lib/necesar-energetic/bmi";
 
 // ─── Age-block message — reused as both the field's validation message and,   ─
 // ─── defensively, anywhere else that needs to explain the standard cutoff.    ─
@@ -151,16 +166,79 @@ const MEAL_EXAMPLES_EN = [
   "meat and vegetable soup + bread",
 ];
 
+// ─── BMI category labels (the 6 WHO categories, shown on the IMC badge) ─────
+const BMI_CATEGORY_LABELS: Record<BmiCategory, { ro: string; en: string }> = {
+  underweight: { ro: "Subponderal", en: "Underweight" },
+  reference: { ro: "Interval de referință", en: "Reference range" },
+  overweight: { ro: "Suprapondere", en: "Overweight" },
+  obese1: { ro: "Obezitate grad I", en: "Obesity grade I" },
+  obese2: { ro: "Obezitate grad II", en: "Obesity grade II" },
+  obese3: { ro: "Obezitate grad III", en: "Obesity grade III" },
+};
+
+// ─── Status + direction copy — 4 branches, obese1/2/3 share one ────────────
+const DIRECTION_COPY: Record<
+  DirectionBranch,
+  { titleRo: string; titleEn: string; directionRo: string; directionEn: string; textRo: string; textEn: string; showCta: boolean }
+> = {
+  underweight: {
+    titleRo: "Greutatea ta este sub intervalul de referință",
+    titleEn: "Your weight is below the reference range",
+    directionRo: "Creștere ponderală / evaluare individuală",
+    directionEn: "Weight gain / individual assessment",
+    textRo: "Înainte de a crește aportul caloric, este util să fie înțeleasă cauza greutății scăzute și stabilit un obiectiv potrivit.",
+    textEn: "Before increasing caloric intake, it helps to understand the cause of the low weight and set a suitable goal.",
+    showCta: true,
+  },
+  reference: {
+    titleRo: "Greutatea ta se află în intervalul de referință",
+    titleEn: "Your weight is within the reference range",
+    directionRo: "Menținere",
+    directionEn: "Maintenance",
+    textRo: "Dacă nu există alte obiective medicale, direcția orientativă este menținerea greutății.",
+    textEn: "If there are no other medical goals, the orientative direction is maintaining your weight.",
+    showCta: false,
+  },
+  overweight: {
+    titleRo: "Greutatea ta este peste intervalul de referință",
+    titleEn: "Your weight is above the reference range",
+    directionRo: "Scădere ponderală",
+    directionEn: "Weight loss",
+    textRo: "O reducere ponderală poate fi utilă pentru sănătate, dar obiectivul potrivit nu se stabilește doar pe baza IMC-ului.",
+    textEn: "Weight loss can be beneficial for health, but the right target isn't set from BMI alone.",
+    showCta: false,
+  },
+  obese: {
+    titleRo: "IMC-ul tău se află în intervalul asociat obezității",
+    titleEn: "Your BMI falls in the range associated with obesity",
+    directionRo: "Scădere ponderală + evaluare individuală",
+    directionEn: "Weight loss + individual assessment",
+    textRo: "Managementul greutății trebuie să țină cont și de starea metabolică, funcțională și de contextul individual.",
+    textEn: "Weight management also needs to account for metabolic and functional status and individual context.",
+    showCta: true,
+  },
+};
+
 // ─── Results shape ────────────────────────────────────────────────────────────
+type EnergyResult =
+  | { kind: "maintenance"; kcal: number }
+  | { kind: "loss"; kcalLow: number; kcalHigh: number }
+  | { kind: "loss_blocked" }
+  | { kind: "underweight_no_calc" };
+
 type ResultState =
   | { status: "idle" }
   | { status: "blocked-safety" }
   | {
       status: "ok";
-      energyKcal: number;
+      bmi: number;
+      bmiCategory: BmiCategory;
+      directionBranch: DirectionBranch;
+      weightRange: WeightRange;
+      energy: EnergyResult;
       protein: ProteinResult;
-      carbs: GramRange;
-      fat: GramRange;
+      carbs: GramRange | null;
+      fat: GramRange | null;
     };
 
 function scrollToId(id: string) {
@@ -198,16 +276,43 @@ export default function Calculator() {
     }
 
     const sex: Sex = parsed.sex;
+    const bmiRaw = calculateBmiRaw(parsed.weight, parsed.height);
+    const bmi = formatBmi(bmiRaw);
+    const bmiCategory = getBmiCategory(bmiRaw);
+    const directionBranch = getDirectionBranch(bmiCategory);
+    const weightRange = calculateWeightReferenceRange(parsed.height);
+
     const ree = calculateREE(sex, parsed.weight, parsed.height, parsed.age);
     const teeRaw = calculateTEE(ree, PAL[parsed.activityLevel]);
-    const energyKcal = truncateKcal(teeRaw);
+
+    let energy: EnergyResult;
+    let carbs: GramRange | null = null;
+    let fat: GramRange | null = null;
+
+    if (directionBranch === "underweight") {
+      energy = { kind: "underweight_no_calc" };
+    } else if (directionBranch === "reference") {
+      const kcal = truncateKcal(teeRaw);
+      energy = { kind: "maintenance", kcal };
+      carbs = calculateCarbsGrams(kcal, kcal);
+      fat = calculateFatGrams(kcal, kcal);
+    } else {
+      // overweight or obese -> orientative weight-loss deficit
+      const wl = calculateWeightLossRange(teeRaw);
+      if (wl.blocked) {
+        energy = { kind: "loss_blocked" };
+      } else {
+        energy = { kind: "loss", kcalLow: wl.kcalLow, kcalHigh: wl.kcalHigh };
+        carbs = calculateCarbsGrams(wl.kcalLow, wl.kcalHigh);
+        fat = calculateFatGrams(wl.kcalLow, wl.kcalHigh);
+      }
+    }
+
     const protein = calculateProtein(parsed.weight, parsed.age);
-    const carbs = calculateCarbsGrams(energyKcal);
-    const fat = calculateFatGrams(energyKcal);
 
     setShowCarbGrams(false);
     setShowFatGrams(false);
-    setResult({ status: "ok", energyKcal, protein, carbs, fat });
+    setResult({ status: "ok", bmi, bmiCategory, directionBranch, weightRange, energy, protein, carbs, fat });
     requestAnimationFrame(() => scrollToId("rezultate"));
   };
 
@@ -487,29 +592,167 @@ export default function Calculator() {
 
           {result.status === "ok" && (
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="mt-10">
-              <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-6">
+              {/* ── 8. IMC ─────────────────────────────────────────────────── */}
+              <div className="rounded-2xl bg-card border border-border p-6 mb-4">
+                <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                  <Scale className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-medium">{ro ? "IMC-ul tău" : "Your BMI"}</p>
+                </div>
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <p className="text-3xl font-bold font-serif text-foreground" data-testid="text-bmi-value">
+                    {result.bmi.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                  </p>
+                  <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary" data-testid="text-bmi-category">
+                    {ro ? BMI_CATEGORY_LABELS[result.bmiCategory].ro : BMI_CATEGORY_LABELS[result.bmiCategory].en}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+                  {ro
+                    ? "IMC-ul este un instrument de orientare, nu un diagnostic complet. Nu descrie direct compoziția corporală, distribuția grăsimii sau starea metabolică."
+                    : "BMI is an orientation tool, not a complete diagnosis. It doesn't directly describe body composition, fat distribution, or metabolic status."}
+                </p>
+              </div>
+
+              {/* ── 9. Status actual + direcție orientativă ──────────────────── */}
+              <div className="rounded-2xl bg-card border border-border p-6 mb-4">
+                <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                  <Compass className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-medium">
+                    {ro
+                      ? DIRECTION_COPY[result.directionBranch].directionRo
+                      : DIRECTION_COPY[result.directionBranch].directionEn}
+                  </p>
+                </div>
+                <h3 className="text-lg font-serif font-bold text-foreground mb-2" data-testid="text-direction-title">
+                  {ro ? DIRECTION_COPY[result.directionBranch].titleRo : DIRECTION_COPY[result.directionBranch].titleEn}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {ro ? DIRECTION_COPY[result.directionBranch].textRo : DIRECTION_COPY[result.directionBranch].textEn}
+                </p>
+                {DIRECTION_COPY[result.directionBranch].showCta && (
+                  <Button asChild variant="outline" size="sm" className="rounded-full mt-4">
+                    <Link href="/contact">{ro ? "Hai să discutăm" : "Let's talk"}</Link>
+                  </Button>
+                )}
+              </div>
+
+              {/* ── 10. Interval orientativ de greutate ──────────────────────── */}
+              <div className="rounded-2xl bg-card border border-border p-6 mb-4">
+                <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                  <Scale className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-medium">
+                    {ro
+                      ? `Interval orientativ de greutate corespunzător unui IMC ${BMI_REFERENCE_RANGE_MIN.toString().replace(".", ",")}–${BMI_REFERENCE_RANGE_MAX.toString().replace(".", ",")}`
+                      : `Orientative weight range corresponding to a BMI of ${BMI_REFERENCE_RANGE_MIN}–${BMI_REFERENCE_RANGE_MAX}`}
+                  </p>
+                </div>
+                <p className="text-2xl font-bold font-serif text-foreground" data-testid="text-weight-range">
+                  {result.weightRange.min.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                  –
+                  {result.weightRange.max.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{" "}
+                  kg
+                </p>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                  {ro
+                    ? "Acesta este un interval matematic de referință, nu o greutate-țintă personalizată. Compoziția corporală și starea de sănătate pot schimba obiectivul potrivit."
+                    : "This is a mathematical reference range, not a personalized target weight. Body composition and health status can change what the right goal is."}
+                </p>
+              </div>
+
+              <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-6 mt-10">
                 {ro ? "Reperele tale zilnice" : "Your daily reference points"}
               </h2>
 
               <div className="grid sm:grid-cols-2 gap-4">
-                {/* Energie */}
-                <div className="rounded-2xl bg-primary text-primary-foreground p-6 sm:col-span-2">
-                  <div className="flex items-center gap-2 mb-2 opacity-90">
-                    <Flame className="w-4 h-4" />
-                    <p className="text-sm font-medium">{ro ? "Energie" : "Energy"}</p>
+                {/* Energie — 4 variants depending on direction */}
+                {result.energy.kind === "maintenance" && (
+                  <div className="rounded-2xl bg-primary text-primary-foreground p-6 sm:col-span-2">
+                    <div className="flex items-center gap-2 mb-2 opacity-90">
+                      <Flame className="w-4 h-4" />
+                      <p className="text-sm font-medium">{ro ? "Aport orientativ pentru menținere" : "Orientative maintenance intake"}</p>
+                    </div>
+                    <p className="text-3xl font-bold font-serif" data-testid="text-energy-value">
+                      {result.energy.kcal.toLocaleString(ro ? "ro-RO" : "en-US")} kcal/zi
+                    </p>
+                    <p className="text-sm opacity-90 mt-2">
+                      {ro ? "Estimare pentru menținerea greutății actuale." : "Estimate for maintaining your current weight."}
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      {ro
+                        ? "Rezultatul provine dintr-o ecuație predictivă și necesarul real poate varia."
+                        : "This comes from a predictive equation, and your actual need may vary."}
+                    </p>
                   </div>
-                  <p className="text-3xl font-bold font-serif" data-testid="text-energy-value">
-                    {result.energyKcal.toLocaleString(ro ? "ro-RO" : "en-US")} kcal/zi
-                  </p>
-                  <p className="text-sm opacity-90 mt-2">
-                    {ro ? "Estimare pentru menținerea greutății actuale." : "Estimate for maintaining your current weight."}
-                  </p>
-                  <p className="text-xs opacity-75 mt-1">
-                    {ro
-                      ? "Rezultatul provine dintr-o ecuație predictivă și necesarul real poate varia."
-                      : "This comes from a predictive equation, and your actual need may vary."}
-                  </p>
-                </div>
+                )}
+
+                {result.energy.kind === "loss" && (
+                  <div className="rounded-2xl bg-primary text-primary-foreground p-6 sm:col-span-2">
+                    <div className="flex items-center gap-2 mb-2 opacity-90">
+                      <Flame className="w-4 h-4" />
+                      <p className="text-sm font-medium">{ro ? "Aport orientativ pentru scădere ponderală" : "Orientative weight-loss intake"}</p>
+                    </div>
+                    <p className="text-3xl font-bold font-serif" data-testid="text-energy-value">
+                      {result.energy.kcalLow.toLocaleString(ro ? "ro-RO" : "en-US")}–
+                      {result.energy.kcalHigh.toLocaleString(ro ? "ro-RO" : "en-US")} kcal/zi
+                    </p>
+                    <p className="text-sm opacity-90 mt-2">
+                      {ro
+                        ? "Interval calculat pornind de la necesarul energetic estimat și un deficit moderat."
+                        : "Range calculated from your estimated energy needs and a moderate deficit."}
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      {ro
+                        ? "Este o orientare, nu o prescripție individuală. Aportul potrivit depinde de istoricul ponderal, compoziția corporală, activitate, starea de sănătate și evoluția în timp."
+                        : "This is guidance, not an individual prescription. The right intake depends on weight history, body composition, activity, health status, and how things evolve over time."}
+                    </p>
+                    <Button asChild variant="secondary" size="sm" className="rounded-full mt-4">
+                      <Link href="/contact">{ro ? "Hai să discutăm" : "Let's talk"}</Link>
+                    </Button>
+                  </div>
+                )}
+
+                {result.energy.kind === "loss_blocked" && (
+                  <div
+                    className="rounded-2xl border border-amber-200 bg-amber-50 p-6 sm:col-span-2 flex items-start gap-4"
+                    data-testid="panel-loss-blocked"
+                  >
+                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1.5">
+                        {ro
+                          ? "Pentru datele introduse, o recomandare automată de reducere calorică nu este potrivită."
+                          : "For the data entered, an automatic caloric-reduction recommendation isn't appropriate."}
+                      </h3>
+                      <p className="text-sm text-amber-900/80 leading-relaxed mb-3">
+                        {ro
+                          ? "Un aport atât de redus necesită evaluare individuală și monitorizare adecvată."
+                          : "An intake this low needs individual assessment and proper monitoring."}
+                      </p>
+                      <Button asChild variant="outline" size="sm" className="rounded-full">
+                        <Link href="/contact">{ro ? "Hai să discutăm" : "Let's talk"}</Link>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {result.energy.kind === "underweight_no_calc" && (
+                  <div
+                    className="rounded-2xl border border-amber-200 bg-amber-50 p-6 sm:col-span-2 flex items-start gap-4"
+                    data-testid="panel-underweight-no-calc"
+                  >
+                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-amber-900/80 leading-relaxed mb-3">
+                        {ro
+                          ? "Aportul pentru creștere ponderală trebuie stabilit după evaluarea cauzei și a situației individuale."
+                          : "Intake for weight gain should be set only after assessing the cause and the individual situation."}
+                      </p>
+                      <Button asChild variant="outline" size="sm" className="rounded-full">
+                        <Link href="/contact">{ro ? "Hai să discutăm" : "Let's talk"}</Link>
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Proteină */}
                 <div className="rounded-2xl bg-card border border-border p-5">
@@ -556,20 +799,24 @@ export default function Calculator() {
                       ? "Alege frecvent cereale integrale, leguminoase, legume și fructe."
                       : "Choose whole grains, legumes, vegetables and fruit often."}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowCarbGrams((v) => !v)}
-                    className="text-xs font-medium text-primary hover:underline mt-2"
-                    data-testid="button-toggle-carb-grams"
-                  >
-                    {showCarbGrams
-                      ? (ro ? "Ascunde gramele" : "Hide grams")
-                      : (ro ? "Vezi și în grame" : "See it in grams too")}
-                  </button>
-                  {showCarbGrams && (
-                    <p className="text-sm font-semibold text-foreground mt-1.5" data-testid="text-carb-grams">
-                      {result.carbs.min}–{result.carbs.max} g/zi
-                    </p>
+                  {result.carbs && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setShowCarbGrams((v) => !v)}
+                        className="text-xs font-medium text-primary hover:underline mt-2"
+                        data-testid="button-toggle-carb-grams"
+                      >
+                        {showCarbGrams
+                          ? (ro ? "Ascunde gramele" : "Hide grams")
+                          : (ro ? "Vezi și în grame" : "See it in grams too")}
+                      </button>
+                      {showCarbGrams && (
+                        <p className="text-sm font-semibold text-foreground mt-1.5" data-testid="text-carb-grams">
+                          {result.carbs.min}–{result.carbs.max} g/zi
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -590,20 +837,24 @@ export default function Calculator() {
                       ? "Cantitatea contează, dar și tipul de grăsime. Alege predominant surse de grăsimi nesaturate."
                       : "The amount matters, but so does the type of fat. Choose mostly unsaturated sources."}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowFatGrams((v) => !v)}
-                    className="text-xs font-medium text-primary hover:underline mt-2"
-                    data-testid="button-toggle-fat-grams"
-                  >
-                    {showFatGrams
-                      ? (ro ? "Ascunde gramele" : "Hide grams")
-                      : (ro ? "Vezi și în grame" : "See it in grams too")}
-                  </button>
-                  {showFatGrams && (
-                    <p className="text-sm font-semibold text-foreground mt-1.5" data-testid="text-fat-grams">
-                      {result.fat.min}–{result.fat.max} g/zi
-                    </p>
+                  {result.fat && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setShowFatGrams((v) => !v)}
+                        className="text-xs font-medium text-primary hover:underline mt-2"
+                        data-testid="button-toggle-fat-grams"
+                      >
+                        {showFatGrams
+                          ? (ro ? "Ascunde gramele" : "Hide grams")
+                          : (ro ? "Vezi și în grame" : "See it in grams too")}
+                      </button>
+                      {showFatGrams && (
+                        <p className="text-sm font-semibold text-foreground mt-1.5" data-testid="text-fat-grams">
+                          {result.fat.min}–{result.fat.max} g/zi
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
 
