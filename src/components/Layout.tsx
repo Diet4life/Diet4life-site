@@ -107,7 +107,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <Logo className="grayscale opacity-60" />
           <p className="text-sm text-muted-foreground text-center md:text-left">
-            &copy; {new Date().getFullYear()} {t("footer.clinic")}. {t("footer.rights")}
+            &copy; {new Date().getFullYear()} {t("footer.tagline")}. {t("footer.rights")}
           </p>
         </div>
       </footer>

@@ -52,9 +52,9 @@ export default function Contact() {
             {language === 'ro' ? 'Contact & Programări' : 'Contact & Appointments'}
           </h1>
           <p className="text-lg text-muted-foreground">
-            {language === 'ro' 
-              ? 'Suntem aici pentru a răspunde întrebărilor tale. Programează o consultație la clinică sau online.' 
-              : 'We are here to answer your questions. Book an appointment at the clinic or online.'}
+            {language === 'ro'
+              ? 'Suntem aici pentru a răspunde întrebărilor tale. Programează o consultație online.'
+              : 'We are here to answer your questions. Book an online consultation.'}
           </p>
         </div>
 
@@ -238,8 +238,8 @@ export default function Contact() {
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                   {language === 'ro'
-                    ? 'Oferim consultații prin Zoom sau Google Meet, disponibile în același program. Ideal dacă ești în altă localitate sau preferi confortul de acasă.'
-                    : 'We offer consultations via Zoom or Google Meet, available during the same working hours. Ideal if you are in another city or prefer the comfort of home.'}
+                    ? 'Toate consultațiile se desfășoară online, prin Zoom sau Google Meet — poți participa de oriunde, fără deplasare.'
+                    : 'All consultations take place online, via Zoom or Google Meet — you can join from anywhere, no travel needed.'}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {['Zoom', 'Google Meet'].map(platform => (

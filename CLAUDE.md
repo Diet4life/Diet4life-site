@@ -525,6 +525,41 @@ no logic):**
   still shown as general reference points). Checked desktop (1280px) and mobile
   (390px).
 
+## "Clinică" wording removed sitewide — she is 100% online, no physical clinic — done
+
+User pointed out she isn't a clinic at all — every consultation is online, no
+physical location. A repo-wide search for "clinic[aă]" found the visible instance
+already fixed (Services/About) plus several **live-facing SEO/meta spots that had
+never been cleaned up from the original AI-site-builder scaffold** — these were
+worth catching now since they were being touched anyway:
+
+- `index.html` — `<title>`, meta description, keywords, OG title/description/image
+  alt, Twitter title/description, and the JSON-LD `MedicalBusiness` `description`
+  all said "Clinică de nutriție medicală" and, worse, **still advertised "diete
+  bariatrice" / "Consultanță Bariatrică"** — directly violating the standing
+  bariatric-content-exclusion policy (see "Content policy decided this session"
+  above), just in a spot nobody had audited yet since it's not rendered React
+  content. All reworded around "Nutriție Online & Consultanță Personalizată" /
+  "Consultanță nutrițională 100% online" instead. Left the JSON-LD `@type` as
+  `MedicalBusiness` (not a scope-creep schema-architecture decision she didn't
+  ask for) — just fixed the description text.
+- `LanguageContext.tsx` — `footer.clinic` (used in the footer copyright line)
+  renamed to `footer.tagline`, value changed from "Diet4Life Concept - Clinică de
+  Nutriție" to "Diet4Life Concept - Consultanță nutrițională online".
+- `Contact.tsx` — the hero subtitle said "Programează o consultație **la clinică
+  sau online**"; now just "...online." The "Consultații Online" card also implied
+  online was an *alternative* to an in-person option ("Ideal dacă ești în altă
+  localitate sau preferi confortul de acasă") — reworded to state plainly that
+  every consultation is online ("Toate consultațiile se desfășoară online, prin
+  Zoom sau Google Meet — poți participa de oriunde, fără deplasare"), since there
+  is no in-person option to compare against.
+- Confirmed clean otherwise: no address/map on the site, no "cabinet" references
+  anywhere in `src/`. The remaining "clinică"/"Clinical Nutrition" hits are
+  legitimate academic/institutional terms (About.tsx's "Master, Nutriție
+  Clinică" degree name, ESPEN's full English name) — left untouched.
+- Verified with `tsc --noEmit` (clean, same pre-existing error only), `npm run
+  build`, and Playwright screenshots of `/contact` and the footer.
+
 ## Still open / not yet done
 
 - Of the secondary/deep-dive articles referenced from "Citește și" on both NutriHub

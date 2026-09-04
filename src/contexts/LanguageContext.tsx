@@ -21,7 +21,7 @@ const translations: Translations = {
 
   // Footer
   "footer.rights": { ro: "Toate drepturile rezervate.", en: "All rights reserved." },
-  "footer.clinic": { ro: "Diet4Life Concept - Clinică de Nutriție", en: "Diet4Life Concept - Nutrition Clinic" }
+  "footer.tagline": { ro: "Diet4Life Concept - Consultanță nutrițională online", en: "Diet4Life Concept - Online Nutrition Consulting" }
 };
 
 interface LanguageContextType {
