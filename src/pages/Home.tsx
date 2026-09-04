@@ -14,7 +14,6 @@ import {
   Salad,
   Calculator as CalculatorIcon,
   NotebookPen,
-  Flame,
   ArrowRight,
 } from "lucide-react";
 
@@ -219,23 +218,6 @@ export default function Home() {
             {ro
               ? "Instrumentele au rol educațional și nu oferă diagnostic medical."
               : "These tools are educational and do not provide a medical diagnosis."}
-          </p>
-        </div>
-      </section>
-
-      {/* Featured spotlight */}
-      <section className="py-20 bg-secondary/20">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-orange-600 uppercase mb-4">
-            <Flame className="w-3.5 h-3.5" /> {ro ? "În prim-plan" : "Featured"}
-          </span>
-          <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-3">
-            {ro ? "De ce nu toate caloriile sunt la fel?" : "Why aren't all calories the same?"}
-          </h2>
-          <p className="text-muted-foreground leading-relaxed">
-            {ro
-              ? "500 kcal vs. 500 kcal: două farfurii, efecte complet diferite asupra foamei, energiei și sațietății."
-              : "500 kcal vs. 500 kcal: two plates, completely different effects on hunger, energy, and satiety."}
           </p>
         </div>
       </section>

@@ -255,8 +255,15 @@ user:
 - "Jurnal alimentar" card → links to `/consultatii`, which **already has** the
   full PDF/online/upload/email flow built in (verified — see below). Nothing
   to build here.
-- Featured spotlight ("De ce nu toate caloriile sunt la fel?") is static text
-  only, no link — its destination 404s live too, nothing written yet.
+- **Featured spotlight ("De ce nu toate caloriile sunt la fel?") removed —
+  per explicit user instruction, later in the session.** It was static text with
+  no link (its destination 404s live too, nothing was ever written for it) —
+  user asked to drop the whole block rather than leave a dead-end teaser on the
+  homepage. Removed the section and the now-unused `Flame` icon import from
+  `Home.tsx`. The small hero "question card" with the same wording ("Sunt toate
+  caloriile la fel?", one of 3 clickable chips that fill the search bar) is a
+  different element and was **not** touched — she asked to remove "blocul de
+  text" (the spotlight's body paragraph), not the hero chip.
 - Removed the old `hero.*` translation keys from `LanguageContext.tsx` (no
   longer used); new copy uses inline `language === 'ro' ? ... : ...` like most
   other pages, not the `t()` helper.
@@ -582,8 +589,11 @@ tone. Applied in `Contact.tsx`:
   toate caloriile la fel?", "De ce nu slăbesc deși mănânc puțin?", "Ce este platoul
   ponderal?", "Produsele pentru slăbit...". Each of these remaining ones is currently
   a disabled "coming soon" chip in the `related` list, not a broken link.
-- The "De ce nu toate caloriile sunt la fel?" article (linked from the homepage
-  spotlight, not NutriHub) still doesn't exist anywhere (live or git) — separate task.
+- A standalone "De ce nu toate caloriile sunt la fel?" article/page still doesn't
+  exist anywhere (live or git). It's no longer linked from the homepage (see
+  "Homepage rebuild status" — the dead-end spotlight block was removed), but the
+  NutriHub "coming soon" chip for it (bullet above) is still there if she wants
+  it written later — separate task either way.
 - Hero image (`/images/hero.png`) is still broken/missing — user is separately
   regenerating it with an AI image tool; reused the same path so it'll pick up
   automatically once they drop the file in.
