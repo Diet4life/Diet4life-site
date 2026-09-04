@@ -103,7 +103,7 @@ export default function Home() {
             >
               <div className="rounded-3xl overflow-hidden shadow-xl aspect-square">
                 <img
-                  src="/images/hero.png"
+                  src="/images/hero.jpg"
                   alt="Diet4Life"
                   className="w-full h-full object-cover"
                 />

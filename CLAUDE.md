@@ -594,9 +594,7 @@ tone. Applied in `Contact.tsx`:
   "Homepage rebuild status" — the dead-end spotlight block was removed), but the
   NutriHub "coming soon" chip for it (bullet above) is still there if she wants
   it written later — separate task either way.
-- Hero image (`/images/hero.png`) is still broken/missing — user is separately
-  regenerating it with an AI image tool; reused the same path so it'll pick up
-  automatically once they drop the file in.
+- **Hero image — done, see "Site images" below.** No longer broken/missing.
 - **"Nutri pentru copii" — done, see the dedicated section below.** She came back
   with the full backstory/spec herself, as promised, so this is no longer open.
 - **Products page ("cărțile lui Nutri" / mini-ghiduri / rețete digitale on
@@ -825,22 +823,44 @@ respected). Changes, all in `Home.tsx`'s Nutri section only:
   user provided (flat-lay ingredients / protein+carb+fat plates split by source),
   already 16:9, resized to 1280×720. No AI-artifact concerns on these two (no legible
   text to check, styling reads as genuine editorial/stock photography).
-- **`hero.png`** — still missing. Two other candidate photos from the same rejected
-  AI-generated set (a "Diet4Life journal" product mockup — bound book, English text,
-  sections like hydration/stress/sleep/weekly-reflection that don't exist in the
-  actual site's PDF journal) were also flagged and **not used**: using them as the
-  homepage hero would visually promise a product different from what `/consultatii`
-  actually generates (Romanian, loose A4 PDF, no those sections). User's call: leave
-  `hero.png` broken for now ("La hero lasam încă asa"), she's handling it separately.
+- **`hero.jpg`** — done, no longer missing. (Two other candidate photos from the
+  original rejected AI-generated set — a "Diet4Life journal" product mockup with
+  English text and sections like hydration/stress/sleep/weekly-reflection that
+  don't exist in the actual site's PDF journal — were flagged and **not used**
+  back when this was still open: using them would have visually promised a
+  product different from what `/consultatii` actually generates. That's why it
+  stayed broken for a while rather than being filled with a placeholder.)
+  Resolution: user sent a candidate flat-lay food photo (broccoli, spinach,
+  tomatoes, blueberries, carrot ribbons, quinoa/millet, pumpkin seeds, yogurt,
+  egg, almonds, citrus, grapefruit — "editorial, legat de nutriție și stil de
+  viață", her own words for the brief) and asked for an editor's opinion. Flagged
+  one real issue: it was 4:3 (1448×1086) but the hero container is
+  `aspect-square`, so an automatic `object-cover` crop would've cut into the
+  broccoli (left) and grapefruit/carrot (right), which sit close to that image's
+  edges. Gave her the exact target spec (1:1, min 1200×1200, ideally 1600×1600)
+  rather than cropping it myself, since she preferred to regenerate; she came
+  back with a proper square version (1254×1254, same composition with more
+  breathing room from the edges). Installed it — but as **`hero.jpg`, not
+  `hero.png`**: the square PNG she sent was 2.2MB, way too heavy for a homepage
+  hero, so it was re-encoded as an optimized JPEG (quality 88) at 267KB (~88%
+  smaller) with no visible quality loss, and `Home.tsx`'s `<img src>` updated to
+  match. This is the one place this session where a user-provided image *was*
+  re-encoded — different from the Nutri character image and the logo crops,
+  which came with an explicit "don't modify" instruction; this hero photo had no
+  such instruction and re-encoding for file size is a lossless-to-the-eye
+  technical optimization, not a content change. Verified with `tsc --noEmit`
+  (clean, same pre-existing error only), `npm run build`, and a Playwright
+  screenshot of the hero section confirming the full composition renders with no
+  cropping.
 
 ## Known pre-existing issues (not caused by us, not yet fixed)
 
-- `src/pages/*.tsx` reference `/images/hero.png`, `/images/portrait.png`,
+- `src/pages/*.tsx` used to reference `/images/hero.png`, `/images/portrait.png`,
   `/images/blog-*.png`, `/images/recipe-*.png` (recipe ones now moot, page
-  removed). **`portrait.png`, `blog-myths.png` and `blog-med.png` are now in
-  `public/images/` and live** (see next section). **`hero.png` is still
-  missing/broken** — user explicitly said to leave it as-is for now
-  ("La hero lasam încă asa"), separately regenerating it herself.
+  removed). **All 4 originally-missing images are now resolved** — `portrait.png`,
+  `blog-myths.png`, `blog-med.png`, and `hero.jpg` (note the extension change,
+  see "Site images" above) are all in `public/images/` and live. Nothing broken
+  left in this list.
 - `tsc --noEmit` reports one pre-existing error unrelated to any of our changes:
   `src/App.tsx: Property 'env' does not exist on type 'ImportMeta'` (missing
   Vite client types in `tsconfig.json`) — vite build itself succeeds fine.
