@@ -109,9 +109,9 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-              className="mt-[26px] lg:mt-0"
+              className="mt-[18px] lg:mt-0"
             >
-              <div className="rounded-[20px] lg:rounded-3xl overflow-hidden shadow-sm lg:shadow-xl aspect-square max-h-[380px] md:max-h-[420px] lg:max-h-none w-full lg:max-w-[520px] mx-auto lg:mx-0">
+              <div className="rounded-[20px] lg:rounded-3xl overflow-hidden shadow-sm aspect-square w-full max-w-[380px] md:max-w-[420px] lg:max-w-[520px] mx-auto lg:mx-0">
                 <picture>
                   <source srcSet="/images/hero.webp" type="image/webp" />
                   <img
