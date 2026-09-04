@@ -806,6 +806,83 @@ respected). Changes, all in `Home.tsx`'s Nutri section only:
   for 2 cards, not as a broken 3-card grid — confirmed via screenshot, also no
   edit needed.
 
+## Hero section — pixel-perfect responsive refinement — done
+
+User sent a very detailed, breakpoint-by-breakpoint spec (source of truth for
+exact px values, same convention as the calculator specs) to refine `Home.tsx`'s
+hero section only — search bar, quick-question chips, CTA, and the hero image —
+across 5 target viewports: 360×800, 390×844, 412×915, 768, 1440. Explicitly
+scoped to the hero `<section>` alone; nothing else on the homepage touched.
+
+**Key structural change**: the hero image used to be `hidden lg:block` —
+invisible below 1024px, i.e. on every phone and tablet. The new spec's mobile
+section order explicitly lists the image as step 7 (after the CTA, not before),
+which means it must render on mobile too, just last — so the `hidden` class
+was removed and the image now shows at every breakpoint, sized down via
+`max-h-[380px]` (phones) / `md:max-h-[420px]` (tablet) / uncapped at `lg:`
+(desktop, where it's a `max-w-[520px]` grid column instead).
+
+**Added a subtitle that didn't exist before** — the spec gave literal text for
+it ("Caută răspunsuri clare, bazate pe dovezi, la întrebările tale despre
+nutriție și greutate.") since none was there previously; this isn't a rewrite
+of existing wording (which the spec explicitly forbade touching), it's new
+copy she supplied for a slot that was empty.
+
+**Fluid sizing, not hard breakpoint jumps** — per her "folosește responsive
+fluid între ele" instruction, sizing is a mix of one Tailwind arbitrary-value
+jump at `lg` (1024px, since the layout itself only has two real states: mobile-
+stacked and desktop-grid) plus a `min-[380px]:` variant for the few values that
+needed to differ between the 360px and 390–412px clusters specifically (CTA
+width, container padding) — not a continuous `clamp()` across the full 360–1440
+range, since her own spec gives fixed target numbers per named breakpoint
+cluster rather than a single formula.
+
+**Container/grid**: replaced the shared `container mx-auto px-4` (which would
+have resolved to 1280px max-width per Tailwind's default breakpoint, not her
+requested 1200px) with a hero-local `max-w-[1200px] mx-auto px-[18px]
+min-[380px]:px-5 lg:px-8` wrapper — scoped to this section only, doesn't affect
+the shared `.container` class used elsewhere on the page. Desktop grid is
+`lg:grid-cols-[1fr_0.9fr] lg:gap-[68px]` per spec (was an even `lg:grid-cols-2`).
+
+**Accessibility additions** (none of these existed before): a real `<label
+htmlFor="home-search" className="sr-only">` for the search input (previously
+placeholder-only); `loading="eager"` + explicit `width`/`height` on the hero
+`<img>` to declare its aspect ratio and avoid CLS; `focus-visible:ring-2`
+added to the search button, each chip, and the CTA (previously only had
+hover/active states, no visible keyboard-focus state). Chips were already
+native `<button>` elements and the search input was already inside a real
+`<form>`, so Enter-on-search and Enter/Space-on-chips worked correctly
+already — verified both explicitly with Playwright (Tab twice from the search
+input lands on the first chip; pressing Enter there fills the search field,
+same as a click).
+
+**Performance**: added `public/images/hero.webp` (164KB, quality 85) alongside
+the existing `hero.jpg` (267KB), served via a `<picture>` element with a
+`type="image/webp"` `<source>` and the JPEG as fallback — browsers that support
+WebP get the smaller file automatically, no code branching needed.
+
+**Tablet (768px)**: the spec offered two acceptable options ("layout vertical
+elegant" or a 2-column split if text doesn't get too narrow). Went with the
+simpler, lower-risk option — since the grid only switches to 2 columns at `lg`
+(1024px), 768px naturally falls into the same stacked mobile-style layout,
+which is explicitly one of her two sanctioned outcomes, rather than adding a
+separate `md:grid-cols-*` variant for a narrow 768–1023px band.
+
+**Verified**: `tsc --noEmit` (clean, same pre-existing error only), `npm run
+build`, `npx vitest run` (41/41 unrelated tests still pass), Playwright
+screenshots at all 5 required breakpoints (full-viewport captures at natural
+scroll position — an early attempt used Playwright's `element.screenshot()`,
+which scrolls the target element to the top of the viewport before capturing
+and made it look like the sticky header overlapped the title; that was a
+screenshot-capture artifact only, not a real bug, confirmed by re-shooting the
+full viewport at scroll position 0, which is what an actual visitor sees), a
+horizontal-overflow check at each breakpoint (`scrollWidth === clientWidth`
+everywhere, no overflow), and a direct `getComputedStyle` check of every
+element's real rendered font-size/line-height/height/border-radius/max-width
+at 390px and 1440px against the spec's numbers (caught one miss this way — the
+subtitle was 16px at every breakpoint instead of 18px at desktop specifically;
+fixed and re-verified before considering this done).
+
 ## Site images
 
 `public/images/` now exists with 3 of the 4 missing files, added this session:

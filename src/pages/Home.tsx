@@ -37,58 +37,68 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="relative py-20 md:py-28 bg-secondary/40 overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <section className="relative bg-secondary/40 overflow-hidden pt-7 pb-9 md:pt-14 md:pb-14 lg:pt-20 lg:pb-20">
+        <div className="max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8">
+          <div className="grid lg:grid-cols-[1fr_0.9fr] gap-2 lg:gap-[68px] items-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground leading-[1.1] mb-8">
-                {ro ? "Nutriția începe cu" : "Nutrition starts with"}{" "}
+              <h1 className="font-serif font-bold text-foreground text-[32px] min-[390px]:text-[35px] lg:text-[57px] leading-[1.08] lg:leading-[1.06] tracking-[-0.01em] max-w-[340px] lg:max-w-[560px] mb-3 lg:mb-4">
+                {ro ? "Nutriția începe cu " : "Nutrition starts with "}
                 <span className="text-orange-600">{ro ? "întrebarea potrivită." : "the right question."}</span>
               </h1>
 
-              <form onSubmit={(e) => e.preventDefault()} className="relative mb-6">
+              <p className="text-base lg:text-[18px] leading-[1.5] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-[21px] lg:mb-7">
+                {ro
+                  ? "Caută răspunsuri clare, bazate pe dovezi, la întrebările tale despre nutriție și greutate."
+                  : "Search for clear, evidence-based answers to your questions about nutrition and weight."}
+              </p>
+
+              <form onSubmit={(e) => e.preventDefault()} className="relative mb-4 lg:mb-6 lg:max-w-[540px]">
+                <label htmlFor="home-search" className="sr-only">
+                  {ro ? "Caută întrebări, subiecte sau mituri" : "Search questions, topics, or myths"}
+                </label>
                 <input
+                  id="home-search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder={ro ? "Caută întrebări, subiecte, mituri..." : "Search questions, topics, myths..."}
-                  className="w-full h-16 pl-6 pr-16 rounded-2xl border border-border bg-background text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-shadow"
+                  placeholder={ro ? "Caută o întrebare, un subiect sau un mit..." : "Search a question, topic, or myth..."}
+                  className="w-full h-[54px] lg:h-[58px] pl-4 pr-[60px] lg:pr-[64px] rounded-[14px] border border-border bg-background text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-shadow"
                   data-testid="input-home-search"
                 />
                 <button
                   type="submit"
-                  className="absolute right-2 top-2 h-12 w-12 rounded-xl bg-orange-600 hover:bg-orange-700 active:scale-[0.97] text-white flex items-center justify-center transition-all"
+                  className="absolute right-1.5 top-1.5 h-[48px] w-[48px] lg:h-[50px] lg:w-[50px] rounded-[11px] bg-orange-600 hover:bg-orange-700 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 text-white flex items-center justify-center transition-all"
                   data-testid="button-home-search"
                   aria-label={ro ? "Caută" : "Search"}
                 >
-                  <Search className="w-5 h-5" />
+                  <Search className="w-5 h-5 lg:w-[22px] lg:h-[22px]" />
                 </button>
               </form>
 
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-[13px] lg:text-sm font-medium text-muted-foreground mb-2.5 lg:mb-[14px]">
                 {ro ? "Începe cu una dintre acestea" : "Start with one of these"}
               </p>
-              <div className="grid sm:grid-cols-3 gap-3 mb-8">
+              <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-2 lg:gap-2.5 mb-[21px] lg:mb-6">
                 {quickQuestions.map((q, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setSearch(ro ? q.ro : q.en)}
-                    className="text-left p-4 rounded-xl border border-border bg-background hover:border-orange-300 hover:shadow-sm active:scale-[0.98] transition-all"
+                    className="min-h-11 lg:min-h-[42px] flex items-center gap-2 px-3 py-2.5 lg:px-[14px] rounded-xl border border-border bg-background hover:border-orange-300 hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 transition-all text-left"
                     data-testid={`button-quick-question-${i}`}
                   >
-                    <q.icon className="w-4 h-4 text-orange-600 mb-2" />
-                    <span className="text-sm font-medium text-foreground">{ro ? q.ro : q.en}</span>
+                    <q.icon className="w-4 h-4 text-orange-600 shrink-0" />
+                    <span className="text-sm lg:text-[15px] font-medium text-foreground">{ro ? q.ro : q.en}</span>
                   </button>
                 ))}
               </div>
 
               <Link
                 href="/nutrihub"
-                className="inline-flex items-center justify-center rounded-full bg-orange-600 hover:bg-orange-700 active:scale-[0.97] text-white font-medium px-8 h-12 transition-all"
+                className="inline-flex items-center justify-center w-full min-[380px]:w-auto min-[380px]:min-w-[220px] h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-orange-600 hover:bg-orange-700 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 text-white font-semibold text-[15px] lg:text-base transition-all"
                 data-testid="button-explore-nutrihub"
               >
                 {ro ? "Explorează NutriHub" : "Explore NutriHub"}
@@ -99,14 +109,20 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-              className="hidden lg:block"
+              className="mt-[26px] lg:mt-0"
             >
-              <div className="rounded-3xl overflow-hidden shadow-xl aspect-square">
-                <img
-                  src="/images/hero.jpg"
-                  alt="Diet4Life"
-                  className="w-full h-full object-cover"
-                />
+              <div className="rounded-[20px] lg:rounded-3xl overflow-hidden shadow-sm lg:shadow-xl aspect-square max-h-[380px] md:max-h-[420px] lg:max-h-none w-full lg:max-w-[520px] mx-auto lg:mx-0">
+                <picture>
+                  <source srcSet="/images/hero.webp" type="image/webp" />
+                  <img
+                    src="/images/hero.jpg"
+                    alt="Diet4Life"
+                    width={1254}
+                    height={1254}
+                    loading="eager"
+                    className="w-full h-full object-cover"
+                  />
+                </picture>
               </div>
             </motion.div>
           </div>
