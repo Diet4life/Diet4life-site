@@ -1,6 +1,7 @@
 import type { Handler } from "@netlify/functions";
 import { checkoutSubmissionSchema } from "@/lib/checkout/schemas";
 import {
+  CheckoutDisabledInProductionError,
   createOrder,
   PatientDetailsRequiredError,
   ProductNotFoundError,
@@ -48,6 +49,13 @@ export const handler: Handler = async (event) => {
       }),
     };
   } catch (error) {
+    if (error instanceof CheckoutDisabledInProductionError) {
+      return {
+        statusCode: 503,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ error: "checkout_disabled" }),
+      };
+    }
     if (error instanceof ProductNotFoundError) {
       return { statusCode: 404, body: JSON.stringify({ error: "product_not_found" }) };
     }

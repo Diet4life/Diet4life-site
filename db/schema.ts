@@ -67,6 +67,13 @@ export const products = pgTable("products", {
   currency: text("currency").notNull().default("RON"),
   productType: productTypeEnum("product_type").notNull(),
   active: boolean("active").notNull().default(false),
+  // Lets QA/dev insert real-looking rows for testing without them ever
+  // reaching real visitors: products-list (see orderService.ts) excludes
+  // is_demo=true rows whenever process.env.CONTEXT === "production" --
+  // demo products only ever render in a deploy-preview or local/dev
+  // context, never in production, even if someone flips `active` to true
+  // on one by mistake.
+  isDemo: boolean("is_demo").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

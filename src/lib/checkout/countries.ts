@@ -126,8 +126,20 @@ export const COUNTRIES: Country[] = [
 
 export const DEFAULT_COUNTRY_CODE = "RO";
 
+export const VALID_COUNTRY_CODES = new Set(COUNTRIES.map((c) => c.code));
+
 export function getCountryName(code: string, language: "ro" | "en"): string {
   const match = COUNTRIES.find((c) => c.code === code);
   if (!match) return code;
   return language === "ro" ? match.ro : match.en;
+}
+
+// Countries where a postal code isn't part of a normal billing address.
+// Deliberately a short, well-known list rather than per-country regex
+// validation -- everywhere else, postal code is required but accepted as
+// free text (no format assumptions that could reject a real address).
+const COUNTRIES_WITHOUT_POSTAL_CODE = new Set(["AE", "QA", "HK"]);
+
+export function isPostalCodeRequired(countryCode: string): boolean {
+  return !COUNTRIES_WITHOUT_POSTAL_CODE.has(countryCode);
 }

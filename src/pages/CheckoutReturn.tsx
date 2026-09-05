@@ -39,8 +39,8 @@ export default function CheckoutReturn() {
   }, []);
 
   return (
-    <div className="py-24 min-h-screen flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
+    <div className="py-16 sm:py-24 min-h-screen flex items-center justify-center px-4">
+      <div className="max-w-lg w-full">
         {state === "loading" && (
           <div className="flex justify-center">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -48,7 +48,7 @@ export default function CheckoutReturn() {
         )}
 
         {(state === "missing-token" || state === "not-found") && (
-          <div className="text-center">
+          <div className="rounded-2xl border border-border bg-card shadow-sm p-8 sm:p-10 text-center">
             <HelpCircle className="w-14 h-14 text-muted-foreground mx-auto mb-5" />
             <h1 className="font-serif font-bold text-2xl text-foreground mb-2">
               {ro ? "Nu am găsit această comandă" : "We couldn't find this order"}

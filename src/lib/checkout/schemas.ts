@@ -1,11 +1,9 @@
 import { z } from "zod";
-import { COUNTRIES, DEFAULT_COUNTRY_CODE } from "@/lib/checkout/countries";
+import { DEFAULT_COUNTRY_CODE, VALID_COUNTRY_CODES, isPostalCodeRequired } from "@/lib/checkout/countries";
 
 // ---- billing --------------------------------------------------------------
 // "Pentru cine se emite factura?" -- persoană fizică vs. persoană
 // juridică/PFA. CNP is deliberately never a field here.
-
-const VALID_COUNTRY_CODES = new Set(COUNTRIES.map((c) => c.code));
 
 const addressFields = {
   // ISO 3166-1 alpha-2. Required and selectable -- Diet4Life can sell
@@ -39,10 +37,21 @@ export const companyBillingSchema = z.object({
   ...addressFields,
 });
 
-export const billingSchema = z.discriminatedUnion("personType", [
-  individualBillingSchema,
-  companyBillingSchema,
-]);
+export const billingSchema = z
+  .discriminatedUnion("personType", [individualBillingSchema, companyBillingSchema])
+  .superRefine((data, ctx) => {
+    // Required only for countries where a postal code is a normal part of a
+    // billing address (see countries.ts) -- not a blanket requirement, and
+    // no per-country format regex, so a real international address is
+    // never rejected for "looking wrong".
+    if (isPostalCodeRequired(data.countryCode) && !data.postalCode?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["postalCode"],
+        message: "Codul poștal este obligatoriu pentru țara selectată",
+      });
+    }
+  });
 
 export type BillingInput = z.infer<typeof billingSchema>;
 

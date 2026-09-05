@@ -2,10 +2,17 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "@/server/db/client";
 import { billingDetails, orders, patientDetails, products } from "../../../db/schema";
 import { generateOrderNumber, generatePublicStatusToken } from "@/server/security/publicToken";
+import { isProductionContext } from "@/server/environment";
 import type { BillingInput, PatientInput } from "@/lib/checkout/schemas";
 
 export class ProductNotFoundError extends Error {}
 export class PatientDetailsRequiredError extends Error {}
+// Phase 1 has no real payment provider yet -- order creation is
+// intentionally refused in the production context so nobody can complete a
+// checkout that looks operational but never actually charges anything.
+// Deploy previews and local/dev keep working normally for testing. Remove
+// this guard once Phase 2 wires a real NETOPIA callback.
+export class CheckoutDisabledInProductionError extends Error {}
 
 function billingRow(orderId: number, billing: BillingInput) {
   const shared = {
@@ -56,7 +63,13 @@ function isUniqueViolation(err: unknown): boolean {
 
 export async function listActiveProducts() {
   const db = getDb();
-  return db.select().from(products).where(eq(products.active, true));
+  const conditions = [eq(products.active, true)];
+  // Demo/test rows (is_demo=true) are visible in dev/deploy-preview for QA,
+  // never in production -- even if `active` was mistakenly left true.
+  if (isProductionContext()) {
+    conditions.push(eq(products.isDemo, false));
+  }
+  return db.select().from(products).where(and(...conditions));
 }
 
 export interface CreateOrderInput {
@@ -68,6 +81,12 @@ export interface CreateOrderInput {
 // The single place order prices are decided. The browser never supplies a
 // price -- it is always read fresh from the products table here.
 export async function createOrder(input: CreateOrderInput) {
+  if (isProductionContext()) {
+    throw new CheckoutDisabledInProductionError(
+      "Online checkout is not yet available in production (no payment provider is wired up)",
+    );
+  }
+
   const db = getDb();
 
   const [product] = await db

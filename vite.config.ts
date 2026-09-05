@@ -5,6 +5,14 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // Baked into the client bundle at build time from Netlify's own CONTEXT
+  // build variable ("production" | "deploy-preview" | "branch-deploy" |
+  // "dev") -- see src/lib/checkout/environment.ts. Not set here locally
+  // (CONTEXT is undefined outside a Netlify build), so local dev/preview
+  // builds correctly default to "dev".
+  define: {
+    __NETLIFY_CONTEXT__: JSON.stringify(process.env.CONTEXT ?? "dev"),
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),

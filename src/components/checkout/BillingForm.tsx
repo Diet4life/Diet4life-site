@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CountrySelect } from "@/components/checkout/CountrySelect";
-import { DEFAULT_COUNTRY_CODE } from "@/lib/checkout/countries";
+import { DEFAULT_COUNTRY_CODE, isPostalCodeRequired } from "@/lib/checkout/countries";
 import type { CheckoutSubmissionInput } from "@/lib/checkout/schemas";
 
 // Address field labels adapt to the selected country -- Romania's own
@@ -37,6 +37,7 @@ export function BillingForm() {
   const personType = form.watch("billing.personType");
   const countryCode = form.watch("billing.countryCode") ?? DEFAULT_COUNTRY_CODE;
   const labels = addressLabels(countryCode, ro);
+  const postalRequired = isPostalCodeRequired(countryCode);
 
   return (
     <div className="space-y-6">
@@ -200,7 +201,7 @@ export function BillingForm() {
                 <CountrySelect
                   value={field.value}
                   onChange={field.onChange}
-                  testId="select-billing-country"
+                  data-testid="select-billing-country"
                 />
               </FormControl>
               <FormMessage />
@@ -268,8 +269,10 @@ export function BillingForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {ro ? "Cod poștal" : "Postal code"}{" "}
-                <span className="text-muted-foreground font-normal">({ro ? "opțional" : "optional"})</span>
+                {ro ? "Cod poștal" : "Postal code"}
+                {postalRequired ? " *" : (
+                  <span className="text-muted-foreground font-normal"> ({ro ? "opțional" : "optional"})</span>
+                )}
               </FormLabel>
               <FormControl>
                 <Input className={inputClass} {...field} data-testid="input-billing-postal" />

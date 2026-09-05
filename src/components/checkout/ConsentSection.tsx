@@ -9,9 +9,13 @@ import type { CheckoutSubmissionInput } from "@/lib/checkout/schemas";
 // this checkbox is hand-wired (react-hook-form's boolean/literal(true)
 // mismatch doesn't map cleanly onto FormField's render-prop pattern), so
 // using <FormMessage> here throws as soon as an error appears.
-function ConsentError({ message }: { message?: string }) {
+function ConsentError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
-  return <p className="text-[0.8rem] font-medium text-destructive">{message}</p>;
+  return (
+    <p id={id} className="text-[0.8rem] font-medium text-destructive">
+      {message}
+    </p>
+  );
 }
 
 // Only Terms & Conditions require an explicit checkbox. The Privacy Policy
@@ -23,6 +27,7 @@ export function ConsentSection() {
   const form = useFormContext<CheckoutSubmissionInput>();
 
   const termsError = form.formState.errors.consent?.termsAccepted;
+  const termsErrorId = "consent-terms-error";
 
   return (
     <div className="space-y-3">
@@ -33,6 +38,8 @@ export function ConsentSection() {
           onCheckedChange={(checked) =>
             form.setValue("consent.termsAccepted", (checked === true) as true, { shouldValidate: true })
           }
+          aria-describedby={termsError ? termsErrorId : undefined}
+          aria-invalid={termsError ? true : undefined}
           data-testid="checkbox-consent-terms"
         />
         <span className="text-sm text-foreground leading-relaxed">
@@ -43,7 +50,7 @@ export function ConsentSection() {
           .
         </span>
       </label>
-      <ConsentError message={termsError?.message as string | undefined} />
+      <ConsentError id={termsErrorId} message={termsError?.message as string | undefined} />
 
       <p className="text-xs text-muted-foreground leading-relaxed">
         {ro ? "Prin continuarea comenzii confirmi că ai luat la cunoștință " : "By continuing your order you confirm you have reviewed our "}

@@ -15,6 +15,7 @@ import { ConsentSection } from "@/components/checkout/ConsentSection";
 import { PaymentButton } from "@/components/checkout/PaymentButton";
 import { checkoutSubmissionSchema, type CheckoutSubmissionInput } from "@/lib/checkout/schemas";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/checkout/countries";
+import { isProductionBuild } from "@/lib/checkout/environment";
 import type { Product } from "@/lib/checkout/types";
 
 export default function Checkout() {
@@ -103,6 +104,19 @@ export default function Checkout() {
   const needsPatient = product.productType !== "digital_product";
 
   async function onSubmit(values: CheckoutSubmissionInput) {
+    // Defense in depth -- PaymentButton doesn't render a submit control in
+    // production at all, but this keeps onSubmit itself from ever calling
+    // orders-create there (e.g. an Enter-key submit). The real, always-on
+    // guard is server-side in orderService.ts's createOrder().
+    if (isProductionBuild()) {
+      toast({
+        title: ro ? "Plățile online nu sunt încă disponibile" : "Online payments aren't available yet",
+        description: ro
+          ? "Revino în curând sau contactează-ne pentru a finaliza comanda."
+          : "Please check back soon, or contact us to complete your order.",
+      });
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {
@@ -162,7 +176,7 @@ export default function Checkout() {
 
   return (
     <div className="py-16 md:py-24 bg-background min-h-screen">
-      <div className="container mx-auto px-4 max-w-5xl">
+      <div className="container mx-auto px-4 max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -181,7 +195,7 @@ export default function Checkout() {
               // Desktop: two columns. Left = form + consents. Right = a
               // sticky "Comanda ta" card that stays visible while the form
               // is filled in, ending with the payment CTA.
-              <div className="grid grid-cols-[1fr_360px] gap-10 items-start">
+              <div className="grid grid-cols-[1fr_340px] gap-12 items-start">
                 <div className="space-y-10">
                   {billingSection}
                   {patientSection}
