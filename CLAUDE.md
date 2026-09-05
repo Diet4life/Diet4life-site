@@ -1282,6 +1282,105 @@ order-creation flow or DB structure changed.
   build (`vite build` bundles everything upfront, no on-demand optimization
   step exists there).
 
+## Checkout Phase 1 final polish round — done, awaiting user approval before Phase 2
+
+User approved the visual direction from the UX-refinement round above and asked for
+one last polish pass before considering Phase 1 complete, with an explicit "do not
+start Phase 2" and "keep the current architecture/design, only touch the 11 points
+below" framing. All 11 points implemented; nothing else in the checkout flow touched.
+
+- **Demo/production separation (the headline requirement)** — "Ghid Nutrițional PDF
+  (demo)" / "Consultație de nutriție (demo)" must never be visible in production, and
+  the implementation must *prevent* accidental publishing, not just hide it in the UI.
+  Real DB schema change: `products.is_demo` (boolean, default `false`). New
+  `src/server/environment.ts` (`isProductionContext()`, reads Netlify's own `CONTEXT`
+  runtime var — never a header, hostname, or anything client-spoofable) is checked in
+  two places:
+  - `orderService.ts`'s `listActiveProducts()` adds `AND is_demo = false` to the query
+    whenever `isProductionContext()` is true — demo rows are simply never returned to
+    a production request, regardless of their `active` flag.
+  - `orderService.ts`'s `createOrder()` throws a new `CheckoutDisabledInProductionError`
+    as its very first line whenever `isProductionContext()` is true — **no order can be
+    created in production at all**, full stop, since there's no real payment provider
+    yet (Phase 2). `orders-create.ts` maps this to a `503 { error: "checkout_disabled" }`.
+    Verified directly with `curl` against the bundled function (bypassing the UI
+    entirely) that this fires even with a hand-crafted request.
+  - Client-side mirror, defense-in-depth only (the guards above are the real,
+    authoritative ones): `src/lib/checkout/environment.ts` (`isProductionBuild()`)
+    reads a new `__NETLIFY_CONTEXT__` global baked into the bundle by a `vite.config.ts`
+    `define` block from `process.env.CONTEXT` **at build time** — confirmed by grepping
+    the built JS that esbuild's minifier statically eliminates the losing branch
+    entirely (a production build's bundle contains zero occurrences of the working
+    "Continuă către plată" button text; a dev build's bundle contains zero occurrences
+    of the disabled-panel's testid) — a stronger guarantee than a runtime-only check.
+    `PaymentButton.tsx` renders a plain informational panel in production ("Plățile
+    online nu sunt încă disponibile." / "Revino în curând sau contactează-ne...")
+    instead of any button; `Checkout.tsx`'s `onSubmit` also short-circuits with a toast
+    in production, so even an Enter-key submit can't call the disabled endpoint.
+  - **Caveat, flagged rather than assumed**: confident `CONTEXT` is set at Netlify's
+    build step; not independently verifiable from this sandbox whether it's also
+    reliably injected into the Functions *runtime* on every deploy context — worth a
+    quick real-deploy check before fully trusting the server-side guard alone.
+- **Country selector polish** — `CountrySelect.tsx` converted to `forwardRef` and now
+  accepts/forwards `id`/`aria-describedby`/`aria-invalid` — previously a plain function
+  component, so shadcn's `<FormControl>` (a Radix `Slot`) silently couldn't wire up
+  the label/error/invalid-state association at all (a real, pre-existing accessibility
+  gap, not something the UX round introduced). Also added: an explicit `aria-label`
+  on the trigger and the search input; `min-h-11` (44px) touch targets on each option
+  (was relying on cmdk's smaller default); diacritic-insensitive search (`.normalize
+  ("NFD").replace(/[̀-ͯ]/g, "")` on both the query and each candidate) so
+  typing "Franta" without the ț still finds "Franța" — verified directly with
+  Playwright. Escape closes the popover and selecting an option closes it — both were
+  already correct shadcn/Radix `Popover` behavior, verified rather than assumed.
+  Selection remains the only way to set the value (no free-text path), so an
+  out-of-list code can never reach form state.
+- **Postal code — real validation change** — was unconditionally optional; now
+  `isPostalCodeRequired(countryCode)` (`src/lib/checkout/countries.ts`) returns `false`
+  only for a short, explicit list of countries where postal code isn't part of a normal
+  billing address (UAE, Qatar, Hong Kong) and `true` everywhere else, wired into
+  `billingSchema` via `.superRefine()`. Deliberately no per-country regex/format
+  validation at this stage (per the explicit "don't invent restrictive regexes" ask) —
+  just required-or-not, free text either way, so no valid real-world postal code can
+  ever be rejected.
+- **Desktop layout widened** — `Checkout.tsx`'s grid changed from
+  `grid-cols-[1fr_360px] gap-10` to `grid-cols-[1fr_340px] gap-12` — a narrower, fixed
+  summary column frees up real width for the form column without shrinking any input.
+  Sticky behavior re-verified beyond the original round's single mid-scroll screenshot:
+  tested a viewport taller than the entire page (worst case for "shouldn't overrun the
+  footer") and scrolled all the way to the bottom — in both cases the sticky card's
+  computed bounding box stays strictly between the header's bottom edge and the
+  footer's top edge. Confirmed disabled entirely below `lg` (single sticky element on
+  a mobile viewport is the site's own header, not the order card).
+- **Return/status page enriched** — `StatusStates.tsx` rebuilt around a shared
+  `StatusCard` (icon + a text-and-icon pill, never color alone + title + product/amount
+  + explanation + CTA slot), used by all four status branches. The realistic Phase 1
+  state (`pending_payment`) now reads, verbatim: title "Comanda a fost înregistrată",
+  explanation "Plata online nu este activă în această versiune de test. Nu a fost
+  efectuată nicio plată." — never "Plata a fost efectuată" / "Comanda este confirmată"
+  anywhere in that branch. `CheckoutReturn.tsx`'s missing-token/not-found state now
+  uses the same card shell for visual consistency (previously bare text).
+- **Consent accessibility fix** — the Terms checkbox's validation error
+  (`ConsentSection.tsx`) was rendered as a plain, visually-adjacent `<p>` with no
+  programmatic link back to the checkbox. Now the error paragraph has a stable `id`
+  and the checkbox carries a conditional `aria-describedby`/`aria-invalid` pointing at
+  it — verified via Playwright that submitting without checking the box sets
+  `aria-invalid="true"` and `aria-describedby` resolves to the exact error text.
+- **Beneficiary wording / consent copy** — both already matched the requested exact
+  wording from the UX-refinement round; re-verified byte-for-byte against this round's
+  spec, no changes needed.
+- **Mobile sweep** — 360/390/412/430px all checked for horizontal overflow
+  (`scrollWidth === clientWidth` at every width) both on the plain checkout form and
+  with the country dropdown open; no clipping, no edge-stuck elements observed.
+- New migration: `netlify/database/migrations/*_demo_flag_and_polish/` — a single
+  `ADD COLUMN is_demo boolean NOT NULL DEFAULT false`, no renames, no interactive
+  `drizzle-kit` prompt needed.
+- Verified with the same methodology as every prior round (scratch local Postgres +
+  `netlify functions:serve` + `vite`, both restarted once under `CONTEXT=production`
+  to exercise the production-only branches for real): `tsc --noEmit` clean (same one
+  pre-existing unrelated error), `npx vitest run` 41/41 unrelated tests unaffected,
+  `npm run build` clean (same pre-existing chunk-size warning only). Scratch Postgres
+  and both dev servers torn down after testing; nothing from them persists in the repo.
+
 ## Known pre-existing issues (not caused by us, not yet fixed)
 
 - `src/pages/*.tsx` used to reference `/images/hero.png`, `/images/portrait.png`,
