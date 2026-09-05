@@ -1381,6 +1381,78 @@ below" framing. All 11 points implemented; nothing else in the checkout flow tou
   `npm run build` clean (same pre-existing chunk-size warning only). Scratch Postgres
   and both dev servers torn down after testing; nothing from them persists in the repo.
 
+## Checkout Phase 1 — three pre-approval corrections — done, still awaiting approval
+
+Before giving final approval for Phase 1, the user asked for three more things, framed
+explicitly as verification/correction rather than new scope: a genuinely complete country
+list (not the ~125-country hand-picked one from the prior round), a less blunt postal-code
+rule, and a straight, unambiguous answer about the `tsc` error the previous report had
+described in a self-contradictory way ("clean (same pre-existing error)"). No DB/schema
+change this round — `billing_details.country_code` was already free-text ISO alpha-2.
+
+- **`tsc --noEmit` — the contradiction was real, and it's fixed.** Re-ran it fresh: exit
+  code was **2** (a real error, not a warning) — `src/App.tsx(67,45): error TS2339:
+  Property 'env' does not exist on type 'ImportMeta'.`, from `import.meta.env.BASE_URL`.
+  Confirmed via `git log -S` that this line (and the error) predates every change made
+  this session — it's in the repo's very first commit (`e4f9837 "Add files via upload"`).
+  Root cause: `tsconfig.json` never referenced Vite's own client types (no `"types":
+  ["vite/client"]`, no `vite-env.d.ts`) even though `node_modules/vite/client.d.ts` — which
+  declares `ImportMetaEnv`/`ImportMeta.env` — was sitting right there. `npm run build`
+  always succeeded regardless, because `"build": "vite build"` never ran `tsc` at all —
+  Vite transpiles with esbuild, so a type error can't block it. Since the fix is one file
+  and zero risk, fixed it rather than write another paragraph justifying leaving it: added
+  `src/vite-env.d.ts` with the standard `/// <reference types="vite/client" />`. `tsc
+  --noEmit` now exits **0**, no output. This is the first time in the session that command
+  has actually been clean — every previous report's "same pre-existing error" was, correctly
+  pointed out, not the same thing as clean.
+- **Country list — full ISO 3166-1, generated, not hand-typed.** Added
+  `i18n-iso-countries` and `lib-address` as **devDependencies only** (never imported at
+  runtime — confirmed by grepping the production bundle for both package names, zero
+  hits). `scripts/generate-countries.cjs` reads `i18n-iso-countries` for the alpha-2 code
+  list plus its RO and EN locale name tables, cross-references each code against
+  `lib-address`'s per-country JSON (a redistribution of Google's own address metadata —
+  the same data behind Google Pay/Android/Chrome autofill) for whether that country's
+  `require` field lists `Z` (postal code), and writes the result to the checked-in
+  `src/lib/checkout/countries.generated.ts` (250 entries, regenerate with `node
+  scripts/generate-countries.cjs` if either package is upgraded). `countries.ts` now just
+  re-exports that generated list sorted by the Romanian name, plus the same
+  `DEFAULT_COUNTRY_CODE`/`VALID_COUNTRY_CODES`/`getCountryName` API as before — no call
+  site elsewhere needed to change. One honest trade-off worth knowing: a couple of the
+  generated RO names are more formal/bureaucratic than the old hand-picked list's — e.g.
+  Hong Kong is now "R.A.S. Hong Kong a Chinei" (its real ISO/UN-derived long name) instead
+  of the old plain "Hong Kong" — a fair price for not hand-typing 250 entries, but flagged
+  rather than silently shipped.
+- **Postal code — required only where the same Google address metadata positively confirms
+  it, optional everywhere else.** This inverts the prior round's default: before, postal
+  code was required-by-default with 3 hand-picked exceptions (UAE/Qatar/Hong Kong); now
+  `isPostalCodeRequired(code)` (`countries.ts`) looks up the generated `postalRequired`
+  flag from that same `lib-address` dataset and defaults to **false** — for a country
+  missing from the dataset entirely, or one whose data doesn't list `Z` as required — never
+  guessed into `true`. Still zero per-country regex/format validation, exactly as before —
+  only a required/optional boolean, free text either way. Caught a real case the old
+  3-item list got wrong in the direction of being *too strict*: Ireland's Eircode isn't
+  marked required in Google's own data (fairly recent, non-universally-adopted), so it's
+  now correctly optional — the old logic would have forced it as required since Ireland
+  wasn't in the 3-country exception set. 74 of the 250 countries came out `postalRequired:
+  true` (all of the EU/EEA, the US, and most of the rest of Europe/the Americas/APAC with a
+  confirmed postal system in Google's data).
+- Verified with the full scratch stack again (fresh local Postgres, all 3 existing
+  migrations applied unchanged, `netlify functions:serve` + `vite`, a real non-demo seeded
+  product): the country dropdown renders **250** options; default is still România; typing
+  "Franta"/"romania" without diacritics still resolves correctly (unaffected — that fix
+  lives in `CountrySelect.tsx`, not touched this round); a garbage query renders the
+  existing "Nicio țară găsită" empty state rather than accepting free text; spot-checked
+  France/Germany/USA/Romania as `postalRequired: true` and Hong Kong/Ireland/Andorra/UAE/
+  Moldova as `false`, all matching the generated data exactly. `tsc --noEmit` exit 0, `npx
+  vitest run` 41/41 (unrelated, untouched), `npm run build` clean (same one pre-existing
+  chunk-size warning, bundle size essentially unchanged — the extra ~150 country entries
+  add a few KB). Scratch Postgres and both dev servers torn down after testing.
+- Files touched this round: `src/lib/checkout/countries.ts` (rewritten to consume the
+  generated data), `src/lib/checkout/countries.generated.ts` (new, generated, not
+  hand-edited), `scripts/generate-countries.cjs` (new), `src/vite-env.d.ts` (new),
+  `package.json`/`package-lock.json` (two new devDependencies). Nothing else in the
+  checkout flow, DB schema, or any other page was touched.
+
 ## Known pre-existing issues (not caused by us, not yet fixed)
 
 - `src/pages/*.tsx` used to reference `/images/hero.png`, `/images/portrait.png`,
