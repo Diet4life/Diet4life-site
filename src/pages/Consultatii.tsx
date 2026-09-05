@@ -1,17 +1,21 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
   Download, Upload, Send, BookOpen, CheckCircle2,
   ChevronRight, Info, Utensils, FileText, Mail,
-  ClipboardList, AlertCircle,
+  ClipboardList, AlertCircle, X, Plus,
+  Pill, TestTube2, FolderOpen,
+  Circle, ListChecks,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -23,13 +27,41 @@ interface PatientInfo {
 }
 
 interface MealEntry {
-  time: string; food: string; quantity: string; liquids: string; notes: string;
+  label: string; time: string; food: string; quantity: string; quantityUnit: string; liquids: string;
+  hungerBefore: string; fullnessAfter: string; why: string[];
 }
 
 type JournalDay = MealEntry[];
 
-const EMPTY_MEAL = (): MealEntry => ({ time: "", food: "", quantity: "", liquids: "", notes: "" });
-const EMPTY_DAY = (): JournalDay => Array.from({ length: 5 }, EMPTY_MEAL);
+const WHY_REASONS = ["Foame", "Obicei", "Plictiseală", "Stres", "Emoție", "Social", "Poftă"];
+const DEFAULT_MEAL_LABELS = ["Mic dejun", "Gustare dimineață", "Prânz", "Gustare după-amiază", "Cină"];
+const QUANTITY_UNITS = ["g", "ml", "cană", "linguriță", "lingură", "bucată", "porție", "felie", "pumn"];
+
+// Useful for the initial evaluation — deliberately excludes serum protein electrophoresis,
+// zinc, and abdominal ultrasound per explicit instruction; those aren't baseline tests here.
+const LAB_CATEGORIES = [
+  {
+    title: "Evaluare generală și metabolică",
+    tests: [
+      "Hemoleucogramă completă", "Glicemie à jeun", "Hemoglobină glicozilată – HbA1c",
+      "Colesterol total", "LDL-colesterol", "HDL-colesterol", "Trigliceride",
+      "TGO / AST", "TGP / ALT", "GGT", "Creatinină cu eGFR", "Acid uric",
+    ],
+  },
+  {
+    title: "Minerale și status nutrițional",
+    tests: [
+      "Calciu", "Magneziu", "Potasiu", "Clor", "Feritină", "Sideremie",
+      "Vitamina B12", "Acid folic", "25-OH vitamina D",
+    ],
+  },
+];
+
+const EMPTY_MEAL = (label = ""): MealEntry => ({
+  label, time: "", food: "", quantity: "", quantityUnit: "", liquids: "",
+  hungerBefore: "", fullnessAfter: "", why: [],
+});
+const EMPTY_DAY = (): JournalDay => DEFAULT_MEAL_LABELS.map(EMPTY_MEAL);
 const EMPTY_JOURNAL = (): JournalDay[] => Array.from({ length: 7 }, EMPTY_DAY);
 
 const EMPTY_PATIENT: PatientInfo = {
@@ -38,20 +70,64 @@ const EMPTY_PATIENT: PatientInfo = {
   discomfortFoods: "", mainDifficulty: "", objectives: "",
 };
 
+// Hand portion guide — a visual, memorable alternative to a scale/measuring cup.
+// The color triplets are used both as jsPDF fill colors and as inline RGB styles on the web page.
 const PORTION_GUIDE = [
-  { item: "Carne / pește", tip: "aproximativ cât palma" },
-  { item: "Brânză", tip: "aproximativ 2–3 degete" },
-  { item: "Garnitură", tip: "2–4 linguri de supă" },
-  { item: "Legume", tip: "1–2 pumni" },
-  { item: "Pâine", tip: "1 felie" },
-  { item: "Ulei", tip: "1 linguriță" },
-  { item: "Fruct", tip: "1 bucată mică sau cât un pumn" },
-  { item: "Nuci / semințe", tip: "1 lingură sau un pumn mic" },
+  { hand: "Palmă", color: [92, 138, 103] as [number, number, number], group: "Proteine", examples: "carne, pește, tofu, ouă" },
+  { hand: "Pumn", color: [70, 130, 180] as [number, number, number], group: "Legume", examples: "crude sau gătite" },
+  { hand: "Căuș de mână", color: [200, 150, 60] as [number, number, number], group: "Carbohidrați", examples: "orez, cartofi, cereale, paste" },
+  { hand: "Degetul mare", color: [230, 140, 60] as [number, number, number], group: "Grăsimi", examples: "ulei, unt, nuci, semințe" },
+  { hand: "Vârful degetului", color: [200, 90, 90] as [number, number, number], group: "Adaosuri bogate caloric", examples: "dulceață, unt de arahide, sosuri" },
 ];
 
+// Hunger/fullness scale (1-5) shown per meal in the journal — 3 is the sweet spot both
+// ways (hungry-but-not-starving before, comfortably satisfied after), extremes at 1/5.
+const HUNGER_SCALE = [
+  { level: "1", color: [200, 90, 90] as [number, number, number], before: "Foame extremă, amețeală", after: "Încă flămândă" },
+  { level: "2", color: [230, 140, 60] as [number, number, number], before: "Foarte flămândă", after: "Aproape sătulă" },
+  { level: "3", color: [92, 138, 103] as [number, number, number], before: "Flămândă, gata de masă", after: "Confortabil sătulă (ideal)" },
+  { level: "4", color: [230, 140, 60] as [number, number, number], before: "Puțin flămândă", after: "Sătulă, grea" },
+  { level: "5", color: [200, 90, 90] as [number, number, number], before: "Neutră, deloc flămândă", after: "Prea plină" },
+];
+
+// ─── Unicode font loading (DejaVu Sans — full Romanian diacritics support) ───
+// jsPDF's built-in "helvetica" is WinAnsi-only and silently drops ă/â/î/ș/ț,
+// which also corrupts splitTextToSize's width math (text overflowing its box).
+// Fonts are fetched from /public at generation time so they don't bloat the JS bundle.
+let fontsLoaded = false;
+
+async function arrayBufferToBase64(buf: ArrayBuffer): Promise<string> {
+  let binary = "";
+  const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+async function registerFonts(doc: jsPDF) {
+  if (!fontsLoaded) {
+    const [regularRes, boldRes] = await Promise.all([
+      fetch("/fonts/DejaVuSans.ttf"),
+      fetch("/fonts/DejaVuSans-Bold.ttf"),
+    ]);
+    const [regular, bold] = await Promise.all([
+      arrayBufferToBase64(await regularRes.arrayBuffer()),
+      arrayBufferToBase64(await boldRes.arrayBuffer()),
+    ]);
+    (window as any).__diet4lifeFontCache = { regular, bold };
+    fontsLoaded = true;
+  }
+  const { regular, bold } = (window as any).__diet4lifeFontCache;
+  doc.addFileToVFS("DejaVuSans.ttf", regular);
+  doc.addFont("DejaVuSans.ttf", "DejaVuSans", "normal");
+  doc.addFileToVFS("DejaVuSans-Bold.ttf", bold);
+  doc.addFont("DejaVuSans-Bold.ttf", "DejaVuSans", "bold");
+  doc.setFont("DejaVuSans", "normal");
+}
+
 // ─── PDF Generator ─────────────────────────────────────────────────────────
-function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
+async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  await registerFonts(doc);
   const margin = 15;
   const pageW = 210;
   let y = margin;
@@ -64,43 +140,53 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.setFillColor(92, 138, 103);
   doc.rect(0, 0, pageW, 22, "F");
   doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("DejaVuSans", "bold");
   doc.setFontSize(14);
   doc.text("Diet4Life Concept", margin, 10);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("DejaVuSans", "normal");
   doc.setFontSize(9);
   doc.text("Nutriție medicală personalizată  |  contact@diet4lifeconcept.ro  |  0766 572 968", margin, 17);
   y = 30;
 
   // Title
   doc.setTextColor(30, 30, 30);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("DejaVuSans", "bold");
   doc.setFontSize(16);
   doc.text("Jurnal Alimentar – 7 Zile", margin, y);
   y += 6;
-  doc.setFont("helvetica", "normal");
+  doc.setFont("DejaVuSans", "normal");
   doc.setFontSize(9);
   doc.setTextColor(100, 100, 100);
   doc.text("Pregătire pentru consultație nutrițională", margin, y);
-  y += 10;
+  y += 8;
 
-  // Instruction box
+  // Completion options — how the patient can fill in and return this journal
+  const optionsText = "Puteți completa acest jurnal tipărit de mână, sau direct online pe site-ul nostru (diet4lifeconcept.ro). Odată completat, trimiteți-l — fotografiat, scanat sau ca document — pe email la contact@diet4lifeconcept.ro.";
+  doc.setFontSize(8);
+  doc.setFont("DejaVuSans", "normal");
+  doc.setTextColor(100, 100, 100);
+  const optionsWrapped = doc.splitTextToSize(optionsText, pageW - 2 * margin);
+  doc.text(optionsWrapped, margin, y);
+  y += optionsWrapped.length * 4 + 6;
+
+  // Instruction box — height computed from the wrapped line count so text never overflows it
+  const instrText = "Notați toate mesele și gustările timp de 7 zile consecutive. Includeți orele, cantitățile aproximative, lichidele consumate și orice simptome digestive (foame, balonare, greață etc.).";
+  doc.setFontSize(8);
+  const wrapped = doc.splitTextToSize(instrText, pageW - 2 * margin - 8);
+  const instrBoxHeight = 8 + wrapped.length * 4;
   doc.setFillColor(240, 248, 242);
   doc.setDrawColor(92, 138, 103);
-  doc.roundedRect(margin, y, pageW - 2 * margin, 18, 2, 2, "FD");
+  doc.roundedRect(margin, y, pageW - 2 * margin, instrBoxHeight, 2, 2, "FD");
   doc.setTextColor(60, 100, 70);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("DejaVuSans", "bold");
   doc.text("Instrucțiuni:", margin + 4, y + 5);
-  doc.setFont("helvetica", "normal");
-  const instrText = "Notați toate mesele și gustările timp de 7 zile consecutive. Includeți orele, cantitățile aproximative, lichidele consumate și orice simptome digestive (foame, balonare, greață etc.).";
-  const wrapped = doc.splitTextToSize(instrText, pageW - 2 * margin - 8);
+  doc.setFont("DejaVuSans", "normal");
   doc.setTextColor(80, 80, 80);
-  doc.text(wrapped, margin + 4, y + 10);
-  y += 24;
+  doc.text(wrapped, margin + 4, y + 9);
+  y += instrBoxHeight + 6;
 
   // ── Patient Info ──────────────────────────────────────────────────────────
-  doc.setFont("helvetica", "bold");
+  doc.setFont("DejaVuSans", "bold");
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
   doc.text("Date Pacient", margin, y);
@@ -126,7 +212,7 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     head: [],
     body: fields,
     theme: "grid",
-    styles: { fontSize: 8, cellPadding: 2.5 },
+    styles: { fontSize: 8, cellPadding: 2.5, font: "DejaVuSans" },
     columnStyles: {
       0: { fontStyle: "bold", cellWidth: 65, fillColor: [248, 251, 249] },
       1: { cellWidth: pageW - 2 * margin - 65 },
@@ -135,29 +221,75 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   });
   y = (doc as any).lastAutoTable.finalY + 10;
 
-  // ── Portion Guide ─────────────────────────────────────────────────────────
-  addPageIfNeeded(50);
-  doc.setFont("helvetica", "bold");
+  // ── Portion Guide (hand-based) ────────────────────────────────────────────
+  addPageIfNeeded(55);
+  doc.setFont("DejaVuSans", "bold");
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
-  doc.text("Ghid estimare porții", margin, y);
-  y += 4;
+  doc.text("Ghid vizual: mâna ca unitate de măsură", margin, y);
+  y += 5;
+  doc.setFont("DejaVuSans", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text("Simplu și eficient, fără cântar sau pahar gradat.", margin, y);
+  y += 5;
 
   autoTable(doc, {
     startY: y,
-    head: [["Aliment", "Porție orientativă"]],
-    body: PORTION_GUIDE.map(p => [p.item, p.tip]),
-    theme: "striped",
+    head: [["Reper", "Grup alimentar", "Exemple"]],
+    body: PORTION_GUIDE.map(p => [p.hand, p.group, p.examples]),
+    theme: "grid",
     headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 8, fontStyle: "bold" },
-    styles: { fontSize: 8, cellPadding: 2 },
+    styles: { fontSize: 8, cellPadding: 3, font: "DejaVuSans" },
     margin: { left: margin, right: margin },
-    columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: pageW - 2 * margin - 60 } },
+    columnStyles: {
+      0: { cellWidth: 38, fontStyle: "bold", cellPadding: { top: 3, right: 3, bottom: 3, left: 10 } },
+      1: { cellWidth: 45, fontStyle: "bold" },
+      2: { cellWidth: pageW - 2 * margin - 83 },
+    },
+    didDrawCell: (data) => {
+      if (data.section === "body" && data.column.index === 0) {
+        const p = PORTION_GUIDE[data.row.index];
+        doc.setFillColor(...p.color);
+        doc.circle(data.cell.x + 4, data.cell.y + data.cell.height / 2, 2, "F");
+      }
+    },
+  });
+  y = (doc as any).lastAutoTable.finalY + 10;
+
+  // ── Hunger/fullness scale legend ──────────────────────────────────────────
+  addPageIfNeeded(45);
+  doc.setFont("DejaVuSans", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(30, 30, 30);
+  doc.text("Ce înseamnă scala 1-5 (Foame înainte / Sațietate după)", margin, y);
+  y += 5;
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Nivel", "Foame înainte de masă", "Sațietate după masă"]],
+    body: HUNGER_SCALE.map(h => [h.level, h.before, h.after]),
+    theme: "grid",
+    headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 8, fontStyle: "bold" },
+    styles: { fontSize: 8, cellPadding: 3, font: "DejaVuSans" },
+    margin: { left: margin, right: margin },
+    columnStyles: {
+      0: { cellWidth: 18, fontStyle: "bold", halign: "center", cellPadding: { top: 3, right: 3, bottom: 3, left: 8 } },
+      1: { cellWidth: (pageW - 2 * margin - 18) / 2 },
+      2: { cellWidth: (pageW - 2 * margin - 18) / 2 },
+    },
+    didDrawCell: (data) => {
+      if (data.section === "body" && data.column.index === 0) {
+        const h = HUNGER_SCALE[data.row.index];
+        doc.setFillColor(...h.color);
+        doc.circle(data.cell.x + 4, data.cell.y + data.cell.height / 2, 2, "F");
+      }
+    },
   });
   y = (doc as any).lastAutoTable.finalY + 10;
 
   // ── 7-day Journal ─────────────────────────────────────────────────────────
   const days = ["Ziua 1", "Ziua 2", "Ziua 3", "Ziua 4", "Ziua 5", "Ziua 6", "Ziua 7"];
-  const mealLabels = ["Mic dejun", "Gustare dimineață", "Prânz", "Gustare după-amiază", "Cină"];
 
   days.forEach((day, di) => {
     doc.addPage();
@@ -167,74 +299,98 @@ function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     doc.setFillColor(92, 138, 103);
     doc.rect(margin, y, pageW - 2 * margin, 10, "F");
     doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
+    doc.setFont("DejaVuSans", "bold");
     doc.setFontSize(11);
     doc.text(day, margin + 4, y + 7);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("DejaVuSans", "normal");
     doc.setFontSize(8);
     doc.text("Data: ____________________", pageW - margin - 55, y + 7);
     y += 16;
 
     const dayData = journal[di] ?? EMPTY_DAY();
-    const rows = mealLabels.map((label, mi) => {
-      const entry = dayData[mi] ?? EMPTY_MEAL();
-      return [
-        label,
-        entry.time || "",
-        entry.food || "",
-        entry.quantity || "",
-        entry.liquids || "",
-        entry.notes || "",
-      ];
+    const rows = dayData.map((entry, mi) => {
+      const foodCell = [entry.food, entry.liquids].filter(Boolean).join("  •  ");
+      const scaleCell = entry.hungerBefore || entry.fullnessAfter
+        ? `Î: ${entry.hungerBefore || "_"}   D: ${entry.fullnessAfter || "_"}`
+        : "Î: ___\nD: ___";
+      const whyCell = entry.why.length > 0 ? entry.why.join(", ") : WHY_REASONS.join(" / ");
+      const quantityCell = [entry.quantity, entry.quantityUnit].filter(Boolean).join(" ");
+      return [entry.label || `Masă ${mi + 1}`, entry.time || "", foodCell, quantityCell, scaleCell, whyCell];
     });
 
     autoTable(doc, {
       startY: y,
-      head: [["Masă", "Ora", "Ce am mâncat", "Cantitate aprox.", "Lichide", "Observații*"]],
+      head: [["Masă", "Ora", "Ce am mâncat / băut", "Cantitate", "Foame înainte /\ndupă masă (1-5)", "De ce ai mâncat?"]],
       body: rows,
       theme: "grid",
-      headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 7.5, fontStyle: "bold", halign: "center" },
-      styles: { fontSize: 8, cellPadding: 3, minCellHeight: 12 },
+      headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 7, fontStyle: "bold", halign: "center" },
+      styles: { fontSize: 7.5, cellPadding: 2.5, minCellHeight: 26, font: "DejaVuSans" },
       columnStyles: {
-        0: { cellWidth: 28, fontStyle: "bold", fillColor: [248, 251, 249] },
-        1: { cellWidth: 16, halign: "center" },
-        2: { cellWidth: 45 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 25 },
-        5: { cellWidth: pageW - 2 * margin - 139 },
+        0: { cellWidth: 22, fontStyle: "bold", fillColor: [248, 251, 249] },
+        1: { cellWidth: 12, halign: "center" },
+        2: { cellWidth: 44 },
+        3: { cellWidth: 38, overflow: "ellipsize" },
+        4: { cellWidth: 22, halign: "center" },
+        5: { cellWidth: pageW - 2 * margin - 138 },
       },
       margin: { left: margin, right: margin },
     });
 
-    y = (doc as any).lastAutoTable.finalY + 8;
+    y = (doc as any).lastAutoTable.finalY + 6;
 
-    // Observations note
+    // Legend for the Î/D abbreviations used in the table above
     doc.setFontSize(7);
     doc.setTextColor(120, 120, 120);
-    doc.setFont("helvetica", "italic");
-    doc.text("*Observații: foame, poftă, balonare, greață, vărsături, disconfort, ronțăieli între mese", margin, y);
-    y += 8;
+    doc.setFont("DejaVuSans", "normal");
+    doc.text("Î = Înainte de masă   ·   D = După masă", margin, y);
+    y += 6;
 
     // Extra notes box
-    doc.setFont("helvetica", "bold");
+    doc.setFont("DejaVuSans", "bold");
     doc.setFontSize(8);
     doc.setTextColor(60, 60, 60);
     doc.text("Note suplimentare:", margin, y);
     y += 4;
     doc.setDrawColor(180, 180, 180);
     doc.setFillColor(252, 252, 252);
-    doc.roundedRect(margin, y, pageW - 2 * margin, 28, 2, 2, "FD");
-    y += 32;
+    const dayPageBottom = 273;
+    const notesBoxHeight = Math.max(18, dayPageBottom - y);
+    doc.roundedRect(margin, y, pageW - 2 * margin, notesBoxHeight, 2, 2, "FD");
   });
 
   // Footer on last page
-  doc.setFont("helvetica", "italic");
+  doc.setFont("DejaVuSans", "normal");
   doc.setFontSize(7);
   doc.setTextColor(140, 140, 140);
   doc.text("Diet4Life Concept  •  contact@diet4lifeconcept.ro  •  0766 572 968", margin, 285);
   doc.text("Acest document este confidențial și destinat exclusiv evaluării nutriționale.", margin, 289);
 
   doc.save("Jurnal_Alimentar_7Zile_Diet4Life.pdf");
+}
+
+// ─── Draft persistence (browser localStorage) ─────────────────────────────────
+// The journal is meant to be filled over 7 days, not in one sitting, so progress
+// is auto-saved on this device/browser — no account or server involved.
+const STORAGE_KEY_PATIENT = "diet4life_journal_patient";
+const STORAGE_KEY_JOURNAL = "diet4life_journal_data";
+
+function loadPatientDraft(): PatientInfo {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_PATIENT);
+    return raw ? { ...EMPTY_PATIENT, ...JSON.parse(raw) } : EMPTY_PATIENT;
+  } catch {
+    return EMPTY_PATIENT;
+  }
+}
+
+function loadJournalDraft(): JournalDay[] {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_JOURNAL);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) && parsed.length === 7 ? parsed : EMPTY_JOURNAL();
+  } catch {
+    return EMPTY_JOURNAL();
+  }
 }
 
 // ─── Section tabs ──────────────────────────────────────────────────────────
@@ -251,16 +407,44 @@ export default function Consultatii() {
   const ro = language === "ro";
 
   const [activeTab, setActiveTab] = useState("info");
-  const [patient, setPatient] = useState<PatientInfo>(EMPTY_PATIENT);
-  const [journal, setJournal] = useState<JournalDay[]>(EMPTY_JOURNAL());
+  const [patient, setPatient] = useState<PatientInfo>(loadPatientDraft);
+  const [journal, setJournal] = useState<JournalDay[]>(loadJournalDraft);
   const [activeDay, setActiveDay] = useState(0);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [journalSent, setJournalSent] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+
+  // Auto-save the draft to this browser as the patient fills it in over multiple days
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY_PATIENT, JSON.stringify(patient));
+      window.localStorage.setItem(STORAGE_KEY_JOURNAL, JSON.stringify(journal));
+      setDraftSaved(true);
+    } catch {
+      // localStorage unavailable (private browsing, storage full, etc.) — fail silently
+    }
+  }, [patient, journal]);
+
+  const resetDraft = () => {
+    if (!window.confirm(ro
+      ? "Această acțiune va șterge definitiv jurnalul salvat în acest browser."
+      : "This will permanently delete the journal saved in this browser.")) return;
+    setPatient(EMPTY_PATIENT);
+    setJournal(EMPTY_JOURNAL());
+    setActiveDay(0);
+    try {
+      window.localStorage.removeItem(STORAGE_KEY_PATIENT);
+      window.localStorage.removeItem(STORAGE_KEY_JOURNAL);
+    } catch {
+      // ignore
+    }
+    toast({ title: ro ? "Jurnalul a fost șters" : "Journal cleared" });
+  };
 
   const setPatientField = (field: keyof PatientInfo, value: string) =>
     setPatient(prev => ({ ...prev, [field]: value }));
 
-  const setMealField = (day: number, meal: number, field: keyof MealEntry, value: string) =>
+  const setMealField = (day: number, meal: number, field: Exclude<keyof MealEntry, "why">, value: string) =>
     setJournal(prev => {
       const next = prev.map(d => [...d]);
       next[day] = next[day].map(m => ({ ...m }));
@@ -268,9 +452,44 @@ export default function Consultatii() {
       return next;
     });
 
-  const handleDownload = () => {
-    generatePDF(patient, journal);
-    toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: ro ? "Jurnalul a fost generat cu succes." : "Journal generated successfully." });
+  const toggleMealWhy = (day: number, meal: number, reason: string) =>
+    setJournal(prev => {
+      const next = prev.map(d => [...d]);
+      next[day] = next[day].map(m => ({ ...m }));
+      const current = next[day][meal].why;
+      const why = current.includes(reason) ? current.filter(r => r !== reason) : [...current, reason];
+      next[day][meal] = { ...next[day][meal], why };
+      return next;
+    });
+
+  const addMeal = (day: number) =>
+    setJournal(prev => {
+      const next = prev.map(d => [...d]);
+      next[day] = [...next[day], EMPTY_MEAL(ro ? "Gustare extra" : "Extra snack")];
+      return next;
+    });
+
+  const removeMeal = (day: number, meal: number) =>
+    setJournal(prev => {
+      const next = prev.map(d => [...d]);
+      next[day] = next[day].filter((_, i) => i !== meal);
+      return next;
+    });
+
+  const POST_DOWNLOAD_MESSAGE = ro
+    ? "Jurnalul tău este gata. Descarcă documentul și trimite-l înainte de consultație prin canalul de comunicare stabilit cu dieteticianul."
+    : "Your journal is ready. Download the document and send it before your consultation through the communication channel established with your dietitian.";
+
+  const handleDownload = async () => {
+    await generatePDF(patient, journal);
+    toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: POST_DOWNLOAD_MESSAGE });
+  };
+
+  // Always generates an empty template, regardless of any saved online-form
+  // draft — for the "print and fill by hand" buttons, not the "send my progress" ones.
+  const handleDownloadBlank = async () => {
+    await generatePDF(EMPTY_PATIENT, EMPTY_JOURNAL());
+    toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: POST_DOWNLOAD_MESSAGE });
   };
 
   const handleSendEmail = () => {
@@ -307,9 +526,24 @@ export default function Consultatii() {
     toast({ title: ro ? "Email deschis!" : "Email opened!", description: ro ? "Atașați fișierul și trimiteți emailul." : "Attach the file and send the email." });
   };
 
-  const mealLabels = ro
-    ? ["Mic dejun", "Gustare dimineață", "Prânz", "Gustare după-amiază", "Cină"]
-    : ["Breakfast", "Morning snack", "Lunch", "Afternoon snack", "Dinner"];
+  // ── Checklist status ──────────────────────────────────────────────────────
+  // Only the journal has real, trackable progress (localStorage); the other
+  // sections are informational-only, so they carry no completion state.
+  const completedDays = journal.filter(day => day.length > 0 && day.every(m => m.food.trim() !== "")).length;
+  const journalStatus: "not_started" | "in_progress" | "completed" | "uploaded" =
+    completedDays === 7 ? "completed" : uploadedFile ? "uploaded" : completedDays > 0 ? "in_progress" : "not_started";
+
+  const CHECKLIST = [
+    { id: "jurnal", icon: Utensils, label: ro ? "Jurnal alimentar" : "Food journal",
+      detail: journalStatus === "completed" ? `7/7 ${ro ? "zile" : "days"}` : journalStatus === "uploaded" ? (ro ? "Încărcat" : "Uploaded") : journalStatus === "in_progress" ? `${completedDays}/7 ${ro ? "zile" : "days"}` : (ro ? "Neînceput" : "Not started") },
+    { id: "analize", icon: TestTube2, label: ro ? "Analize medicale" : "Medical tests", detail: null },
+    { id: "medicatie", icon: Pill, label: ro ? "Medicație și suplimente" : "Medication & supplements", detail: null },
+    { id: "documente", icon: FolderOpen, label: ro ? "Documente medicale" : "Medical documents", detail: null },
+  ] as const;
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const dayNames = ro
     ? ["Ziua 1", "Ziua 2", "Ziua 3", "Ziua 4", "Ziua 5", "Ziua 6", "Ziua 7"]
@@ -331,10 +565,12 @@ export default function Consultatii() {
             {ro ? "Pregătire consultație" : "Consultation preparation"}
           </span>
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-            {ro ? "Pregătire pentru consultație" : "Consultation Preparation"}
+            {ro ? "Pregătește-te pentru consultație" : "Prepare for your consultation"}
           </h1>
           <h2 className="text-xl text-muted-foreground font-normal mb-6">
-            {ro ? "Jurnal alimentar 7 zile" : "7-Day Food Journal"}
+            {ro
+              ? "Câțiva pași simpli, pentru ca prima întâlnire să fie cât mai utilă"
+              : "A few simple steps, so the first meeting is as useful as possible"}
           </h2>
 
           {/* Appointment reminder */}
@@ -342,11 +578,71 @@ export default function Consultatii() {
             <AlertCircle className="w-5 h-5 shrink-0 text-amber-500 mt-0.5" />
             <span>
               {ro
-                ? "Pentru o consultație mai eficientă, vă rugăm să completați jurnalul alimentar de 7 zile înainte de întâlnire."
-                : "For a more effective consultation, please complete the 7-day food journal before your appointment."}
+                ? "Pentru o consultație mai eficientă, vă rugăm să completați jurnalul alimentar de 7 zile înainte de întâlnire. Restul pașilor sunt opționali — consultația poate avea loc și fără ei."
+                : "For a more effective consultation, please complete the 7-day food journal before your appointment. The other steps are optional — the consultation can take place without them."}
             </span>
           </div>
         </motion.div>
+
+        {/* ── Checklist: Pregătește-te pentru consultație ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="bg-card border border-border rounded-2xl p-6 md:p-8 mb-10 shadow-sm"
+        >
+          <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <ListChecks className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-serif font-bold text-foreground">
+                {ro ? "Pregătește-te pentru consultație" : "Prepare for your consultation"}
+              </h3>
+            </div>
+            <span className="text-sm font-medium text-muted-foreground">
+              {ro ? `${completedDays} din 7 zile completate` : `${completedDays} of 7 days completed`}
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {CHECKLIST.map(item => {
+              const Icon = item.icon;
+              const isDone = item.id === "jurnal" && (journalStatus === "completed" || journalStatus === "uploaded");
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => scrollToSection(item.id)}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/40 transition-colors text-left"
+                  data-testid={`checklist-item-${item.id}`}
+                >
+                  {isDone ? (
+                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                  ) : (
+                    <Circle className="w-5 h-5 shrink-0 text-muted-foreground/60" />
+                  )}
+                  <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="flex-1 text-sm font-medium text-foreground">{item.label}</span>
+                  {item.detail && (
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                      isDone ? "bg-primary/10 text-primary" : "bg-amber-50 text-amber-700"
+                    }`}>
+                      {item.detail}
+                    </span>
+                  )}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* ── Step 1: Jurnal alimentar ── */}
+        <div id="jurnal" className="scroll-mt-24 mb-3 flex items-center gap-2">
+          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">1</span>
+          <h2 className="text-lg font-serif font-bold text-foreground">{ro ? "Jurnal alimentar — 7 zile" : "Food journal — 7 days"}</h2>
+        </div>
 
         {/* Intro card */}
         <motion.div
@@ -364,6 +660,14 @@ export default function Consultatii() {
               : "For the most accurate nutritional assessment, please complete the food journal for 7 days before your consultation. Record meals, times, liquids consumed, approximate quantities, digestive symptoms and preferred or avoided foods."}
           </p>
         </motion.div>
+
+        {/* Confidentiality note — only true because the draft never leaves this browser */}
+        <p className="text-xs text-muted-foreground mb-8 -mt-4 flex items-start gap-1.5">
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          {ro
+            ? "Informațiile completate în jurnal sunt salvate doar pe dispozitivul tău și nu sunt transmise automat către Diet4Life."
+            : "Information entered in the journal is saved only on your device and is not automatically transmitted to Diet4Life."}
+        </p>
 
         {/* Tab navigation */}
         <div className="flex gap-2 mb-8 bg-muted/40 p-1.5 rounded-2xl">
@@ -405,7 +709,7 @@ export default function Consultatii() {
                   {[
                     ro ? "Fișă date personale (12 câmpuri)" : "Personal data sheet (12 fields)",
                     ro ? "Tabel 7 zile × 5 mese/zi" : "7-day × 5 meals/day table",
-                    ro ? "Coloane: oră, aliment, cantitate, lichide, observații" : "Columns: time, food, quantity, liquids, notes",
+                    ro ? "Scală foame/sațietate și motivul mesei, la fiecare masă" : "Hunger/fullness scale and eating reason, per meal",
                     ro ? "Ghid estimare porții vizual" : "Visual portion estimation guide",
                     ro ? "Spațiu note suplimentare / zi" : "Extra notes space per day",
                     ro ? "Format A4, ușor de printat" : "A4 format, easy to print",
@@ -420,7 +724,7 @@ export default function Consultatii() {
                 <Button
                   size="lg"
                   className="rounded-xl gap-2 w-full sm:w-auto text-base"
-                  onClick={handleDownload}
+                  onClick={handleDownloadBlank}
                 >
                   <Download className="w-5 h-5" />
                   {ro ? "Descarcă jurnal alimentar 7 zile" : "Download 7-day food journal"}
@@ -439,14 +743,27 @@ export default function Consultatii() {
                     <Utensils className="w-4 h-4" />
                   </div>
                   <h3 className="text-xl font-serif font-bold text-foreground">
-                    {ro ? "Ghid estimare porții" : "Portion estimation guide"}
+                    {ro ? "Ghid vizual: mâna ca unitate de măsură" : "Visual guide: your hand as a measuring tool"}
                   </h3>
                 </div>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {ro
+                    ? "Simplu și eficient, fără cântar sau pahar gradat."
+                    : "Simple and effective, no scale or measuring cup needed."}
+                </p>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {PORTION_GUIDE.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between gap-2 py-2.5 px-3 bg-secondary/40 rounded-xl">
-                      <span className="text-sm font-semibold text-foreground">{p.item}</span>
-                      <span className="text-sm text-muted-foreground text-right">{p.tip}</span>
+                    <div key={i} className="flex items-start gap-3 py-2.5 px-3 bg-secondary/40 rounded-xl">
+                      <span
+                        className="w-3 h-3 rounded-full shrink-0 mt-1"
+                        style={{ backgroundColor: `rgb(${p.color.join(",")})` }}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">
+                          {p.hand} <span className="font-normal text-muted-foreground">→ {p.group}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">{p.examples}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -493,6 +810,24 @@ export default function Consultatii() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
+            {/* Draft save status */}
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                {draftSaved
+                  ? (ro ? "Salvat automat pe acest dispozitiv" : "Auto-saved on this device")
+                  : (ro ? "Se salvează..." : "Saving...")}
+              </span>
+              <button
+                type="button"
+                onClick={resetDraft}
+                className="text-muted-foreground hover:text-destructive underline underline-offset-2"
+                data-testid="button-reset-draft"
+              >
+                {ro ? "Șterge jurnalul de pe acest dispozitiv" : "Delete the journal from this device"}
+              </button>
+            </div>
+
             {/* Patient info */}
             <Card>
               <CardContent className="p-8">
@@ -552,10 +887,29 @@ export default function Consultatii() {
                   {dayNames[activeDay]}
                 </h3>
                 <div className="space-y-4">
-                  {mealLabels.map((meal, mi) => (
+                  {journal[activeDay].map((entry, mi) => (
                     <div key={mi} className="rounded-xl border border-border p-4 bg-secondary/20">
-                      <p className="text-sm font-semibold text-foreground mb-3">{meal}</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Input
+                          value={entry.label}
+                          onChange={e => setMealField(activeDay, mi, "label", e.target.value)}
+                          placeholder={ro ? "Numele mesei" : "Meal name"}
+                          className="rounded-lg text-sm font-semibold h-8 max-w-xs border-transparent bg-transparent px-2 -ml-2 hover:border-border focus-visible:border-border"
+                          data-testid={`input-meal-label-${activeDay}-${mi}`}
+                        />
+                        {journal[activeDay].length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeMeal(activeDay, mi)}
+                            className="ml-auto text-muted-foreground hover:text-destructive transition-colors p-1"
+                            aria-label={ro ? "Șterge masa" : "Remove meal"}
+                            data-testid={`button-remove-meal-${activeDay}-${mi}`}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">
                             {ro ? "Ora" : "Time"}
@@ -582,12 +936,26 @@ export default function Consultatii() {
                           <label className="text-xs text-muted-foreground mb-1 block">
                             {ro ? "Cantitate aprox." : "Approx. qty"}
                           </label>
-                          <Input
-                            placeholder={ro ? "1 porție / 200g" : "1 serving / 200g"}
-                            value={journal[activeDay][mi].quantity}
-                            onChange={e => setMealField(activeDay, mi, "quantity", e.target.value)}
-                            className="rounded-lg text-sm h-9"
-                          />
+                          <div className="flex gap-1.5">
+                            <Input
+                              placeholder={ro ? "1, 200..." : "1, 200..."}
+                              value={entry.quantity}
+                              onChange={e => setMealField(activeDay, mi, "quantity", e.target.value)}
+                              className="rounded-lg text-sm h-9 min-w-0"
+                              data-testid={`input-quantity-${activeDay}-${mi}`}
+                            />
+                            <select
+                              value={entry.quantityUnit}
+                              onChange={e => setMealField(activeDay, mi, "quantityUnit", e.target.value)}
+                              className="rounded-lg text-sm h-9 border border-input bg-background px-1.5 shrink-0"
+                              data-testid={`select-unit-${activeDay}-${mi}`}
+                            >
+                              <option value="">{ro ? "unit." : "unit"}</option>
+                              {QUANTITY_UNITS.map(u => (
+                                <option key={u} value={u}>{u}</option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">
@@ -600,21 +968,102 @@ export default function Consultatii() {
                             className="rounded-lg text-sm h-9"
                           />
                         </div>
-                        <div className="col-span-2 sm:col-span-1 lg:col-span-1">
-                          <label className="text-xs text-muted-foreground mb-1 block">
-                            {ro ? "Observații" : "Notes"}
+                      </div>
+
+                      {/* Hunger before / Fullness after (1-5) */}
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1.5 block">
+                            {ro ? "Foame înainte de masă" : "Hunger before eating"}
                           </label>
-                          <Input
-                            placeholder={ro ? "Balonare, foame..." : "Bloating, hunger..."}
-                            value={journal[activeDay][mi].notes}
-                            onChange={e => setMealField(activeDay, mi, "notes", e.target.value)}
-                            className="rounded-lg text-sm h-9"
-                          />
+                          <div className="flex gap-1.5">
+                            {["1", "2", "3", "4", "5"].map(n => (
+                              <button
+                                key={n}
+                                type="button"
+                                onClick={() => setMealField(activeDay, mi, "hungerBefore", n)}
+                                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
+                                  journal[activeDay][mi].hungerBefore === n
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-background border border-border text-muted-foreground hover:border-primary/40"
+                                }`}
+                                data-testid={`button-hunger-${activeDay}-${mi}-${n}`}
+                              >
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            {ro ? "1 = foame extremă · 3 = gata de masă · 5 = neutră" : "1 = extremely hungry · 3 = ready to eat · 5 = neutral"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1.5 block">
+                            {ro ? "Sațietate după masă" : "Fullness after eating"}
+                          </label>
+                          <div className="flex gap-1.5">
+                            {["1", "2", "3", "4", "5"].map(n => (
+                              <button
+                                key={n}
+                                type="button"
+                                onClick={() => setMealField(activeDay, mi, "fullnessAfter", n)}
+                                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
+                                  journal[activeDay][mi].fullnessAfter === n
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-background border border-border text-muted-foreground hover:border-primary/40"
+                                }`}
+                                data-testid={`button-fullness-${activeDay}-${mi}-${n}`}
+                              >
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            {ro ? "1 = încă flămândă · 3 = confortabil sătulă · 5 = prea plină" : "1 = still hungry · 3 = comfortably full · 5 = overfull"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Why did you eat? */}
+                      <div className="mt-4">
+                        <label className="text-xs text-muted-foreground mb-1.5 block">
+                          {ro ? "De ce ai mâncat?" : "Why did you eat?"}
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {WHY_REASONS.map(reason => {
+                            const active = journal[activeDay][mi].why.includes(reason);
+                            return (
+                              <button
+                                key={reason}
+                                type="button"
+                                onClick={() => toggleMealWhy(activeDay, mi, reason)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                  active
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-background border border-border text-muted-foreground hover:border-primary/40"
+                                }`}
+                                data-testid={`button-why-${activeDay}-${mi}-${reason}`}
+                              >
+                                {reason}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl gap-1.5 mt-4"
+                  onClick={() => addMeal(activeDay)}
+                  data-testid="button-add-meal"
+                >
+                  <Plus className="w-4 h-4" />
+                  {ro ? "Adaugă masă / gustare" : "Add meal / snack"}
+                </Button>
 
                 {/* Navigate days */}
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
@@ -763,7 +1212,7 @@ export default function Consultatii() {
                     size="lg"
                     variant="outline"
                     className="rounded-xl gap-2"
-                    onClick={handleDownload}
+                    onClick={handleDownloadBlank}
                   >
                     <Download className="w-4 h-4" />
                     {ro ? "Descarcă PDF gol" : "Download blank PDF"}
@@ -812,6 +1261,114 @@ export default function Consultatii() {
             </Card>
           </motion.div>
         )}
+
+        {/* ── Step 2: Analize medicale ── */}
+        <div id="analize" className="scroll-mt-24 mb-3 mt-14 flex items-center gap-2">
+          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">2</span>
+          <h2 className="text-lg font-serif font-bold text-foreground">{ro ? "Analize medicale" : "Medical tests"}</h2>
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">{ro ? "opțional" : "optional"}</span>
+        </div>
+        <Card className="mb-10">
+          <CardContent className="p-8">
+            <p className="text-sm text-foreground leading-relaxed mb-5">
+              {ro
+                ? "Dacă ai analize medicale recente, pregătește-le pentru consultație. Nu este necesar să repeți analize pe care le ai deja și nici să efectuezi toate investigațiile de mai jos înainte de prima întâlnire."
+                : "If you have recent medical tests, have them ready for the consultation. There's no need to repeat tests you already have, or to get all the investigations below before the first meeting."}
+            </p>
+
+            <Accordion type="single" collapsible className="mb-5 border border-border rounded-xl px-4">
+              <AccordionItem value="labs" className="border-b-0">
+                <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline">
+                  {ro ? "Vezi lista analizelor utile" : "See the list of useful tests"}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-5">
+                    {LAB_CATEGORIES.map(cat => (
+                      <div key={cat.title}>
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{cat.title}</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {cat.tests.map(test => (
+                            <span key={test} className="text-xs px-3 py-1.5 rounded-full bg-secondary/50 text-foreground">{test}</span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    <p className="text-xs text-muted-foreground pt-3 border-t border-border">
+                      {ro
+                        ? "În funcție de istoricul medical, simptome și obiectivul consultației, pot fi utile și alte investigații (de exemplu TSH, FT4, sodiu sau alte analize specifice unei afecțiuni deja diagnosticate)."
+                        : "Depending on medical history, symptoms and the goal of the consultation, other investigations may be useful too (e.g. TSH, FT4, sodium, or other tests specific to an already diagnosed condition)."}
+                    </p>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            <div className="flex items-start gap-3 bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 text-sm text-foreground">
+              <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              {ro
+                ? "Nu ai analize recente? Poți face consultația și fără ele. După evaluare putem stabili dacă sunt necesare investigații suplimentare."
+                : "No recent tests? You can still have the consultation without them. After the evaluation we can determine if further tests are needed."}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Step 3: Medicație și suplimente ── */}
+        <div id="medicatie" className="scroll-mt-24 mb-3 mt-14 flex items-center gap-2">
+          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">3</span>
+          <h2 className="text-lg font-serif font-bold text-foreground">{ro ? "Medicație și suplimente" : "Medication & supplements"}</h2>
+        </div>
+        <Card className="mb-10">
+          <CardContent className="p-8">
+            <p className="text-sm text-foreground leading-relaxed">
+              {ro
+                ? "Pregătește lista medicamentelor și suplimentelor pe care le iei în mod curent (denumire, doză, frecvență) — o vei avea la îndemână la consultație. Dacă nu iei nimic, poți sări peste acest pas."
+                : "Prepare the list of medications and supplements you currently take (name, dose, frequency) — have it ready for the consultation. If you take none, you can skip this step."}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* ── Step 4: Documente medicale ── */}
+        <div id="documente" className="scroll-mt-24 mb-3 mt-14 flex items-center gap-2">
+          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">4</span>
+          <h2 className="text-lg font-serif font-bold text-foreground">{ro ? "Documente medicale" : "Medical documents"}</h2>
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">{ro ? "opțional" : "optional"}</span>
+        </div>
+        <Card className="mb-10">
+          <CardContent className="p-8">
+            <p className="text-sm text-foreground leading-relaxed mb-2">
+              {ro
+                ? "Dacă ai afecțiuni diagnosticate sau ești urmărit de un medic specialist, pregătește documentele relevante pentru consultație: scrisori medicale, bilete de externare, investigații sau recomandări medicale."
+                : "If you have diagnosed conditions or are followed by a specialist, prepare the documents relevant to the consultation: medical letters, discharge notes, investigations or medical recommendations."}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {ro
+                ? "Nu este necesar să pregătești întregul istoric medical, ci doar documentele relevante pentru problema discutată."
+                : "There's no need to prepare your entire medical history — just the documents relevant to the issue at hand."}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* ── Send before the consultation ── */}
+        <div id="trimite" className="scroll-mt-24 mb-3 mt-14 flex items-center gap-2">
+          <Send className="w-5 h-5 text-primary shrink-0" />
+          <h2 className="text-lg font-serif font-bold text-foreground">{ro ? "Trimite pregătirea" : "Send your preparation"}</h2>
+        </div>
+        <Card className="border-primary/20 bg-primary/5 mb-4">
+          <CardContent className="p-8">
+            <p className="text-sm text-foreground leading-relaxed">
+              {ro
+                ? "Trimite jurnalul și documentele relevante înainte de consultație prin canalul de comunicare stabilit cu dieteticianul."
+                : "Send the journal and any relevant documents before your consultation through the communication channel established with your dietitian."}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {ro ? (
+                <>Nu ai încă datele de contact? Le găsești pe pagina de <Link href="/contact" className="text-primary underline underline-offset-2">Contact</Link>.</>
+              ) : (
+                <>Don't have the contact details yet? You'll find them on the <Link href="/contact" className="text-primary underline underline-offset-2">Contact</Link> page.</>
+              )}
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

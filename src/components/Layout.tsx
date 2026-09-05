@@ -15,12 +15,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: t("nav.home") },
     { href: "/about", label: t("nav.about") },
     { href: "/services", label: t("nav.services") },
-    { href: "/nutrition", label: t("nav.nutrition") },
+    { href: "/nutrihub", label: t("nav.nutrihub") },
+    { href: "/nutri-pentru-copii", label: t("nav.nutriKids") },
     { href: "/calculator", label: t("nav.calculator") },
-    { href: "/recipes", label: t("nav.recipes") },
-    { href: "/blog", label: t("nav.blog") },
     { href: "/products", label: t("nav.products") },
-    { href: "/education", label: t("nav.education") },
     { href: "/consultatii", label: language === "ro" ? "Consultații" : "Appointments" },
   ];
 
@@ -110,7 +108,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <Logo className="grayscale opacity-60" />
           <p className="text-sm text-muted-foreground text-center md:text-left">
-            &copy; {new Date().getFullYear()} {t("footer.clinic")}. {t("footer.rights")}
+            &copy; {new Date().getFullYear()} {t("footer.tagline")}. {t("footer.rights")}
           </p>
         </div>
       </footer>

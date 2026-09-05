@@ -1,6 +1,6 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
-import { Phone, Mail, Clock, Video } from "lucide-react";
+import { Phone, Mail, Handshake, Video } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -52,9 +52,9 @@ export default function Contact() {
             {language === 'ro' ? 'Contact & Programări' : 'Contact & Appointments'}
           </h1>
           <p className="text-lg text-muted-foreground">
-            {language === 'ro' 
-              ? 'Suntem aici pentru a răspunde întrebărilor tale. Programează o consultație la clinică sau online.' 
-              : 'We are here to answer your questions. Book an appointment at the clinic or online.'}
+            {language === 'ro'
+              ? 'Suntem aici pentru a răspunde întrebărilor tale. Programează o consultație online.'
+              : 'We are here to answer your questions. Book an online consultation.'}
           </p>
         </div>
 
@@ -127,8 +127,6 @@ export default function Contact() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="weight_loss">{language === 'ro' ? 'Scădere în greutate' : 'Weight loss'}</SelectItem>
-                          <SelectItem value="bariatric">{language === 'ro' ? 'Nutriție Bariatrică (Pre/Post-Op)' : 'Bariatric Nutrition (Pre/Post-Op)'}</SelectItem>
-
                           <SelectItem value="health">{language === 'ro' ? 'Sănătate Generală' : 'General Health'}</SelectItem>
                           <SelectItem value="other">{language === 'ro' ? 'Altul' : 'Other'}</SelectItem>
                         </SelectContent>
@@ -212,16 +210,20 @@ export default function Contact() {
               {/* Program */}
               <div className="flex items-center gap-4 rounded-xl p-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <Clock className="w-5 h-5" />
+                  <Handshake className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
-                    {language === 'ro' ? 'Program' : 'Working hours'}
+                    {language === 'ro' ? 'Program' : 'Schedule'}
                   </p>
                   <p className="text-base font-semibold text-foreground">
-                    {language === 'ro' ? 'Luni – Vineri' : 'Monday – Friday'}
+                    {language === 'ro' ? 'Stabilit de comun acord' : 'Set by mutual agreement'}
                   </p>
-                  <p className="text-sm text-muted-foreground">09:00 – 18:00</p>
+                  <p className="text-sm text-muted-foreground">
+                    {language === 'ro'
+                      ? 'Fiind totul online, găsim împreună un interval potrivit pentru tine.'
+                      : "Since everything is online, we'll find a time that works for you together."}
+                  </p>
                 </div>
               </div>
 
@@ -240,11 +242,11 @@ export default function Contact() {
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                   {language === 'ro'
-                    ? 'Oferim consultații prin Zoom sau Google Meet, disponibile în același program. Ideal dacă ești în altă localitate sau preferi confortul de acasă.'
-                    : 'We offer consultations via Zoom or Google Meet, available during the same working hours. Ideal if you are in another city or prefer the comfort of home.'}
+                    ? 'Toate consultațiile se desfășoară online — prin Zoom, Google Meet sau WhatsApp, în funcție de ce ți se potrivește mai bine. Poți participa de oriunde, fără deplasare.'
+                    : "All consultations take place online — via Zoom, Google Meet or WhatsApp, whichever suits you best. You can join from anywhere, no travel needed."}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {['Zoom', 'Google Meet'].map(platform => (
+                  {['Zoom', 'Google Meet', 'WhatsApp'].map(platform => (
                     <span key={platform} className="text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">
                       {platform}
                     </span>

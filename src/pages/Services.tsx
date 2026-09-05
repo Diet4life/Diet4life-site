@@ -1,167 +1,96 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { HeartPulse, Scale, Stethoscope, ChevronDown, CheckCircle2, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { Link } from "wouter";
+import { CheckCircle2, ArrowRight, MessageCircle, Stethoscope } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-const services = [
+const packages = [
   {
-    id: "consultation",
-    icon: HeartPulse,
-    color: "hsl(152 35% 40%)",
-    bgColor: "hsl(152 35% 40% / 0.08)",
-    title: {
-      ro: "Consultație nutrițională personalizată",
-      en: "Personalized Nutrition Consultation",
-    },
-    desc: {
-      ro: "Evaluare completă și plan de nutriție adaptat stilului tău de viață și obiectivelor tale de sănătate.",
-      en: "Complete assessment and nutrition plan tailored to your lifestyle and health goals.",
-    },
-    details: {
-      ro: {
-        intro:
-          "Prima consultație reprezintă fundamentul întregului tău parcurs nutrițional. Aceasta include o evaluare aprofundată a stării tale de sănătate, a obiceiurilor alimentare, a istoricului medical și a obiectivelor personale.",
-        includes: [
-          "Anamneza nutrițională completă (60–90 minute)",
-          "Analiza obiceiurilor alimentare și a stilului de viață",
-          "Evaluarea parametrilor antropometrici",
-          "Stabilirea obiectivelor realiste și personalizate",
-          "Plan alimentar individualizat cu meniuri de săptămână",
-          "Recomandări de suplimentare, dacă este cazul",
-          "Ședințe de monitorizare lunare",
-        ],
-        duration: "60–90 min / ședință",
-        format: "Cabinet sau online (Zoom / Teams)",
-        cta: "Programează o consultație",
-      },
-      en: {
-        intro:
-          "The first consultation is the foundation of your entire nutritional journey. It includes an in-depth assessment of your health status, eating habits, medical history, and personal goals.",
-        includes: [
-          "Complete nutritional history (60–90 minutes)",
-          "Analysis of dietary habits and lifestyle",
-          "Anthropometric parameter evaluation",
-          "Setting realistic, personalized goals",
-          "Individualized meal plan with weekly menus",
-          "Supplementation recommendations if needed",
-          "Monthly monitoring sessions",
-        ],
-        duration: "60–90 min / session",
-        format: "In-person or online (Zoom / Teams)",
-        cta: "Book a consultation",
-      },
-    },
+    id: "start",
+    weeksRo: "4 săptămâni",
+    weeksEn: "4 weeks",
+    nameRo: "Pachet Start",
+    nameEn: "Start Package",
+    price: 450,
+    originalPrice: 500,
+    recommended: false,
+    featuresRo: ["Consultație inițială", "1 consultație de control", "Plan alimentar personalizat, 7 zile"],
+    featuresEn: ["Initial consultation", "1 follow-up consultation", "Personalized 7-day meal plan"],
   },
   {
-    id: "weightloss",
-    icon: Scale,
-    color: "hsl(210 40% 55%)",
-    bgColor: "hsl(210 40% 55% / 0.08)",
-    title: {
-      ro: "Program de slăbire",
-      en: "Weight Loss Program",
-    },
-    desc: {
-      ro: "Abordare sustenabilă pentru scăderea în greutate, fără diete restrictive și cu rezultate pe termen lung.",
-      en: "Sustainable approach to weight loss, without restrictive diets and with long-term results.",
-    },
-    details: {
-      ro: {
-        intro:
-          "Programul nostru de slăbire nu este o dietă, ci o transformare graduală a stilului de viață. Ne concentrăm pe crearea unui deficit caloric sănătos, menținerea masei musculare și educarea pacientului pentru un comportament alimentar sănătos pe termen lung.",
-        includes: [
-          "Plan caloric și macronutritiv personalizat (ESPEN / OMS)",
-          "Strategii de gestionare a foamei și a poftelor",
-          "Ghid de citire a etichetelor alimentare",
-          "Adaptarea planului la preferințe culturale și culinare",
-          "Monitorizare bilunară a progresului",
-          "Suport prin mesaje între ședințe",
-          "Plan de menținere post-scădere ponderală",
-        ],
-        duration: "Program 3–6 luni",
-        format: "Cabinet sau online",
-        cta: "Începe programul",
-      },
-      en: {
-        intro:
-          "Our weight loss program is not a diet — it's a gradual lifestyle transformation. We focus on creating a healthy caloric deficit, preserving muscle mass, and educating patients for long-term healthy eating behaviors.",
-        includes: [
-          "Personalized caloric and macronutrient plan (ESPEN / WHO)",
-          "Hunger and craving management strategies",
-          "Food label reading guide",
-          "Plan adapted to cultural and culinary preferences",
-          "Bi-monthly progress monitoring",
-          "Support via messages between sessions",
-          "Post-weight-loss maintenance plan",
-        ],
-        duration: "3–6 month program",
-        format: "In-person or online",
-        cta: "Start the program",
-      },
-    },
+    id: "echilibru",
+    weeksRo: "8 săptămâni",
+    weeksEn: "8 weeks",
+    nameRo: "Pachet Echilibru",
+    nameEn: "Balance Package",
+    price: 750,
+    originalPrice: 850,
+    recommended: true,
+    featuresRo: [
+      "Consultație inițială",
+      "2 consultații de control",
+      "Suport WhatsApp — 60 zile",
+      "Plan alimentar personalizat, 7 zile",
+    ],
+    featuresEn: [
+      "Initial consultation",
+      "2 follow-up consultations",
+      "WhatsApp support — 60 days",
+      "Personalized 7-day meal plan",
+    ],
   },
   {
-    id: "bariatric",
-    icon: Stethoscope,
-    color: "hsl(340 60% 50%)",
-    bgColor: "hsl(340 60% 50% / 0.08)",
-    title: {
-      ro: "Nutriție bariatrică",
-      en: "Bariatric Nutrition",
-    },
-    desc: {
-      ro: "Pregătire pre-operatorie și monitorizare post-operatorie pentru a asigura succesul intervenției.",
-      en: "Pre-operative preparation and post-operative monitoring to ensure the success of the intervention.",
-    },
-    details: {
-      ro: {
-        intro:
-          "Suportul nutrițional în chirurgia bariatrică este esențial atât înainte cât și după intervenție. Colaborăm îndeaproape cu echipa medicală pentru a asigura că pacientul este pregătit optim și că recuperarea este rapidă și fără complicații.",
-        includes: [
-          "Evaluare nutrițională pre-operatorie detaliată",
-          "Dietă lichidiană și de tranziție pre-op (2–4 săptămâni)",
-          "Educație nutrițională: etapele post-op (lichide → piure → solid)",
-          "Plan de suplimentare obligatorie (vitamine, minerale, proteine)",
-          "Monitorizare lunară pe 12–24 luni post-operator",
-          "Gestionarea complicațiilor nutriționale (dumping syndrome, deficiențe)",
-          "Colaborare cu echipa chirurgicală și medicul de familie",
-        ],
-        duration: "Continuă: pre-op + minim 12 luni post-op",
-        format: "Cabinet (recomandat) sau online",
-        cta: "Solicită evaluare bariatrică",
-      },
-      en: {
-        intro:
-          "Nutritional support in bariatric surgery is essential both before and after the procedure. We work closely with the medical team to ensure patients are optimally prepared and that recovery is swift and complication-free.",
-        includes: [
-          "Detailed pre-operative nutritional assessment",
-          "Liquid and transition diet pre-op (2–4 weeks)",
-          "Nutritional education: post-op stages (liquids → puree → solid)",
-          "Mandatory supplementation plan (vitamins, minerals, proteins)",
-          "Monthly monitoring for 12–24 months post-op",
-          "Management of nutritional complications (dumping syndrome, deficiencies)",
-          "Collaboration with the surgical team and family doctor",
-        ],
-        duration: "Ongoing: pre-op + minimum 12 months post-op",
-        format: "In-person (recommended) or online",
-        cta: "Request bariatric assessment",
-      },
-    },
+    id: "transformare",
+    weeksRo: "12 săptămâni",
+    weeksEn: "12 weeks",
+    nameRo: "Pachet Transformare",
+    nameEn: "Transformation Package",
+    price: 950,
+    originalPrice: 1100,
+    recommended: false,
+    featuresRo: [
+      "Consultație inițială",
+      "3 consultații de control",
+      "Suport WhatsApp — 90 zile",
+      "Plan alimentar personalizat, 14 zile",
+    ],
+    featuresEn: [
+      "Initial consultation",
+      "3 follow-up consultations",
+      "WhatsApp support — 90 days",
+      "Personalized 14-day meal plan",
+    ],
+  },
+];
+
+const whatsappSteps = [
+  {
+    ro: "Completezi jurnalul alimentar de 7 zile",
+    en: "You fill in the 7-day food journal",
+  },
+  {
+    ro: "Analizez jurnalul tău",
+    en: "I analyze your journal",
+  },
+  {
+    ro: "Îmi trimiți un mesaj pe WhatsApp (vocal sau text) despre tine",
+    en: "You send me a WhatsApp message (voice or text) about yourself",
+  },
+  {
+    ro: "Îți răspund pe parcursul zilei cu recomandări personalizate",
+    en: "I reply during the day with personalized recommendations",
   },
 ];
 
 export default function Services() {
   const { language } = useLanguage();
-  const [openId, setOpenId] = useState<string | null>(null);
   const ro = language === "ro";
-
-  const toggle = (id: string) => setOpenId(openId === id ? null : id);
 
   return (
     <div className="py-24 bg-secondary/30 min-h-screen">
-      <div className="container mx-auto px-4 max-w-4xl">
+      <div className="container mx-auto px-4 max-w-5xl">
 
         {/* Header */}
         <motion.div
@@ -171,7 +100,7 @@ export default function Services() {
           transition={{ duration: 0.55 }}
         >
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-5">
-            {ro ? "Serviciile Noastre" : "Our Services"}
+            {ro ? "Servicii" : "Services"}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             {ro
@@ -180,125 +109,156 @@ export default function Services() {
           </p>
         </motion.div>
 
-        {/* Service accordion cards */}
-        <div className="flex flex-col gap-5">
-          {services.map((service, index) => {
-            const Icon = service.icon;
-            const isOpen = openId === service.id;
-            const d = service.details[ro ? "ro" : "en"];
+        {/* Two core services */}
+        <div className="grid md:grid-cols-2 gap-6 mb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card className="h-full border-border">
+              <CardContent className="p-8 flex flex-col h-full">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-5">
+                  <Stethoscope className="w-6 h-6 text-primary" />
+                </div>
+                <h2 className="font-serif font-bold text-2xl text-foreground mb-1">
+                  {ro ? "Consultație de nutriție" : "Nutrition consultation"}
+                </h2>
+                <p className="text-3xl font-bold text-primary mb-4">300 lei</p>
+                <p className="text-muted-foreground leading-relaxed text-sm mb-6 flex-1">
+                  {ro
+                    ? "Consultație completă — evaluare, discuție despre obiective, istoric medical, obiceiuri alimentare și recomandări personalizate, adaptate situației tale reale."
+                    : "A complete consultation — assessment, a discussion about your goals, medical history, eating habits, and personalized recommendations adapted to your real situation."}
+                </p>
+                <Button asChild size="lg" className="rounded-xl gap-2 w-full">
+                  <Link href="/contact">
+                    {ro ? "Programează-te" : "Book now"}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-            return (
-              <motion.div
-                key={service.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, delay: index * 0.1 }}
-                className={`rounded-2xl border bg-card shadow-sm overflow-hidden transition-shadow ${isOpen ? "shadow-md border-primary/30" : "border-border hover:shadow-md"}`}
-              >
-                {/* Card header — always visible, clickable */}
-                <button
-                  className="w-full text-left px-8 py-7 flex items-center gap-5 group"
-                  onClick={() => toggle(service.id)}
-                  aria-expanded={isOpen}
-                >
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 transition-colors"
-                    style={{
-                      backgroundColor: isOpen ? service.color : service.bgColor,
-                      color: isOpen ? "#fff" : service.color,
-                    }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <Card className="h-full border-border">
+              <CardContent className="p-8 flex flex-col h-full">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-5">
+                  <MessageCircle className="w-6 h-6 text-primary" />
+                </div>
+                <h2 className="font-serif font-bold text-2xl text-foreground mb-1">
+                  {ro ? "Ghidaj WhatsApp pe 7 zile" : "7-day WhatsApp guidance"}
+                </h2>
+                <p className="text-3xl font-bold text-primary mb-4">150 lei</p>
+                <p className="text-muted-foreground leading-relaxed text-sm mb-6">
+                  {ro
+                    ? "Completezi jurnalul alimentar de 7 zile, eu îl analizez, iar apoi îmi scrii pe WhatsApp câteva cuvinte despre tine — cum te simți, ce provocări ai, ce îți dorești să schimbi. Pe parcursul zilei îți răspund cu idei și recomandări conturate exact pe baza jurnalului tău."
+                    : "You fill in the 7-day food journal, I analyze it, then you write me a few words on WhatsApp about yourself — how you feel, what challenges you have, what you'd like to change. During the day I reply with ideas and recommendations shaped exactly around your journal."}
+                </p>
+
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground mb-3">
+                  {ro ? "Cum funcționează" : "How it works"}
+                </h3>
+                <ol className="space-y-2 mb-6">
+                  {whatsappSteps.map((step, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-foreground">
+                      <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center shrink-0 mt-0.5">
+                        {i + 1}
+                      </span>
+                      {ro ? step.ro : step.en}
+                    </li>
+                  ))}
+                </ol>
+
+                <p className="text-xs text-muted-foreground leading-relaxed mb-6">
+                  {ro
+                    ? "Nu înlocuiește o consultație completă — e un prim ghidaj, pornind de la jurnalul tău."
+                    : "It doesn't replace a full consultation — it's an initial guidance, starting from your journal."}
+                </p>
+
+                <Button asChild size="lg" variant="outline" className="rounded-xl gap-2 w-full mt-auto">
+                  <Link href="/contact">
+                    {ro ? "Începe cu jurnalul" : "Start with the journal"}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Pachete */}
+        <motion.h2
+          className="text-3xl font-serif font-bold text-foreground text-center mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          {ro ? "Pachete" : "Packages"}
+        </motion.h2>
+
+        <div className="grid md:grid-cols-3 gap-6 mb-20">
+          {packages.map((pkg, i) => (
+            <motion.div
+              key={pkg.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className="relative"
+            >
+              {pkg.recommended && (
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                  {ro ? "Recomandat" : "Recommended"}
+                </Badge>
+              )}
+              <Card className={`h-full ${pkg.recommended ? "border-primary shadow-md" : "border-border"}`}>
+                <CardContent className="p-7 flex flex-col h-full">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                    {ro ? pkg.weeksRo : pkg.weeksEn}
+                  </p>
+                  <h3 className="font-serif font-bold text-xl text-foreground mb-3">
+                    {ro ? pkg.nameRo : pkg.nameEn}
+                  </h3>
+                  <div className="flex items-baseline gap-2 mb-5">
+                    <span className="text-2xl font-bold text-primary">{pkg.price} lei</span>
+                    <span className="text-sm text-muted-foreground line-through">{pkg.originalPrice} lei</span>
+                  </div>
+                  <ul className="space-y-2.5 mb-6 flex-1">
+                    {(ro ? pkg.featuresRo : pkg.featuresEn).map((item, j) => (
+                      <li key={j} className="flex items-start gap-2.5 text-sm text-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    asChild
+                    size="lg"
+                    variant={pkg.recommended ? "default" : "outline"}
+                    className="rounded-xl gap-2 w-full mt-auto"
                   >
-                    <Icon className="w-7 h-7" />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-serif font-bold text-foreground mb-1">
-                      {ro ? service.title.ro : service.title.en}
-                    </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
-                      {ro ? service.desc.ro : service.desc.en}
-                    </p>
-                  </div>
-
-                  <div
-                    className="w-8 h-8 rounded-full border border-border flex items-center justify-center shrink-0 transition-all"
-                    style={isOpen ? { backgroundColor: service.color, borderColor: service.color } : {}}
-                  >
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-180 text-white" : "text-muted-foreground"}`}
-                    />
-                  </div>
-                </button>
-
-                {/* Expanded details */}
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      key="details"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.35, ease: "easeInOut" }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-8 pb-8 border-t border-border pt-6" style={{ borderColor: `${service.color}22` }}>
-
-                        {/* Intro paragraph */}
-                        <p className="text-muted-foreground leading-relaxed mb-6 text-sm">
-                          {d.intro}
-                        </p>
-
-                        {/* What's included */}
-                        <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
-                          {ro ? "Ce include" : "What's included"}
-                        </h4>
-                        <ul className="grid sm:grid-cols-2 gap-2.5 mb-6">
-                          {d.includes.map((item, i) => (
-                            <li key={i} className="flex items-start gap-2.5 text-sm text-foreground">
-                              <CheckCircle2
-                                className="w-4 h-4 shrink-0 mt-0.5"
-                                style={{ color: service.color }}
-                              />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-
-                        {/* Meta info row */}
-                        <div className="flex flex-wrap gap-4 mb-7">
-                          <div
-                            className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full"
-                            style={{ backgroundColor: service.bgColor, color: service.color }}
-                          >
-                            <span>⏱</span> {d.duration}
-                          </div>
-                          <div
-                            className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full"
-                            style={{ backgroundColor: service.bgColor, color: service.color }}
-                          >
-                            <span>📍</span> {d.format}
-                          </div>
-                        </div>
-
-                        {/* CTA */}
-                        <Button asChild className="rounded-xl gap-2">
-                          <Link href="/contact">
-                            {d.cta}
-                            <ArrowRight className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            );
-          })}
+                    <Link href="/contact">
+                      {ro ? "Alege pachetul potrivit" : "Choose this package"}
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </div>
 
         {/* Bottom CTA */}
         <motion.div
-          className="mt-14 text-center rounded-2xl bg-primary/8 border border-primary/20 py-10 px-8"
+          className="text-center rounded-2xl bg-primary/8 border border-primary/20 py-10 px-8"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
