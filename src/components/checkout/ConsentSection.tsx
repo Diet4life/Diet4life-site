@@ -6,7 +6,7 @@ import type { CheckoutSubmissionInput } from "@/lib/checkout/schemas";
 
 // Plain <p>, not the shadcn <FormMessage>: that component calls
 // useFormField(), which requires a surrounding <FormField>/<FormItem> --
-// these checkboxes are hand-wired (react-hook-form's boolean/literal(true)
+// this checkbox is hand-wired (react-hook-form's boolean/literal(true)
 // mismatch doesn't map cleanly onto FormField's render-prop pattern), so
 // using <FormMessage> here throws as soon as an error appears.
 function ConsentError({ message }: { message?: string }) {
@@ -14,13 +14,15 @@ function ConsentError({ message }: { message?: string }) {
   return <p className="text-[0.8rem] font-medium text-destructive">{message}</p>;
 }
 
+// Only Terms & Conditions require an explicit checkbox. The Privacy Policy
+// is informational text with a link -- continuing the order is treated as
+// acknowledgement, not a second mandatory checkbox (per explicit request).
 export function ConsentSection() {
   const { language } = useLanguage();
   const ro = language === "ro";
   const form = useFormContext<CheckoutSubmissionInput>();
 
   const termsError = form.formState.errors.consent?.termsAccepted;
-  const privacyError = form.formState.errors.consent?.privacyAcknowledged;
 
   return (
     <div className="space-y-3">
@@ -43,24 +45,13 @@ export function ConsentSection() {
       </label>
       <ConsentError message={termsError?.message as string | undefined} />
 
-      <label htmlFor="consent-privacy" className="flex items-start gap-3 cursor-pointer">
-        <Checkbox
-          id="consent-privacy"
-          checked={form.watch("consent.privacyAcknowledged") === true}
-          onCheckedChange={(checked) =>
-            form.setValue("consent.privacyAcknowledged", (checked === true) as true, { shouldValidate: true })
-          }
-          data-testid="checkbox-consent-privacy"
-        />
-        <span className="text-sm text-foreground leading-relaxed">
-          {ro ? "Am citit " : "I have read the "}
-          <Link href="/confidentialitate" target="_blank" className="text-primary underline underline-offset-2">
-            {ro ? "Politica de confidențialitate" : "Privacy Policy"}
-          </Link>
-          .
-        </span>
-      </label>
-      <ConsentError message={privacyError?.message as string | undefined} />
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        {ro ? "Prin continuarea comenzii confirmi că ai luat la cunoștință " : "By continuing your order you confirm you have reviewed our "}
+        <Link href="/confidentialitate" target="_blank" className="text-primary underline underline-offset-2">
+          {ro ? "Politica de confidențialitate" : "Privacy Policy"}
+        </Link>
+        .
+      </p>
     </div>
   );
 }

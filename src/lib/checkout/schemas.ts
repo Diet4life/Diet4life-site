@@ -1,22 +1,29 @@
 import { z } from "zod";
+import { COUNTRIES, DEFAULT_COUNTRY_CODE } from "@/lib/checkout/countries";
 
 // ---- billing --------------------------------------------------------------
 // "Pentru cine se emite factura?" -- persoană fizică vs. persoană
 // juridică/PFA. CNP is deliberately never a field here.
 
+const VALID_COUNTRY_CODES = new Set(COUNTRIES.map((c) => c.code));
+
 const addressFields = {
-  country: z.string().min(1).default("România"),
-  county: z.string().min(1, "Județul / sectorul este obligatoriu"),
+  // ISO 3166-1 alpha-2. Required and selectable -- Diet4Life can sell
+  // internationally, this is never hidden or hardcoded to Romania.
+  countryCode: z
+    .string()
+    .refine((v) => VALID_COUNTRY_CODES.has(v), "Selectează o țară")
+    .default(DEFAULT_COUNTRY_CODE),
+  county: z.string().min(1, "Acest câmp este obligatoriu"),
   city: z.string().min(1, "Localitatea este obligatorie"),
-  streetAddress: z.string().min(1, "Strada și numărul sunt obligatorii"),
+  streetAddress: z.string().min(1, "Adresa este obligatorie"),
   buildingDetails: z.string().optional(),
   postalCode: z.string().optional(),
 };
 
 export const individualBillingSchema = z.object({
   personType: z.literal("individual"),
-  firstName: z.string().min(1, "Prenumele este obligatoriu"),
-  lastName: z.string().min(1, "Numele este obligatoriu"),
+  fullName: z.string().min(1, "Numele și prenumele sunt obligatorii"),
   email: z.string().email("Adresa de e-mail nu este validă"),
   phone: z.string().min(6, "Numărul de telefon nu este valid"),
   ...addressFields,
@@ -46,37 +53,34 @@ export type BillingInput = z.infer<typeof billingSchema>;
 export const patientSchema = z
   .object({
     sameAsBuyer: z.boolean(),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
+    fullName: z.string().optional(),
     email: z.string().optional(),
     phone: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.sameAsBuyer) return;
-    if (!data.firstName) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["firstName"], message: "Prenumele pacientului este obligatoriu" });
-    }
-    if (!data.lastName) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["lastName"], message: "Numele pacientului este obligatoriu" });
+    if (!data.fullName) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["fullName"], message: "Numele și prenumele sunt obligatorii" });
     }
     if (!data.email || !z.string().email().safeParse(data.email).success) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["email"], message: "Adresa de e-mail a pacientului nu este validă" });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["email"], message: "Adresa de e-mail nu este validă" });
     }
     if (!data.phone || data.phone.length < 6) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["phone"], message: "Numărul de telefon al pacientului nu este valid" });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["phone"], message: "Numărul de telefon nu este valid" });
     }
   });
 
 export type PatientInput = z.infer<typeof patientSchema>;
 
 // ---- consents -----------------------------------------------------------
+// Only Terms & Conditions require an explicit checkbox. The Privacy Policy
+// is surfaced as informational text with a link (ConsentSection.tsx) --
+// continuing the order is treated as acknowledgement, not a separate
+// mandatory checkbox.
 
 export const consentSchema = z.object({
   termsAccepted: z.literal(true, {
     errorMap: () => ({ message: "Trebuie să accepți Termenii și condițiile" }),
-  }),
-  privacyAcknowledged: z.literal(true, {
-    errorMap: () => ({ message: "Trebuie să confirmi că ai citit Politica de confidențialitate" }),
   }),
 });
 

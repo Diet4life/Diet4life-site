@@ -65,11 +65,16 @@ export default function Products() {
         )}
 
         {Array.isArray(products) && products.length === 0 && (
-          <p className="text-center text-muted-foreground max-w-md mx-auto">
-            {ro
-              ? "Produsele digitale vor fi disponibile în curând."
-              : "Digital products will be available soon."}
-          </p>
+          <div className="text-center max-w-md mx-auto space-y-2">
+            <p className="font-serif font-bold text-xl text-foreground">
+              {ro ? "Materialele Diet4Life sunt în pregătire." : "Diet4Life's materials are being prepared."}
+            </p>
+            <p className="text-muted-foreground">
+              {ro
+                ? "Lucrăm la ghiduri și instrumente practice bazate pe recomandări actuale și experiență clinică."
+                : "We're working on practical guides and tools based on current recommendations and clinical experience."}
+            </p>
+          </div>
         )}
 
         {Array.isArray(products) && products.length > 0 && (

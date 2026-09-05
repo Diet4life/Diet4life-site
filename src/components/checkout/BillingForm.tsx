@@ -4,13 +4,39 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { CountrySelect } from "@/components/checkout/CountrySelect";
+import { DEFAULT_COUNTRY_CODE } from "@/lib/checkout/countries";
 import type { CheckoutSubmissionInput } from "@/lib/checkout/schemas";
+
+// Address field labels adapt to the selected country -- Romania's own
+// administrative terms (Județ/Localitate/Stradă) vs. a generic
+// State-Province/City/Address set for everywhere else, per the "must work
+// for international customers" requirement. Same DB columns either way
+// (county/city/street_address) -- this is a display-only adaptation.
+function addressLabels(countryCode: string, ro: boolean) {
+  if (countryCode === DEFAULT_COUNTRY_CODE) {
+    return {
+      region: ro ? "Județ / Sector" : "County / Sector",
+      city: ro ? "Localitate" : "City",
+      street: ro ? "Stradă și număr" : "Street and number",
+    };
+  }
+  return {
+    region: ro ? "Stat / Regiune / Provincie" : "State / Region / Province",
+    city: ro ? "Oraș" : "City",
+    street: ro ? "Adresă" : "Address",
+  };
+}
+
+const inputClass = "h-11";
 
 export function BillingForm() {
   const { language } = useLanguage();
   const ro = language === "ro";
   const form = useFormContext<CheckoutSubmissionInput>();
   const personType = form.watch("billing.personType");
+  const countryCode = form.watch("billing.countryCode") ?? DEFAULT_COUNTRY_CODE;
+  const labels = addressLabels(countryCode, ro);
 
   return (
     <div className="space-y-6">
@@ -49,28 +75,15 @@ export function BillingForm() {
       </div>
 
       {personType === "individual" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <FormField
             control={form.control}
-            name="billing.firstName"
+            name="billing.fullName"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>{ro ? "Prenume" : "First name"}</FormLabel>
+              <FormItem className="sm:col-span-2">
+                <FormLabel>{ro ? "Nume și prenume" : "Full name"} *</FormLabel>
                 <FormControl>
-                  <Input {...field} data-testid="input-billing-firstname" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="billing.lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{ro ? "Nume" : "Last name"}</FormLabel>
-                <FormControl>
-                  <Input {...field} data-testid="input-billing-lastname" />
+                  <Input className={inputClass} {...field} data-testid="input-billing-fullname" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -81,9 +94,9 @@ export function BillingForm() {
             name="billing.email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>E-mail</FormLabel>
+                <FormLabel>E-mail *</FormLabel>
                 <FormControl>
-                  <Input type="email" {...field} data-testid="input-billing-email" />
+                  <Input className={inputClass} type="email" {...field} data-testid="input-billing-email" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -94,9 +107,9 @@ export function BillingForm() {
             name="billing.phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{ro ? "Telefon" : "Phone"}</FormLabel>
+                <FormLabel>{ro ? "Telefon" : "Phone"} *</FormLabel>
                 <FormControl>
-                  <Input type="tel" {...field} data-testid="input-billing-phone" />
+                  <Input className={inputClass} type="tel" {...field} data-testid="input-billing-phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -104,15 +117,15 @@ export function BillingForm() {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <FormField
             control={form.control}
             name="billing.companyName"
             render={({ field }) => (
               <FormItem className="sm:col-span-2">
-                <FormLabel>{ro ? "Denumire" : "Company name"}</FormLabel>
+                <FormLabel>{ro ? "Denumire" : "Company name"} *</FormLabel>
                 <FormControl>
-                  <Input {...field} data-testid="input-billing-companyname" />
+                  <Input className={inputClass} {...field} data-testid="input-billing-companyname" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -123,9 +136,9 @@ export function BillingForm() {
             name="billing.taxId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>CUI/CIF</FormLabel>
+                <FormLabel>CUI/CIF *</FormLabel>
                 <FormControl>
-                  <Input {...field} data-testid="input-billing-taxid" />
+                  <Input className={inputClass} {...field} data-testid="input-billing-taxid" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -141,7 +154,7 @@ export function BillingForm() {
                   <span className="text-muted-foreground font-normal">({ro ? "opțional" : "optional"})</span>
                 </FormLabel>
                 <FormControl>
-                  <Input {...field} data-testid="input-billing-tradereg" />
+                  <Input className={inputClass} {...field} data-testid="input-billing-tradereg" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -152,9 +165,9 @@ export function BillingForm() {
             name="billing.email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>E-mail</FormLabel>
+                <FormLabel>E-mail *</FormLabel>
                 <FormControl>
-                  <Input type="email" {...field} data-testid="input-billing-email" />
+                  <Input className={inputClass} type="email" {...field} data-testid="input-billing-email" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -165,9 +178,9 @@ export function BillingForm() {
             name="billing.phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{ro ? "Telefon" : "Phone"}</FormLabel>
+                <FormLabel>{ro ? "Telefon" : "Phone"} *</FormLabel>
                 <FormControl>
-                  <Input type="tel" {...field} data-testid="input-billing-phone" />
+                  <Input className={inputClass} type="tel" {...field} data-testid="input-billing-phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -176,15 +189,19 @@ export function BillingForm() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <FormField
           control={form.control}
-          name="billing.country"
+          name="billing.countryCode"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>{ro ? "Țară" : "Country"}</FormLabel>
+            <FormItem className="sm:col-span-2">
+              <FormLabel>{ro ? "Țară" : "Country"} *</FormLabel>
               <FormControl>
-                <Input {...field} data-testid="input-billing-country" />
+                <CountrySelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  testId="select-billing-country"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -195,9 +212,9 @@ export function BillingForm() {
           name="billing.county"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{ro ? "Județ / Sector" : "County"}</FormLabel>
+              <FormLabel>{labels.region} *</FormLabel>
               <FormControl>
-                <Input {...field} data-testid="input-billing-county" />
+                <Input className={inputClass} {...field} data-testid="input-billing-county" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -208,9 +225,9 @@ export function BillingForm() {
           name="billing.city"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{ro ? "Localitate" : "City"}</FormLabel>
+              <FormLabel>{labels.city} *</FormLabel>
               <FormControl>
-                <Input {...field} data-testid="input-billing-city" />
+                <Input className={inputClass} {...field} data-testid="input-billing-city" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -221,9 +238,9 @@ export function BillingForm() {
           name="billing.streetAddress"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{ro ? "Stradă și număr" : "Street and number"}</FormLabel>
+              <FormLabel>{labels.street} *</FormLabel>
               <FormControl>
-                <Input {...field} data-testid="input-billing-street" />
+                <Input className={inputClass} {...field} data-testid="input-billing-street" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -239,7 +256,7 @@ export function BillingForm() {
                 <span className="text-muted-foreground font-normal">({ro ? "opțional" : "optional"})</span>
               </FormLabel>
               <FormControl>
-                <Input {...field} data-testid="input-billing-building" />
+                <Input className={inputClass} {...field} data-testid="input-billing-building" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -255,7 +272,7 @@ export function BillingForm() {
                 <span className="text-muted-foreground font-normal">({ro ? "opțional" : "optional"})</span>
               </FormLabel>
               <FormControl>
-                <Input {...field} data-testid="input-billing-postal" />
+                <Input className={inputClass} {...field} data-testid="input-billing-postal" />
               </FormControl>
               <FormMessage />
             </FormItem>

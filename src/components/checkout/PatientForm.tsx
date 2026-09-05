@@ -17,7 +17,7 @@ export function PatientForm() {
   return (
     <div className="space-y-5">
       <Label className="text-sm font-medium text-foreground block">
-        {ro ? "Cine va beneficia de serviciu?" : "Who will receive the service?"}
+        {ro ? "Serviciul este pentru tine?" : "Is this service for you?"}
       </Label>
 
       <label
@@ -33,64 +33,56 @@ export function PatientForm() {
           data-testid="checkbox-patient-same-as-buyer"
         />
         <span className="text-sm font-medium text-foreground">
-          {ro ? "Eu sunt pacientul" : "I am the patient"}
+          {ro ? "Da, eu voi beneficia de serviciu" : "Yes, I will receive the service"}
         </span>
       </label>
 
       {!sameAsBuyer && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="patient.firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{ro ? "Prenume pacient" : "Patient first name"}</FormLabel>
-                <FormControl>
-                  <Input {...field} data-testid="input-patient-firstname" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="patient.lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{ro ? "Nume pacient" : "Patient last name"}</FormLabel>
-                <FormControl>
-                  <Input {...field} data-testid="input-patient-lastname" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="patient.email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{ro ? "E-mail pacient" : "Patient e-mail"}</FormLabel>
-                <FormControl>
-                  <Input type="email" {...field} data-testid="input-patient-email" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="patient.phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{ro ? "Telefon pacient" : "Patient phone"}</FormLabel>
-                <FormControl>
-                  <Input type="tel" {...field} data-testid="input-patient-phone" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="space-y-5">
+          <p className="text-sm font-medium text-foreground">
+            {ro ? "Datele persoanei pentru care cumperi serviciul" : "Details of the person you're buying this for"}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <FormField
+              control={form.control}
+              name="patient.fullName"
+              render={({ field }) => (
+                <FormItem className="sm:col-span-2">
+                  <FormLabel>{ro ? "Nume și prenume" : "Full name"} *</FormLabel>
+                  <FormControl>
+                    <Input className="h-11" {...field} data-testid="input-patient-fullname" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="patient.email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>E-mail *</FormLabel>
+                  <FormControl>
+                    <Input className="h-11" type="email" {...field} data-testid="input-patient-email" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="patient.phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{ro ? "Telefon" : "Phone"} *</FormLabel>
+                  <FormControl>
+                    <Input className="h-11" type="tel" {...field} data-testid="input-patient-phone" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
       )}
     </div>

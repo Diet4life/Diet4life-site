@@ -1181,6 +1181,107 @@ functions (not created), SmartBill/FGO invoicing, transactional email, secure
 digital-product delivery, real legal copy, real NETOPIA env vars. `PaymentButton`
 creates a `pending_payment` order and stops there by design.
 
+## Checkout UI/UX refinement round — done
+
+User asked to keep the Phase 1 architecture exactly as-is but refine the checkout's
+UI/UX before Phase 2. Explicitly allowed touching schema/logic only where the UX
+ask required it (name field consolidation, country code) — nothing else in the
+order-creation flow or DB structure changed.
+
+- **Desktop two-column layout** (`Checkout.tsx`): `lg:` grid, left column =
+  billing form → patient section (conditional) → consents; right column = a
+  `sticky top-24` card with `OrderSummary` + `PaymentButton` together, staying
+  visible while the form is filled in. Below `lg` (mobile/tablet): single
+  column, order = form → patient → order summary → consents → CTA, exactly
+  per spec. Implemented via a small `useMediaQuery` hook (`src/hooks/use-
+  media-query.ts`, matches the site's own `lg` breakpoint at 1024px) rather
+  than duplicating the same components in two hidden/visible DOM trees —
+  duplicat­ing would have meant two live copies of every input `id`/
+  `data-testid` at once, which breaks both accessibility and testability
+  even when only one copy is visually shown.
+- **Name field simplified** — individual billing and patient both now use a
+  single "Nume și prenume" / "Full name" field instead of separate Prenume/
+  Nume. **Real DB schema change**: `billing_details`/`patient_details`
+  dropped `first_name`+`last_name`, added `full_name` — a clean drop+add
+  migration (not a rename, since combining two columns into one isn't a pure
+  rename anyway). Company/PFA billing is untouched (still `companyName` +
+  `taxId` etc., separate fields, per explicit instruction to keep those
+  separate).
+- **Country — real DB schema change**: `billing_details.country` (free-text,
+  defaulted to "România") replaced with `billing_details.country_code`
+  (ISO 3166-1 alpha-2, e.g. "RO"/"DE"/"US", default "RO"). Never hidden,
+  never hardcoded to Romania — a searchable combobox
+  (`src/components/checkout/CountrySelect.tsx`, built from the existing
+  shadcn `Command`+`Popover` primitives, no new dependency) backed by a new
+  `src/lib/checkout/countries.ts` (ISO code + RO/EN localized name, ~100
+  countries covering the EU, the Americas, the Middle East, and the largest
+  Asian/African economies — a representative list for a first release, not
+  the full ~195-entry ISO set; trivial to extend, it's just a data array).
+  The UI always shows the localized name; the DB always stores the code.
+- **International address labels** — no new columns needed: `county`/`city`/
+  `street_address` are reused for every country, but their *labels* switch
+  based on the selected `countryCode` — "Județ / Sector" / "Localitate" /
+  "Stradă și număr" for Romania, "Stat / Regiune / Provincie" / "Oraș" /
+  "Adresă" (localized) for everywhere else. Verified end-to-end: selecting
+  Germany relabels the fields live, filling them in and switching back to
+  Romania correctly relabels again with no data loss, and the submitted
+  order stored the right `country_code`.
+- **Patient section wording** — "Eu sunt pacientul" → "Serviciul este pentru
+  tine?" / "Da, eu voi beneficia de serviciu"; when unchecked, the heading
+  is now "Datele persoanei pentru care cumperi serviciul" with a single
+  "Nume și prenume" field (matching the billing simplification) + email +
+  telefon. No medical fields, as before.
+- **CTA text** — "Trimite comanda" → "Continuă către plată — {total}"
+  (`PaymentButton.tsx`), since "Trimite comanda" read as if the order itself
+  was the end state; "Continuă către plată" more accurately signals a
+  payment step is still coming. Trust line changed to "Plata online va fi
+  procesată securizat." Still **not** "Plătește securizat" and still no
+  card-network badges — those are explicitly reserved for once NETOPIA is
+  actually wired up in Phase 2, per her explicit "IMPORTANT" instruction.
+- **Consents simplified** — Privacy Policy is no longer a second mandatory
+  checkbox. `consentSchema` (zod) now only requires `termsAccepted`;
+  `ConsentSection.tsx` shows the Terms checkbox plus a plain informational
+  sentence ("Prin continuarea comenzii confirmi că ai luat la cunoștință
+  Politica de confidențialitate.") with a working link. No DB change needed
+  — consent was never persisted as a column in Phase 1 to begin with.
+- **Demo product exclusion** — confirmed by repo-wide grep that no
+  "Ghid Nutrițional PDF (demo)"-style data ever existed in git; the demo
+  products seen in earlier screenshots only ever lived in a throwaway local
+  Postgres instance used for testing, never committed. `Products.tsx`'s
+  empty-state copy updated to the exact requested two lines ("Materialele
+  Diet4Life sunt în pregătire." / "Lucrăm la ghiduri și instrumente
+  practice...") with no price or CTA shown when the catalog is empty.
+- **Required-field asterisks + roomier inputs** — every required field label
+  now ends in `*`; checkout inputs use `h-11` (44px) instead of the shared
+  `Input` component's site-wide default `h-9` (36px) — scoped to checkout
+  only via a per-field className, not a global `Input` component change,
+  so no other page's inputs are affected. Spacing between fields increased
+  (`gap-5`, was `gap-4`) for a calmer, less "tax form" feel on mobile.
+- New migration: `netlify/database/migrations/*_checkout_ux_refinements/`
+  — generated with `drizzle-kit generate` (interactively confirmed via a
+  scripted `pexpect` session, since the CLI's rename-detection prompt
+  requires a real TTY; all three column changes were correctly resolved as
+  "create column", not "rename", matching the intent). Also picked up one
+  small pending diff from the previous session that hadn't been migrated
+  yet (`orders.invoice_status` default `not_required` → `pending`).
+- Verified exactly like Phase 1: a scratch local Postgres (system binaries,
+  run as `nobody`), both migrations applied in sequence, real order
+  submissions end-to-end for both a digital product (mobile) and a
+  consultation with a non-buyer patient and a mid-flow country switch
+  (desktop) — confirmed via direct SQL query that `full_name`/`country_code`
+  landed correctly. `tsc --noEmit` clean (same one pre-existing unrelated
+  error), `npm run build` clean, `npx vitest run` 41/41. No horizontal
+  overflow at 390px.
+- One real flake caught and understood, not a bug: the very first page load
+  after adding `CountrySelect` (which pulled in `cmdk`/`@radix-ui/react-
+  popover`/`@radix-ui/react-dialog` for the first time) triggered Vite's
+  "new dependencies optimized... reloading" dev-server restart mid-request,
+  producing one blank screenshot. Not present on any subsequent load once
+  Vite's dependency pre-bundle cache was warm — a known Vite dev-server
+  characteristic, not a code defect, and doesn't happen in a production
+  build (`vite build` bundles everything upfront, no on-demand optimization
+  step exists there).
+
 ## Known pre-existing issues (not caused by us, not yet fixed)
 
 - `src/pages/*.tsx` used to reference `/images/hero.png`, `/images/portrait.png`,

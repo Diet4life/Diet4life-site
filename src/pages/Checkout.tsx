@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Form } from "@/components/ui/form";
 import { BillingForm } from "@/components/checkout/BillingForm";
 import { PatientForm } from "@/components/checkout/PatientForm";
@@ -13,6 +14,7 @@ import { OrderSummary } from "@/components/checkout/OrderSummary";
 import { ConsentSection } from "@/components/checkout/ConsentSection";
 import { PaymentButton } from "@/components/checkout/PaymentButton";
 import { checkoutSubmissionSchema, type CheckoutSubmissionInput } from "@/lib/checkout/schemas";
+import { DEFAULT_COUNTRY_CODE } from "@/lib/checkout/countries";
 import type { Product } from "@/lib/checkout/types";
 
 export default function Checkout() {
@@ -20,6 +22,8 @@ export default function Checkout() {
   const { language } = useLanguage();
   const ro = language === "ro";
   const { toast } = useToast();
+  // Matches the site's own lg breakpoint (1024px, e.g. Home.tsx's hero grid).
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const [product, setProduct] = useState<Product | "loading" | "not-found">("loading");
   const [submitting, setSubmitting] = useState(false);
@@ -51,11 +55,10 @@ export default function Checkout() {
       productSlug: slug,
       billing: {
         personType: "individual",
-        firstName: "",
-        lastName: "",
+        fullName: "",
         email: "",
         phone: "",
-        country: "România",
+        countryCode: DEFAULT_COUNTRY_CODE,
         county: "",
         city: "",
         streetAddress: "",
@@ -64,14 +67,12 @@ export default function Checkout() {
       },
       patient: {
         sameAsBuyer: true,
-        firstName: "",
-        lastName: "",
+        fullName: "",
         email: "",
         phone: "",
       },
       consent: {
         termsAccepted: undefined as unknown as true,
-        privacyAcknowledged: undefined as unknown as true,
       },
     },
   });
@@ -132,9 +133,36 @@ export default function Checkout() {
     }
   }
 
+  const billingSection = (
+    <section>
+      <h2 className="font-serif font-bold text-lg text-foreground mb-5">
+        {ro ? "Date pentru factură" : "Billing details"}
+      </h2>
+      <BillingForm />
+    </section>
+  );
+
+  const patientSection = needsPatient && (
+    <section>
+      <h2 className="font-serif font-bold text-lg text-foreground mb-5">
+        {ro ? "Beneficiarul serviciului" : "Service beneficiary"}
+      </h2>
+      <PatientForm />
+    </section>
+  );
+
+  const consentSection = (
+    <section>
+      <ConsentSection />
+    </section>
+  );
+
+  const summaryCard = <OrderSummary product={product} />;
+  const paymentCta = <PaymentButton product={product} submitting={submitting} />;
+
   return (
     <div className="py-16 md:py-24 bg-background min-h-screen">
-      <div className="container mx-auto px-4 max-w-2xl">
+      <div className="container mx-auto px-4 max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -148,34 +176,33 @@ export default function Checkout() {
         </motion.div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-            <section>
-              <h2 className="font-serif font-bold text-lg text-foreground mb-5">
-                {ro ? "Date pentru factură" : "Billing details"}
-              </h2>
-              <BillingForm />
-            </section>
-
-            {needsPatient && (
-              <section>
-                <h2 className="font-serif font-bold text-lg text-foreground mb-5">
-                  {ro ? "Beneficiarul serviciului" : "Service beneficiary"}
-                </h2>
-                <PatientForm />
-              </section>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            {isDesktop ? (
+              // Desktop: two columns. Left = form + consents. Right = a
+              // sticky "Comanda ta" card that stays visible while the form
+              // is filled in, ending with the payment CTA.
+              <div className="grid grid-cols-[1fr_360px] gap-10 items-start">
+                <div className="space-y-10">
+                  {billingSection}
+                  {patientSection}
+                  {consentSection}
+                </div>
+                <div className="sticky top-24 space-y-4">
+                  {summaryCard}
+                  {paymentCta}
+                </div>
+              </div>
+            ) : (
+              // Mobile: single column. Order summary sits after the form,
+              // before consents and the final CTA.
+              <div className="space-y-10">
+                {billingSection}
+                {patientSection}
+                <section>{summaryCard}</section>
+                {consentSection}
+                <section>{paymentCta}</section>
+              </div>
             )}
-
-            <section>
-              <OrderSummary product={product} />
-            </section>
-
-            <section>
-              <ConsentSection />
-            </section>
-
-            <section>
-              <PaymentButton product={product} submitting={submitting} />
-            </section>
           </form>
         </Form>
       </div>

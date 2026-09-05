@@ -11,7 +11,7 @@ function billingRow(orderId: number, billing: BillingInput) {
   const shared = {
     orderId,
     personType: billing.personType,
-    country: billing.country,
+    countryCode: billing.countryCode,
     county: billing.county,
     city: billing.city,
     streetAddress: billing.streetAddress,
@@ -24,8 +24,7 @@ function billingRow(orderId: number, billing: BillingInput) {
   if (billing.personType === "individual") {
     return {
       ...shared,
-      firstName: billing.firstName,
-      lastName: billing.lastName,
+      fullName: billing.fullName,
       companyName: null,
       taxId: null,
       tradeRegistryNumber: null,
@@ -34,8 +33,7 @@ function billingRow(orderId: number, billing: BillingInput) {
 
   return {
     ...shared,
-    firstName: null,
-    lastName: null,
+    fullName: null,
     companyName: billing.companyName,
     taxId: billing.taxId,
     tradeRegistryNumber: billing.tradeRegistryNumber ?? null,
@@ -46,8 +44,7 @@ function patientRow(orderId: number, patient: PatientInput) {
   return {
     orderId,
     sameAsBuyer: patient.sameAsBuyer,
-    firstName: patient.sameAsBuyer ? null : patient.firstName ?? null,
-    lastName: patient.sameAsBuyer ? null : patient.lastName ?? null,
+    fullName: patient.sameAsBuyer ? null : patient.fullName ?? null,
     email: patient.sameAsBuyer ? null : patient.email ?? null,
     phone: patient.sameAsBuyer ? null : patient.phone ?? null,
   };

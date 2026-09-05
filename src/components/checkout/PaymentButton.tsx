@@ -7,12 +7,13 @@ function formatPrice(cents: number, currency: string) {
   return `${(cents / 100).toFixed(0)} ${currency === "RON" ? "lei" : currency}`;
 }
 
-// Phase 1: no payment provider is wired up yet (see project notes -- NETOPIA
-// integration is explicitly Phase 2). The CTA is honest about that instead
-// of showing a "Plătește securizat" claim with nothing behind it -- it
-// creates the order (pending_payment) and continues to the status page,
-// which will accurately keep showing "pending" until a real payment
-// integration exists. Swap `copy` below once Phase 2 lands.
+// Phase 1: no payment provider is wired up yet (NETOPIA is explicitly
+// Phase 2). CTA says "Continuă către plată", not "Plătește securizat" --
+// swap to the latter, and add Visa/Mastercard + processor details below,
+// only once Phase 2 actually wires NETOPIA. Submitting creates the order
+// (pending_payment) and continues to the status page, which will
+// accurately keep showing "pending" until a real payment integration
+// exists.
 export function PaymentButton({
   product,
   submitting,
@@ -34,14 +35,12 @@ export function PaymentButton({
       >
         {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
         {ro
-          ? `Trimite comanda — ${formatPrice(product.priceCents, product.currency)}`
-          : `Submit order — ${formatPrice(product.priceCents, product.currency)}`}
+          ? `Continuă către plată — ${formatPrice(product.priceCents, product.currency)}`
+          : `Continue to payment — ${formatPrice(product.priceCents, product.currency)}`}
       </Button>
       <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
         <ShieldCheck className="w-3.5 h-3.5" />
-        {ro
-          ? "Plata online va fi disponibilă în curând — comanda ta este înregistrată acum."
-          : "Online payment is coming soon — your order is being registered now."}
+        {ro ? "Plata online va fi procesată securizat." : "Online payment will be processed securely."}
       </p>
     </div>
   );

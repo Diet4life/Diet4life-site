@@ -14,16 +14,20 @@ export function OrderSummary({ product }: { product: Product }) {
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">
         {ro ? "Comanda ta" : "Your order"}
       </h2>
-      <div className="flex items-start justify-between gap-4 pb-4 border-b border-border">
-        <div>
-          <p className="font-medium text-foreground" data-testid="text-order-product-name">
-            {product.name}
-          </p>
-          <p className="text-sm text-muted-foreground mt-0.5">1 × {formatPrice(product.priceCents, product.currency)}</p>
-        </div>
-        <p className="font-semibold text-foreground whitespace-nowrap" data-testid="text-order-line-total">
-          {formatPrice(product.priceCents, product.currency)}
+      <div className="pb-4 border-b border-border space-y-2">
+        <p className="font-medium text-foreground" data-testid="text-order-product-name">
+          {product.name}
         </p>
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>{ro ? "Cantitate" : "Quantity"}</span>
+          <span>1</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{ro ? "Preț" : "Price"}</span>
+          <span className="font-medium text-foreground" data-testid="text-order-line-total">
+            {formatPrice(product.priceCents, product.currency)}
+          </span>
+        </div>
       </div>
       <div className="flex items-center justify-between pt-4">
         <p className="font-serif font-bold text-lg text-foreground">{ro ? "Total" : "Total"}</p>

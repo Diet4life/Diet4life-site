@@ -110,16 +110,19 @@ export const billingDetails = pgTable("billing_details", {
   personType: customerTypeEnum("person_type").notNull(), // individual | company
 
   // individual
-  firstName: text("first_name"),
-  lastName: text("last_name"),
+  fullName: text("full_name"),
 
   // company / PFA
   companyName: text("company_name"),
   taxId: text("tax_id"), // CUI/CIF
   tradeRegistryNumber: text("trade_registry_number"),
 
-  // shared address block
-  country: text("country").notNull().default("România"),
+  // shared address block. country_code is ISO 3166-1 alpha-2 (e.g. "RO",
+  // "DE", "US") -- the UI shows a localized country name, but the DB always
+  // stores the standard code. county/city/street_address are reused for
+  // every country; the checkout UI relabels them per country (Județ/State,
+  // Localitate/City, Stradă/Address) without needing separate columns.
+  countryCode: text("country_code").notNull().default("RO"),
   county: text("county").notNull(),
   city: text("city").notNull(),
   streetAddress: text("street_address").notNull(),
@@ -141,8 +144,7 @@ export const patientDetails = pgTable("patient_details", {
   orderId: integer("order_id").notNull().references(() => orders.id),
 
   sameAsBuyer: boolean("same_as_buyer").notNull().default(true),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
+  fullName: text("full_name"),
   email: text("email"),
   phone: text("phone"),
 }, (table) => ({
