@@ -52,19 +52,19 @@ export default function Home() {
 
               <p className="text-base lg:text-[18px] leading-[1.5] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-[21px] lg:mb-7">
                 {ro
-                  ? "Caută răspunsuri clare, bazate pe dovezi, la întrebările tale despre nutriție și greutate."
-                  : "Search for clear, evidence-based answers to your questions about nutrition and weight."}
+                  ? "Caută răspunsuri clare, bazate pe dovezi, despre nutriție și greutate — fără reguli rigide și fără soluții universale."
+                  : "Search for clear, evidence-based answers about nutrition and weight — without rigid rules or one-size-fits-all solutions."}
               </p>
 
               <form onSubmit={(e) => e.preventDefault()} className="relative mb-4 lg:mb-6 lg:max-w-[540px]">
                 <label htmlFor="home-search" className="sr-only">
-                  {ro ? "Caută întrebări, subiecte sau mituri" : "Search questions, topics, or myths"}
+                  {ro ? "Scrie sau alege o întrebare de pornire" : "Type or pick a starting question"}
                 </label>
                 <input
                   id="home-search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder={ro ? "Caută o întrebare, un subiect sau un mit..." : "Search a question, topic, or myth..."}
+                  placeholder={ro ? "Scrie sau alege o întrebare de pornire..." : "Type or pick a starting question..."}
                   className="w-full h-[54px] lg:h-[58px] pl-4 pr-[60px] lg:pr-[64px] rounded-[14px] border border-border bg-background text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
                   data-testid="input-home-search"
                 />
@@ -182,6 +182,31 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Servicii scurt */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 max-w-2xl text-center">
+          <span className="inline-block text-xs font-bold tracking-wide uppercase text-primary bg-primary/15 border border-primary/20 px-3 py-1 rounded-full mb-4">
+            {ro ? "Sprijin personalizat" : "Personalized support"}
+          </span>
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-5 text-balance">
+            {ro ? "Când informația generală nu este suficientă" : "When general information isn't enough"}
+          </h2>
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-8">
+            {ro
+              ? "Dacă ai nevoie de recomandări adaptate situației tale, putem lucra împreună într-o consultație nutrițională individuală. Camelia Amuza, nutriționist-dietetician autorizat."
+              : "If you need recommendations tailored to your situation, we can work together in an individual nutrition consultation. Camelia Amuza, licensed dietitian-nutritionist."}
+          </p>
+          <Link
+            href="/services"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary/90 active:scale-[0.97] text-primary-foreground font-medium px-8 h-12 transition-all"
+            data-testid="button-see-services"
+          >
+            {ro ? "Vezi serviciile" : "See services"}
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </section>
+
       {/* Nutri pentru copii */}
       <section className="py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
@@ -195,9 +220,14 @@ export default function Home() {
               <span className="inline-block text-xs font-bold tracking-wide uppercase text-primary bg-primary/15 border border-primary/20 px-3 py-1 rounded-full mb-4">
                 {ro ? "Pentru cei mici" : "For little ones"}
               </span>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-5 text-balance">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3 text-balance">
                 {ro ? "Descoperă lumea lui Nutri" : "Discover Nutri's world"}
               </h2>
+              <p className="text-sm text-muted-foreground mb-5">
+                {ro
+                  ? "Nutri este un proiect educațional Diet4Life, creat pentru a-i ajuta pe cei mici să descopere alimentația prin joacă."
+                  : "Nutri is a Diet4Life educational project, created to help little ones discover food through play."}
+              </p>
               <div className="text-base md:text-lg text-muted-foreground leading-relaxed md:leading-relaxed space-y-5 mb-6">
                 <p>
                   {ro
