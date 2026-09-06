@@ -137,7 +137,7 @@ export default function NutriPentruCopii() {
   );
 
   return (
-    <div className="bg-amber-50/60">
+    <div className="bg-secondary/30">
       {/* Hero */}
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4 max-w-3xl text-center">

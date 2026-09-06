@@ -47,7 +47,7 @@ export default function Home() {
             >
               <h1 className="font-serif font-bold text-foreground text-[32px] min-[390px]:text-[35px] lg:text-[57px] leading-[1.08] lg:leading-[1.06] tracking-[-0.01em] max-w-[340px] lg:max-w-[560px] mb-3 lg:mb-4">
                 {ro ? "Nutriția începe cu " : "Nutrition starts with "}
-                <span className="text-orange-600">{ro ? "întrebarea potrivită." : "the right question."}</span>
+                <span className="text-primary">{ro ? "întrebarea potrivită." : "the right question."}</span>
               </h1>
 
               <p className="text-base lg:text-[18px] leading-[1.5] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-[21px] lg:mb-7">
@@ -65,12 +65,12 @@ export default function Home() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={ro ? "Caută o întrebare, un subiect sau un mit..." : "Search a question, topic, or myth..."}
-                  className="w-full h-[54px] lg:h-[58px] pl-4 pr-[60px] lg:pr-[64px] rounded-[14px] border border-border bg-background text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-shadow"
+                  className="w-full h-[54px] lg:h-[58px] pl-4 pr-[60px] lg:pr-[64px] rounded-[14px] border border-border bg-background text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
                   data-testid="input-home-search"
                 />
                 <button
                   type="submit"
-                  className="absolute right-1.5 top-1.5 h-[48px] w-[48px] lg:h-[50px] lg:w-[50px] rounded-[11px] bg-orange-600 hover:bg-orange-700 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 text-white flex items-center justify-center transition-all"
+                  className="absolute right-1.5 top-1.5 h-[48px] w-[48px] lg:h-[50px] lg:w-[50px] rounded-[11px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white flex items-center justify-center transition-all"
                   data-testid="button-home-search"
                   aria-label={ro ? "Caută" : "Search"}
                 >
@@ -87,10 +87,10 @@ export default function Home() {
                     key={i}
                     type="button"
                     onClick={() => setSearch(ro ? q.ro : q.en)}
-                    className={`${i === 0 ? "col-span-2" : ""} min-h-11 lg:min-h-[42px] flex items-center gap-2 px-3 py-2.5 lg:px-[14px] rounded-xl border border-border bg-background hover:border-orange-300 hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 transition-all text-left`}
+                    className={`${i === 0 ? "col-span-2" : ""} min-h-11 lg:min-h-[42px] flex items-center gap-2 px-3 py-2.5 lg:px-[14px] rounded-xl border border-border bg-background hover:border-primary/30 hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-all text-left`}
                     data-testid={`button-quick-question-${i}`}
                   >
-                    <q.icon className="w-4 h-4 text-orange-600 shrink-0" />
+                    <q.icon className="w-4 h-4 text-primary shrink-0" />
                     <span className="text-sm lg:text-[15px] font-medium text-foreground">{ro ? q.ro : q.en}</span>
                   </button>
                 ))}
@@ -98,7 +98,7 @@ export default function Home() {
 
               <Link
                 href="/nutrihub"
-                className="inline-flex items-center justify-center w-full min-[380px]:w-auto min-[380px]:min-w-[220px] h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-orange-600 hover:bg-orange-700 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 text-white font-semibold text-[15px] lg:text-base transition-all"
+                className="inline-flex items-center justify-center w-full min-[380px]:w-auto min-[380px]:min-w-[220px] h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white font-semibold text-[15px] lg:text-base transition-all"
                 data-testid="button-explore-nutrihub"
               >
                 {ro ? "Explorează NutriHub" : "Explore NutriHub"}
@@ -166,11 +166,11 @@ export default function Home() {
               >
                 <Link
                   href={`/nutrihub/${topic.slug}`}
-                  className="block rounded-2xl bg-card border border-border p-8 text-center hover:border-orange-300 hover:shadow-md transition-all"
+                  className="block rounded-2xl bg-card border border-border p-8 text-center hover:border-primary/30 hover:shadow-md transition-all"
                   data-testid={`card-nutrihub-topic-${i}`}
                 >
-                  <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
-                    <topic.icon className="w-6 h-6 text-orange-600" />
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <topic.icon className="w-6 h-6 text-primary" />
                   </div>
                   <h3 className="font-serif font-bold text-foreground text-lg">
                     {ro ? topic.ro : topic.en}
@@ -183,7 +183,7 @@ export default function Home() {
       </section>
 
       {/* Nutri pentru copii */}
-      <section className="py-20 bg-amber-50/60">
+      <section className="py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-[1fr_1.2fr] gap-10 lg:gap-8 items-center">
             <motion.div
@@ -319,7 +319,7 @@ export default function Home() {
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-orange-600 hover:bg-orange-700 active:scale-[0.97] text-white font-medium px-8 h-12 transition-all"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary/90 active:scale-[0.97] text-white font-medium px-8 h-12 transition-all"
             data-testid="button-lets-meet"
           >
             <Heart className="w-4 h-4" />
