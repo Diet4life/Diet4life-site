@@ -33,11 +33,36 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const LANGUAGE_STORAGE_KEY = 'd4l-lang';
+
+// Lazy initializer -- reads localStorage synchronously during the first
+// render, not in a useEffect after mount. Reading it later would render
+// 'ro' first and then flip to the stored language, producing a visible
+// RO->EN flash; reading it here avoids that entirely.
+function getInitialLanguage(): Language {
+  try {
+    const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (stored === 'ro' || stored === 'en') return stored;
+  } catch {
+    // localStorage unavailable (e.g. private browsing) -- fall back below.
+  }
+  return 'ro';
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('ro');
+  const [language, setLanguage] = useState<Language>(getInitialLanguage);
 
   const toggleLanguage = () => {
-    setLanguage(prev => prev === 'ro' ? 'en' : 'ro');
+    setLanguage(prev => {
+      const next = prev === 'ro' ? 'en' : 'ro';
+      try {
+        localStorage.setItem(LANGUAGE_STORAGE_KEY, next);
+      } catch {
+        // Ignore write failures (e.g. private browsing / storage full) --
+        // the toggle still works for the current session either way.
+      }
+      return next;
+    });
   };
 
   const t = (key: string): string => {

@@ -183,7 +183,7 @@ export default function Services() {
                 </p>
 
                 <Button asChild size="lg" variant="outline" className="rounded-xl gap-2 w-full mt-auto">
-                  <Link href="/contact">
+                  <Link href="/consultatii">
                     {ro ? "Începe cu jurnalul" : "Start with the journal"}
                     <ArrowRight className="w-4 h-4" />
                   </Link>

@@ -1,47 +1,63 @@
+import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
-import { Phone, Mail, Handshake, Video } from "lucide-react";
+import { Phone, Mail, Handshake, Video, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { contactSubmissionSchema, type ContactSubmissionInput } from "@/lib/contact/schema";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
-  goal: z.string().min(1, "Please select a goal"),
-  message: z.string().min(10, "Message must be at least 10 characters"),
-});
-
 export default function Contact() {
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
+  const ro = language === "ro";
   const { toast } = useToast();
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  // Honeypot -- a real visitor never fills this; kept outside react-hook-form
+  // since it isn't part of the validated business schema.
+  const [website, setWebsite] = useState("");
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ContactSubmissionInput>({
+    resolver: zodResolver(contactSubmissionSchema),
     defaultValues: {
       name: "",
       email: "",
       phone: "",
-      goal: "",
       message: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    toast({
-      title: language === 'ro' ? "Mesaj Trimis!" : "Message Sent!",
-      description: language === 'ro' 
-        ? "Vă vom contacta în cel mai scurt timp posibil." 
-        : "We will contact you as soon as possible.",
-    });
-    form.reset();
+  async function onSubmit(values: ContactSubmissionInput) {
+    setStatus("submitting");
+    try {
+      const res = await fetch("/.netlify/functions/contact-submit", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...values, website }),
+      });
+      if (!res.ok) throw new Error("send_failed");
+
+      setStatus("success");
+      toast({
+        title: ro ? "Mesajul a fost trimis." : "Your message has been sent.",
+        description: ro
+          ? "Îți răspund, de obicei, în 1–2 zile lucrătoare, pe email sau telefon."
+          : "We usually reply within 1-2 business days, by email or phone.",
+      });
+      form.reset();
+    } catch {
+      setStatus("error");
+      toast({
+        variant: "destructive",
+        title: ro ? "Mesajul nu a putut fi trimis." : "Your message could not be sent.",
+        description: ro
+          ? "A apărut o problemă tehnică la trimiterea mesajului. Te rugăm să încerci din nou sau să ne scrii direct la contact@diet4lifeconcept.ro."
+          : "A technical problem occurred while sending your message. Please try again, or write to us directly at contact@diet4lifeconcept.ro.",
+      });
+    }
   }
 
   return (
@@ -49,12 +65,12 @@ export default function Contact() {
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6">
-            {language === 'ro' ? 'Contact & Programări' : 'Contact & Appointments'}
+            {ro ? "Contact & Programări" : "Contact & Appointments"}
           </h1>
           <p className="text-lg text-muted-foreground">
-            {language === 'ro'
-              ? 'Suntem aici pentru a răspunde întrebărilor tale. Programează o consultație online.'
-              : 'We are here to answer your questions. Book an online consultation.'}
+            {ro
+              ? "Sunt aici pentru a răspunde întrebărilor tale. Programează o consultație online."
+              : "I'm here to answer your questions. Book an online consultation."}
           </p>
         </div>
 
@@ -65,19 +81,36 @@ export default function Contact() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-2xl font-serif font-bold text-foreground mb-8">
-              {language === 'ro' ? 'Trimite un Mesaj' : 'Send a Message'}
+              {ro ? "Trimite un Mesaj" : "Send a Message"}
             </h2>
-            
+
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Honeypot -- clipped to 1x1px rather than display:none, so
+                    simple bots that skip hidden/display:none fields still
+                    fill it. Clipped in place (not pushed off-screen with a
+                    large negative offset) so it can never affect the page's
+                    scrollable width. */}
+                <input
+                  type="text"
+                  name="website"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="absolute w-px h-px p-0 m-[-1px] overflow-hidden whitespace-nowrap border-0"
+                  style={{ clip: "rect(0,0,0,0)" }}
+                />
+
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{language === 'ro' ? 'Nume Complet' : 'Full Name'}</FormLabel>
+                      <FormLabel>{ro ? "Nume Complet" : "Full Name"}</FormLabel>
                       <FormControl>
-                        <Input placeholder="John Doe" {...field} data-testid="input-name" />
+                        <Input placeholder={ro ? "Ana Popescu" : "Jane Doe"} {...field} data-testid="input-name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -92,7 +125,7 @@ export default function Contact() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="john@example.com" type="email" {...field} data-testid="input-email" />
+                          <Input placeholder={ro ? "ana@exemplu.ro" : "jane@example.com"} type="email" {...field} data-testid="input-email" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -103,7 +136,7 @@ export default function Contact() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{language === 'ro' ? 'Telefon (Opțional)' : 'Phone (Optional)'}</FormLabel>
+                        <FormLabel>{ro ? "Telefon (Opțional)" : "Phone (Optional)"}</FormLabel>
                         <FormControl>
                           <Input placeholder="+40 700 000 000" type="tel" {...field} data-testid="input-phone" />
                         </FormControl>
@@ -115,38 +148,15 @@ export default function Contact() {
 
                 <FormField
                   control={form.control}
-                  name="goal"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{language === 'ro' ? 'Scopul Consultației' : 'Consultation Goal'}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-goal">
-                            <SelectValue placeholder={language === 'ro' ? "Selectează o opțiune" : "Select an option"} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="weight_loss">{language === 'ro' ? 'Scădere în greutate' : 'Weight loss'}</SelectItem>
-                          <SelectItem value="health">{language === 'ro' ? 'Sănătate Generală' : 'General Health'}</SelectItem>
-                          <SelectItem value="other">{language === 'ro' ? 'Altul' : 'Other'}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="message"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{language === 'ro' ? 'Mesaj / Detalii suplimentare' : 'Message / Additional details'}</FormLabel>
+                      <FormLabel>{ro ? "Mesaj / Detalii suplimentare" : "Message / Additional details"}</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder={language === 'ro' ? "Descrie scurt situația ta..." : "Briefly describe your situation..."}
+                        <Textarea
+                          placeholder={ro ? "Descrie scurt situația ta..." : "Briefly describe your situation..."}
                           className="min-h-[120px]"
-                          {...field} 
+                          {...field}
                           data-testid="input-message"
                         />
                       </FormControl>
@@ -155,9 +165,16 @@ export default function Contact() {
                   )}
                 />
 
-                <Button type="submit" size="lg" className="w-full sm:w-auto" data-testid="button-submit">
-                  {language === 'ro' ? 'Trimite Mesajul' : 'Send Message'}
+                <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={status === "submitting"} data-testid="button-submit">
+                  {status === "submitting" && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {status === "submitting" ? (ro ? "Se trimite..." : "Sending...") : ro ? "Trimite Mesajul" : "Send Message"}
                 </Button>
+
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {ro
+                    ? "Mesajul tău este folosit doar pentru a-ți răspunde la această solicitare. Te rugăm să nu incluzi analize, documente medicale sau alte informații medicale sensibile în acest formular — le putem discuta direct în cadrul consultației."
+                    : "Your message is used only to respond to your request. Please don't include test results, medical documents, or other sensitive medical information in this form — we can go over those directly during your consultation."}
+                </p>
               </form>
             </Form>
           </motion.div>
@@ -169,7 +186,7 @@ export default function Contact() {
             className="flex flex-col h-full"
           >
             <h2 className="text-2xl font-serif font-bold text-foreground mb-8">
-              {language === 'ro' ? 'Contactează-ne' : 'Contact us'}
+              {ro ? "Contactează-ne" : "Contact us"}
             </h2>
 
             <div className="space-y-5 bg-secondary/30 p-8 rounded-2xl flex-1 border border-border">
@@ -182,7 +199,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
-                    {language === 'ro' ? 'Telefon' : 'Phone'}
+                    {ro ? "Telefon" : "Phone"}
                   </p>
                   <p className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                     0766 572 968
@@ -214,14 +231,14 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
-                    {language === 'ro' ? 'Program' : 'Schedule'}
+                    {ro ? "Program" : "Schedule"}
                   </p>
                   <p className="text-base font-semibold text-foreground">
-                    {language === 'ro' ? 'Stabilit de comun acord' : 'Set by mutual agreement'}
+                    {ro ? "Stabilit de comun acord" : "Set by mutual agreement"}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {language === 'ro'
-                      ? 'Fiind totul online, găsim împreună un interval potrivit pentru tine.'
+                    {ro
+                      ? "Fiind totul online, găsim împreună un interval potrivit pentru tine."
                       : "Since everything is online, we'll find a time that works for you together."}
                   </p>
                 </div>
@@ -237,16 +254,16 @@ export default function Contact() {
                     <Video className="w-5 h-5" />
                   </div>
                   <h3 className="font-bold text-foreground">
-                    {language === 'ro' ? 'Consultații Online' : 'Online Consultations'}
+                    {ro ? "Consultații Online" : "Online Consultations"}
                   </h3>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                  {language === 'ro'
-                    ? 'Toate consultațiile se desfășoară online — prin Zoom, Google Meet sau WhatsApp, în funcție de ce ți se potrivește mai bine. Poți participa de oriunde, fără deplasare.'
+                  {ro
+                    ? "Toate consultațiile se desfășoară online — prin Zoom, Google Meet sau WhatsApp, în funcție de ce ți se potrivește mai bine. Poți participa de oriunde, fără deplasare."
                     : "All consultations take place online — via Zoom, Google Meet or WhatsApp, whichever suits you best. You can join from anywhere, no travel needed."}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {['Zoom', 'Google Meet', 'WhatsApp'].map(platform => (
+                  {["Zoom", "Google Meet", "WhatsApp"].map((platform) => (
                     <span key={platform} className="text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">
                       {platform}
                     </span>
