@@ -1453,6 +1453,61 @@ change this round — `billing_details.country_code` was already free-text ISO a
   `package.json`/`package-lock.json` (two new devDependencies). Nothing else in the
   checkout flow, DB schema, or any other page was touched.
 
+## Etapa 3 — Contact form (Resend), 404 rebrand, language persistence — COMPLETĂ / VALIDATĂ END-TO-END
+
+Implemented through the same propose-then-approve cycle as Etapa 1/2, under an
+explicit data-minimisation constraint the user gave mid-proposal: the contact
+message can contain personal/health information, so it must never be written
+to a permanent store. Architecture is deliberately storage-free: **Browser →
+Netlify Function (`contact-submit.ts`) → server-side zod validation → honeypot
+check → Resend API → inbox at `contact@diet4lifeconcept.ro`.** No
+`contact_messages` table exists or was approved; a DB/email hybrid was
+explicitly proposed and explicitly rejected by the user for the same reason.
+
+- `netlify/functions/contact-submit.ts` — POST-only, rejects other methods;
+  honeypot field (`website`) silently accepted with no signal back if filled;
+  zod validation via `src/lib/contact/schema.ts` (name 2–100, email ≤254,
+  phone optional ≤20 free text, message 10–2000 — no "scop"/goal field, removed
+  for data minimisation); sends through Resend's REST API directly via `fetch`
+  (no SDK dependency added); `FROM_ADDRESS = "Diet4Life Contact
+  <contact@diet4lifeconcept.ro>"`, `TO_ADDRESS = "contact@diet4lifeconcept.ro"`,
+  `reply_to` set to the visitor's own (already-validated) email, subject
+  `Mesaj nou Diet4Life — ${name}`. Logs carry only `requestId` +
+  success/failure + a generic error type — never name, email, phone, or
+  message content.
+- `src/pages/Contact.tsx` — real loading/success/error states; form is **not**
+  reset on error so the visitor doesn't lose what they typed and can retry.
+- `src/pages/not-found.tsx` — rebranded 404 (was the raw Vite/router
+  developer-facing screen), bilingual, links back to Home.
+- `src/contexts/LanguageContext.tsx` — language choice now persists via a
+  lazy `localStorage` initializer instead of always resetting to Romanian on
+  reload.
+- `src/pages/Services.tsx` — "Începe cu jurnalul" now correctly links to
+  `/consultatii` (where the journal actually is) instead of `/contact`.
+- `.env.example` added — `RESEND_API_KEY=` only, commented as server-side-only,
+  never referenced from client code.
+- Verified pre-merge with direct handler invocation (bundled with esbuild,
+  `handler()` called directly with mock `event`/`context`, no live Netlify
+  infra needed): honeypot-filled → silent 200; validation-too-short → 400;
+  valid payload with no `RESEND_API_KEY` set → 500 `email_not_configured`
+  (never simulated a fake success); wrong HTTP method → 405; invalid JSON →
+  400.
+
+**Post-merge production validation (2026-09-10, confirmed directly by the
+user — this session has no live-site network access to re-verify
+independently, see "Environment constraint" above):**
+- `diet4lifeconcept.ro` verified as a sending domain in Resend.
+- `RESEND_API_KEY` configured as a secret in Netlify.
+- PR #2 merged into `main` (`e66de5c`), production deploy updated.
+- Contact form submits successfully in production.
+- Message shows as **Sent** and **Delivered** in Resend's own dashboard.
+- Message actually arrives in the `contact@diet4lifeconcept.ro` inbox.
+- `Reply-To` correctly carries the submitting visitor's email.
+- Full form content (name, email, phone, message) arrives intact.
+
+**Status: Etapa 3 is COMPLETĂ / VALIDATĂ END-TO-END.** No further action
+planned here unless the user reopens it.
+
 ## Known pre-existing issues (not caused by us, not yet fixed)
 
 - `src/pages/*.tsx` used to reference `/images/hero.png`, `/images/portrait.png`,
