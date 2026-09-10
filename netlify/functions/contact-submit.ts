@@ -5,13 +5,16 @@ import { contactSubmissionSchema } from "@/lib/contact/schema";
 // server-side validation -> honeypot check -> Resend API -> reply. Nothing
 // is written to Netlify Database -- the message content only ever exists
 // transiently in this function's memory and in Resend's delivery pipeline.
-// Never log the message body, name, or email in clear -- only status codes
-// and generic error strings.
+// Never log the message body, name, email, or phone in clear -- every log
+// line below carries only a request id, a success/failure outcome, and a
+// generic error type, for correlation/debugging only.
 const RESEND_API_URL = "https://api.resend.com/emails";
-const FROM_ADDRESS = "contact@diet4lifeconcept.ro";
+const FROM_ADDRESS = "Diet4Life Contact <contact@diet4lifeconcept.ro>";
 const TO_ADDRESS = "contact@diet4lifeconcept.ro";
 
-export const handler: Handler = async (event) => {
+export const handler: Handler = async (event, context) => {
+  const requestId = context.awsRequestId;
+
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: JSON.stringify({ error: "method_not_allowed" }) };
   }
@@ -20,6 +23,7 @@ export const handler: Handler = async (event) => {
   try {
     payload = JSON.parse(event.body ?? "{}");
   } catch {
+    console.error(`contact-submit[${requestId}] failure invalid_json`);
     return { statusCode: 400, body: JSON.stringify({ error: "invalid_json" }) };
   }
 
@@ -38,6 +42,7 @@ export const handler: Handler = async (event) => {
 
   const parsed = contactSubmissionSchema.safeParse(payload);
   if (!parsed.success) {
+    console.error(`contact-submit[${requestId}] failure validation_failed`);
     return {
       statusCode: 400,
       headers: { "content-type": "application/json" },
@@ -47,7 +52,7 @@ export const handler: Handler = async (event) => {
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.error("contact-submit: RESEND_API_KEY is not configured");
+    console.error(`contact-submit[${requestId}] failure email_not_configured`);
     return {
       statusCode: 500,
       headers: { "content-type": "application/json" },
@@ -74,13 +79,13 @@ export const handler: Handler = async (event) => {
         // Only ever set from an address that already passed zod's .email()
         // validation above -- never from unvalidated input.
         reply_to: email,
-        subject: `Mesaj nou de contact — ${name}`,
+        subject: `Mesaj nou Diet4Life — ${name}`,
         text: textBody,
       }),
     });
 
     if (!res.ok) {
-      console.error("contact-submit: Resend API responded with status", res.status);
+      console.error(`contact-submit[${requestId}] failure email_send_failed status=${res.status}`);
       return {
         statusCode: 502,
         headers: { "content-type": "application/json" },
@@ -88,9 +93,10 @@ export const handler: Handler = async (event) => {
       };
     }
 
+    console.log(`contact-submit[${requestId}] success`);
     return { statusCode: 200, headers: { "content-type": "application/json" }, body: JSON.stringify({ ok: true }) };
   } catch (error) {
-    console.error("contact-submit: request to Resend failed", error instanceof Error ? error.message : "unknown error");
+    console.error(`contact-submit[${requestId}] failure network_error type=${error instanceof Error ? error.name : "unknown"}`);
     return {
       statusCode: 502,
       headers: { "content-type": "application/json" },
