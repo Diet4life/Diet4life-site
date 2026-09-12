@@ -12,47 +12,36 @@ export interface ServiceOffering {
   id: string;
   name: { ro: string; en: string };
   priceCents: number;
-  originalPriceCents?: number;
   currency: string;
   purchaseMode: PurchaseMode;
 }
 
 export const services: ServiceOffering[] = [
   {
-    id: "consultatie-nutritie",
-    name: { ro: "Consultație de nutriție", en: "Nutrition consultation" },
+    id: "ghidaj-whatsapp",
+    name: { ro: "Ghidaj WhatsApp", en: "WhatsApp Guidance" },
+    priceCents: 20000,
+    currency: "RON",
+    purchaseMode: "contact",
+  },
+  {
+    id: "consultatie-nutritionala",
+    name: { ro: "Consultație nutrițională", en: "Nutrition Consultation" },
     priceCents: 30000,
-    currency: "RON",
-    purchaseMode: "contact",
-  },
-  {
-    id: "ghidaj-whatsapp-7zile",
-    name: { ro: "Ghidaj WhatsApp pe 7 zile", en: "7-day WhatsApp guidance" },
-    priceCents: 15000,
-    currency: "RON",
-    purchaseMode: "contact",
-  },
-  {
-    id: "pachet-start",
-    name: { ro: "Pachet Start", en: "Start Package" },
-    priceCents: 45000,
-    originalPriceCents: 50000,
     currency: "RON",
     purchaseMode: "contact",
   },
   {
     id: "pachet-echilibru",
     name: { ro: "Pachet Echilibru", en: "Balance Package" },
-    priceCents: 75000,
-    originalPriceCents: 85000,
+    priceCents: 60000,
     currency: "RON",
     purchaseMode: "contact",
   },
   {
     id: "pachet-transformare",
     name: { ro: "Pachet Transformare", en: "Transformation Package" },
-    priceCents: 95000,
-    originalPriceCents: 110000,
+    priceCents: 90000,
     currency: "RON",
     purchaseMode: "contact",
   },
