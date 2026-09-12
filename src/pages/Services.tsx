@@ -1,7 +1,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { CheckCircle2, ArrowRight, MessageCircle, Stethoscope, CalendarCheck2, CalendarRange } from "lucide-react";
+import { CheckCircle2, ArrowRight, MessageCircle, Stethoscope, CalendarCheck2, CalendarRange, ClipboardCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,16 +14,15 @@ interface ServiceOffering {
   price: number;
   periodRo: string;
   periodEn: string;
+  periodSubRo?: string;
+  periodSubEn?: string;
   shortRo: string;
   shortEn: string;
   includeLabelRo: string;
   includeLabelEn: string;
   includeRo: string[];
   includeEn: string[];
-  calendarLabelRo?: string;
-  calendarLabelEn?: string;
-  calendarRo?: string[];
-  calendarEn?: string[];
+  showAnalysisLink?: boolean;
   noteRo?: string;
   noteEn?: string;
   ctaRo: string;
@@ -31,15 +30,22 @@ interface ServiceOffering {
   recommended?: boolean;
 }
 
+const ANALYSIS_LINE_RO =
+  "Revizuirea analizelor medicale recente disponibile, pentru a adapta recomandările nutriționale la contextul metabolic și nutrițional.";
+const ANALYSIS_LINE_EN =
+  "Reviewing recent available medical test results, to adapt nutritional recommendations to your metabolic and nutritional context.";
+
 const services: ServiceOffering[] = [
   {
-    id: "ghidaj-whatsapp",
+    id: "ghidaj-nutritional",
     icon: MessageCircle,
-    nameRo: "Ghidaj WhatsApp",
-    nameEn: "WhatsApp Guidance",
+    nameRo: "Ghidaj Nutrițional",
+    nameEn: "Nutritional Guidance",
     price: 200,
     periodRo: "21 zile",
     periodEn: "21 days",
+    periodSubRo: "7 zile jurnal + 14 zile aplicare",
+    periodSubEn: "7 days journal + 14 days applying recommendations",
     shortRo:
       "Pentru persoanele care vor să își înțeleagă mai bine alimentația actuală și să primească recomandări concrete, fără o consultație completă.",
     shortEn:
@@ -70,7 +76,7 @@ const services: ServiceOffering[] = [
   {
     id: "consultatie-nutritionala",
     icon: Stethoscope,
-    nameRo: "Consultație nutrițională",
+    nameRo: "Consultație Nutrițională",
     nameEn: "Nutrition Consultation",
     price: 300,
     periodRo: "45–60 minute",
@@ -80,35 +86,36 @@ const services: ServiceOffering[] = [
     includeLabelRo: "Include",
     includeLabelEn: "Includes",
     includeRo: [
+      "jurnal alimentar 7 zile;",
       "evaluarea alimentației actuale și a istoricului relevant;",
-      "evaluarea obiectivelor și a principalelor dificultăți;",
-      "revizuirea analizelor medicale disponibile, atunci când există patologii sau situații care necesită acest lucru;",
-      "recomandări nutriționale adaptate contextului medical;",
-      "stabilirea necesarului energetic și a obiectivelor;",
-      "strategie de intervenție;",
-      "plan alimentar orientativ pentru 7 zile, adaptat obiectivelor și preferințelor;",
+      "obiective și dificultăți;",
+      ANALYSIS_LINE_RO,
+      "necesar energetic și obiective;",
+      "recomandări nutriționale;",
+      "plan alimentar orientativ pentru 7 zile;",
       "recomandări practice și pașii următori.",
     ],
     includeEn: [
+      "a 7-day food journal;",
       "assessment of your current eating habits and relevant history;",
-      "assessment of your goals and main difficulties;",
-      "review of available medical test results, when there are conditions or situations that require it;",
-      "nutritional recommendations adapted to the medical context;",
-      "establishing energy needs and goals;",
-      "intervention strategy;",
-      "an orientative 7-day meal plan, adapted to your goals and preferences;",
+      "goals and difficulties;",
+      ANALYSIS_LINE_EN,
+      "energy needs and goals;",
+      "nutritional recommendations;",
+      "an orientative 7-day meal plan;",
       "practical recommendations and next steps.",
     ],
-    noteRo: "Important: consultația nu include monitorizare ulterioară.",
-    noteEn: "Important: the consultation does not include follow-up monitoring.",
+    showAnalysisLink: true,
+    noteRo: "Fără monitorizare ulterioară inclusă.",
+    noteEn: "No follow-up monitoring included.",
     ctaRo: "Programează o consultație",
     ctaEn: "Book a consultation",
   },
   {
-    id: "pachet-echilibru",
+    id: "program-6-saptamani",
     icon: CalendarCheck2,
-    nameRo: "Pachet Echilibru",
-    nameEn: "Balance Package",
+    nameRo: "Program Nutrițional 6 săptămâni",
+    nameEn: "6-Week Nutrition Program",
     price: 600,
     periodRo: "6 săptămâni",
     periodEn: "6 weeks",
@@ -118,53 +125,38 @@ const services: ServiceOffering[] = [
     includeLabelRo: "Include",
     includeLabelEn: "Includes",
     includeRo: [
-      "consultație inițială de 45–60 minute;",
-      "evaluarea alimentației și a contextului relevant;",
-      "revizuirea analizelor medicale, dacă există patologii;",
-      "recomandări adaptate rezultatelor analizelor și situației clinice;",
-      "calcul necesar energetic și obiective;",
-      "plan alimentar pentru 7 zile;",
-      "jurnal alimentar;",
-      "2 monitorizări de aproximativ 20 minute;",
-      "ajustarea recomandărilor și a planului, dacă este necesar;",
-      "feedback asupra progresului;",
-      "clarificări punctuale pe WhatsApp între monitorizări.",
+      "consultație inițială 45–60 minute;",
+      "jurnal alimentar 7 zile;",
+      "evaluarea alimentației și contextului;",
+      ANALYSIS_LINE_RO,
+      "necesar energetic și obiective;",
+      "plan alimentar 7 zile;",
+      "1 monitorizare de aproximativ 20 minute;",
+      "ajustări dacă sunt necesare;",
+      "clarificări punctuale pe WhatsApp.",
     ],
     includeEn: [
       "an initial 45–60 minute consultation;",
-      "assessment of your eating habits and relevant context;",
-      "review of medical test results, if there are conditions;",
-      "recommendations adapted to test results and clinical situation;",
-      "energy needs and goals calculation;",
+      "a 7-day food journal;",
+      "assessment of your eating habits and context;",
+      ANALYSIS_LINE_EN,
+      "energy needs and goals;",
       "a 7-day meal plan;",
-      "a food journal;",
-      "2 check-ins of about 20 minutes each;",
-      "adjusting recommendations and the plan, if needed;",
-      "feedback on progress;",
-      "point-in-time clarifications on WhatsApp between check-ins.",
+      "1 check-in of about 20 minutes;",
+      "adjustments if needed;",
+      "point-in-time clarifications on WhatsApp.",
     ],
-    calendarLabelRo: "Calendar orientativ",
-    calendarLabelEn: "Orientative calendar",
-    calendarRo: [
-      "Săptămâna 0 — consultație inițială",
-      "Săptămâna 2 — monitorizare 1, aproximativ 20 minute",
-      "Săptămâna 4 — monitorizare 2, aproximativ 20 minute",
-      "până la finalul săptămânii 6 — aplicarea ajustărilor și clarificări punctuale",
-    ],
-    calendarEn: [
-      "Week 0 — initial consultation",
-      "Week 2 — check-in 1, about 20 minutes",
-      "Week 4 — check-in 2, about 20 minutes",
-      "until the end of week 6 — applying adjustments and point-in-time clarifications",
-    ],
-    ctaRo: "Alege Pachetul Echilibru",
-    ctaEn: "Choose the Balance Package",
+    showAnalysisLink: true,
+    noteRo: "Clarificările pe WhatsApp nu înseamnă monitorizare continuă sau răspuns în timp real.",
+    noteEn: "WhatsApp clarifications do not mean continuous monitoring or real-time replies.",
+    ctaRo: "Alege Programul 6 săptămâni",
+    ctaEn: "Choose the 6-Week Program",
   },
   {
-    id: "pachet-transformare",
+    id: "program-3-luni",
     icon: CalendarRange,
-    nameRo: "Pachet Transformare",
-    nameEn: "Transformation Package",
+    nameRo: "Program Nutrițional 3 luni",
+    nameEn: "3-Month Nutrition Program",
     price: 900,
     periodRo: "3 luni",
     periodEn: "3 months",
@@ -173,51 +165,46 @@ const services: ServiceOffering[] = [
     includeLabelRo: "Include",
     includeLabelEn: "Includes",
     includeRo: [
-      "consultație inițială de 45–60 minute;",
-      "evaluarea detaliată a alimentației și istoricului relevant;",
-      "revizuirea analizelor medicale la pacienții cu patologii;",
-      "recomandări adaptate situației clinice și analizelor disponibile;",
-      "calcul necesar energetic și stabilirea obiectivelor;",
-      "plan alimentar personalizat pentru 7 zile;",
-      "jurnal alimentar;",
-      "monitorizări periodice;",
-      "ajustarea planului și recomandărilor pe parcurs;",
+      "consultație inițială 45–60 minute;",
+      "jurnal alimentar 7 zile;",
+      "evaluare nutrițională;",
+      ANALYSIS_LINE_RO,
+      "necesar energetic și obiective;",
+      "plan alimentar 7 zile;",
+      "3 monitorizări de aproximativ 20 minute;",
+      "aproximativ o monitorizare pe lună;",
+      "ajustări pe parcurs;",
       "feedback asupra progresului;",
-      "clarificări punctuale pe WhatsApp între ședințe.",
+      "clarificări punctuale pe WhatsApp.",
     ],
     includeEn: [
       "an initial 45–60 minute consultation;",
-      "a detailed assessment of your eating habits and relevant history;",
-      "review of medical test results for patients with conditions;",
-      "recommendations adapted to the clinical situation and available test results;",
-      "energy needs calculation and setting goals;",
-      "a personalized 7-day meal plan;",
-      "a food journal;",
-      "periodic check-ins;",
-      "adjusting the plan and recommendations along the way;",
+      "a 7-day food journal;",
+      "nutritional assessment;",
+      ANALYSIS_LINE_EN,
+      "energy needs and goals;",
+      "a 7-day meal plan;",
+      "3 check-ins of about 20 minutes each;",
+      "about one check-in per month;",
+      "adjustments along the way;",
       "feedback on progress;",
-      "point-in-time clarifications on WhatsApp between sessions.",
+      "point-in-time clarifications on WhatsApp.",
     ],
-    calendarLabelRo: "Calendar",
-    calendarLabelEn: "Calendar",
-    calendarRo: [
-      "Săptămâna 0 — consultație inițială",
-      "Săptămâna 2 — monitorizare 1",
-      "Săptămâna 4 — monitorizare 2",
-      "Săptămâna 8 — monitorizare 3",
-      "Săptămâna 12 — monitorizare finală",
-    ],
-    calendarEn: [
-      "Week 0 — initial consultation",
-      "Week 2 — check-in 1",
-      "Week 4 — check-in 2",
-      "Week 8 — check-in 3",
-      "Week 12 — final check-in",
-    ],
-    ctaRo: "Alege Pachetul Transformare",
-    ctaEn: "Choose the Transformation Package",
+    showAnalysisLink: true,
+    noteRo: "Clarificările pe WhatsApp nu înseamnă monitorizare continuă sau răspuns în timp real.",
+    noteEn: "WhatsApp clarifications do not mean continuous monitoring or real-time replies.",
+    ctaRo: "Alege Programul 3 luni",
+    ctaEn: "Choose the 3-Month Program",
   },
 ];
+
+const MONITORING = {
+  nameRo: "Monitorizare nutrițională",
+  nameEn: "Nutritional Monitoring",
+  price: 180,
+  ctaRo: "Alege acest serviciu",
+  ctaEn: "Choose this service",
+};
 
 export default function Services() {
   const { language } = useLanguage();
@@ -244,7 +231,7 @@ export default function Services() {
         </motion.div>
 
         {/* Services grid: 2x2 on desktop, single column on mobile */}
-        <div className="grid md:grid-cols-2 gap-6 mb-20">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           {services.map((service, i) => {
             const Icon = service.icon;
             return (
@@ -270,17 +257,22 @@ export default function Services() {
                       {ro ? service.nameRo : service.nameEn}
                     </h2>
                     <p className="text-3xl font-bold text-primary mb-1">{service.price} lei</p>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       {ro ? service.periodRo : service.periodEn}
                     </p>
-                    <p className="text-muted-foreground leading-relaxed text-sm mb-6">
+                    {service.periodSubRo && service.periodSubEn && (
+                      <p className="text-xs text-muted-foreground mb-4">
+                        {ro ? service.periodSubRo : service.periodSubEn}
+                      </p>
+                    )}
+                    <p className={`text-muted-foreground leading-relaxed text-sm mb-6 ${service.periodSubRo ? "" : "mt-4"}`}>
                       {ro ? service.shortRo : service.shortEn}
                     </p>
 
                     <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground mb-3">
                       {ro ? service.includeLabelRo : service.includeLabelEn}
                     </h3>
-                    <ul className="space-y-2 mb-6">
+                    <ul className="space-y-2 mb-2">
                       {(ro ? service.includeRo : service.includeEn).map((item, j) => (
                         <li key={j} className="flex items-start gap-2.5 text-sm text-foreground">
                           <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -289,18 +281,18 @@ export default function Services() {
                       ))}
                     </ul>
 
-                    {service.calendarRo && service.calendarEn && (
-                      <>
-                        <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground mb-3">
-                          {ro ? service.calendarLabelRo : service.calendarLabelEn}
-                        </h3>
-                        <ul className="space-y-1.5 mb-6 text-sm text-muted-foreground">
-                          {(ro ? service.calendarRo : service.calendarEn).map((item, j) => (
-                            <li key={j}>{item}</li>
-                          ))}
-                        </ul>
-                      </>
+                    {service.showAnalysisLink && (
+                      <Link
+                        href="/consultatii#analize"
+                        className="inline-flex items-center gap-1.5 text-xs text-primary underline underline-offset-2 mb-6 hover:no-underline"
+                      >
+                        <ClipboardCheck className="w-3.5 h-3.5 shrink-0" />
+                        {ro
+                          ? "Vezi analizele recomandate înainte de consultație"
+                          : "See the recommended tests before your consultation"}
+                      </Link>
                     )}
+                    {!service.showAnalysisLink && <div className="mb-6" />}
 
                     {service.noteRo && service.noteEn && (
                       <p className="text-xs text-muted-foreground leading-relaxed mb-6">
@@ -325,6 +317,32 @@ export default function Services() {
             );
           })}
         </div>
+
+        {/* Monitorizare nutrițională — minimal, name + price only */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mb-20"
+        >
+          <Card className="border-border">
+            <CardContent className="p-6 flex flex-wrap items-center justify-between gap-4">
+              <h3 className="font-serif font-bold text-lg text-foreground">
+                {ro ? MONITORING.nameRo : MONITORING.nameEn}
+              </h3>
+              <div className="flex items-center gap-4">
+                <span className="text-xl font-bold text-primary">{MONITORING.price} lei</span>
+                <Button asChild variant="outline" className="rounded-xl gap-2">
+                  <Link href="/contact">
+                    {ro ? MONITORING.ctaRo : MONITORING.ctaEn}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Bottom CTA */}
         <motion.div

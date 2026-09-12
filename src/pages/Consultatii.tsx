@@ -545,6 +545,15 @@ export default function Consultatii() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  // Supports deep links like /consultatii#analize (e.g. from Services.tsx).
+  // Delayed so it runs after ScrollToTop's immediate reset-to-0 on route change.
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (!hash) return;
+    const timer = window.setTimeout(() => scrollToSection(hash), 50);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const dayNames = ro
     ? ["Ziua 1", "Ziua 2", "Ziua 3", "Ziua 4", "Ziua 5", "Ziua 6", "Ziua 7"]
     : ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
@@ -1270,10 +1279,15 @@ export default function Consultatii() {
         </div>
         <Card className="mb-10">
           <CardContent className="p-8">
-            <p className="text-sm text-foreground leading-relaxed mb-5">
+            <p className="text-sm text-foreground leading-relaxed mb-3">
               {ro
                 ? "Dacă ai analize medicale recente, pregătește-le pentru consultație. Nu este necesar să repeți analize pe care le ai deja și nici să efectuezi toate investigațiile de mai jos înainte de prima întâlnire."
                 : "If you have recent medical tests, have them ready for the consultation. There's no need to repeat tests you already have, or to get all the investigations below before the first meeting."}
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+              {ro
+                ? "Analizele ne ajută să avem o imagine mai completă asupra statusului metabolic și nutrițional și să adaptăm recomandările la situația individuală."
+                : "These tests help us get a fuller picture of your metabolic and nutritional status, and adapt our recommendations to your individual situation."}
             </p>
 
             <Accordion type="single" collapsible className="mb-5 border border-border rounded-xl px-4">
