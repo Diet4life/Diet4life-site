@@ -8,7 +8,7 @@ import {
   Download, Upload, Send, BookOpen, CheckCircle2,
   ChevronRight, Info, Utensils, FileText, Mail,
   ClipboardList, AlertCircle, X, Plus,
-  Pill, TestTube2, FolderOpen,
+  TestTube2, FolderOpen,
   Circle, ListChecks,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -537,7 +537,6 @@ export default function Consultatii() {
     { id: "jurnal", icon: Utensils, label: ro ? "Jurnal alimentar" : "Food journal",
       detail: journalStatus === "completed" ? `7/7 ${ro ? "zile" : "days"}` : journalStatus === "uploaded" ? (ro ? "Încărcat" : "Uploaded") : journalStatus === "in_progress" ? `${completedDays}/7 ${ro ? "zile" : "days"}` : (ro ? "Neînceput" : "Not started") },
     { id: "analize", icon: TestTube2, label: ro ? "Analize medicale" : "Medical tests", detail: null },
-    { id: "medicatie", icon: Pill, label: ro ? "Medicație și suplimente" : "Medication & supplements", detail: null },
     { id: "documente", icon: FolderOpen, label: ro ? "Documente medicale" : "Medical documents", detail: null },
   ] as const;
 
@@ -1340,24 +1339,9 @@ export default function Consultatii() {
           </CardContent>
         </Card>
 
-        {/* ── Step 3: Medicație și suplimente ── */}
-        <div id="medicatie" className="scroll-mt-24 mb-3 mt-14 flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">3</span>
-          <h2 className="text-lg font-serif font-bold text-foreground">{ro ? "Medicație și suplimente" : "Medication & supplements"}</h2>
-        </div>
-        <Card className="mb-10">
-          <CardContent className="p-8">
-            <p className="text-sm text-foreground leading-relaxed">
-              {ro
-                ? "Pregătește lista medicamentelor și suplimentelor pe care le iei în mod curent (denumire, doză, frecvență) — o vei avea la îndemână la consultație. Dacă nu iei nimic, poți sări peste acest pas."
-                : "Prepare the list of medications and supplements you currently take (name, dose, frequency) — have it ready for the consultation. If you take none, you can skip this step."}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* ── Step 4: Documente medicale ── */}
+        {/* ── Step 3: Documente medicale ── */}
         <div id="documente" className="scroll-mt-24 mb-3 mt-14 flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">4</span>
+          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">3</span>
           <h2 className="text-lg font-serif font-bold text-foreground">{ro ? "Documente medicale" : "Medical documents"}</h2>
           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">{ro ? "opțional" : "optional"}</span>
         </div>
