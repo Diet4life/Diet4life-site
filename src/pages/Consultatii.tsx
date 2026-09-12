@@ -606,7 +606,7 @@ export default function Consultatii() {
                 <ListChecks className="w-5 h-5" />
               </div>
               <h3 className="text-lg font-serif font-bold text-foreground">
-                {ro ? "Pregătește-te pentru consultație" : "Prepare for your consultation"}
+                {ro ? "Pașii pregătirii" : "Preparation steps"}
               </h3>
             </div>
             <span className="text-sm font-medium text-muted-foreground">
@@ -663,11 +663,23 @@ export default function Consultatii() {
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
             <Info className="w-5 h-5" />
           </div>
-          <p className="text-sm text-foreground leading-relaxed">
-            {ro
-              ? "Pentru o evaluare nutrițională cât mai corectă, vă rugăm să completați jurnalul alimentar timp de 7 zile înainte de consultație. Notați mesele, orele, lichidele consumate, cantitățile aproximative, simptomele digestive și alimentele preferate sau evitate."
-              : "For the most accurate nutritional assessment, please complete the food journal for 7 days before your consultation. Record meals, times, liquids consumed, approximate quantities, digestive symptoms and preferred or avoided foods."}
-          </p>
+          <div className="text-sm text-foreground leading-relaxed space-y-3">
+            <p>
+              {ro
+                ? "Jurnalul alimentar de 7 zile face parte din pregătirea pentru evaluarea nutrițională. El ne ajută să înțelegem mai bine cum arată alimentația ta obișnuită înainte de consultație."
+                : "The 7-day food journal is part of your preparation for the nutritional assessment. It helps us better understand what your usual eating habits look like before your consultation."}
+            </p>
+            <p>
+              {ro
+                ? "După alegerea serviciului, vei nota timp de 7 zile mesele, gustările, băuturile și alte informații relevante, conform instrucțiunilor din jurnal."
+                : "After choosing your service, you'll record your meals, snacks, drinks, and other relevant information for 7 days, following the instructions included in the journal."}
+            </p>
+            <p>
+              {ro
+                ? "Notează orele, cantitățile aproximative, eventualele simptome digestive și alimentele preferate sau evitate. Instrucțiunile complete sunt incluse în jurnal."
+                : "Note down the times, approximate quantities, any digestive symptoms, and preferred or avoided foods. The complete instructions are included in the journal."}
+            </p>
+          </div>
         </motion.div>
 
         {/* Confidentiality note — only true because the draft never leaves this browser */}
@@ -736,10 +748,12 @@ export default function Consultatii() {
                   onClick={handleDownloadBlank}
                 >
                   <Download className="w-5 h-5" />
-                  {ro ? "Descarcă jurnal alimentar 7 zile" : "Download 7-day food journal"}
+                  {ro ? "Descarcă jurnalul pentru pregătirea consultației" : "Download the journal for your consultation prep"}
                 </Button>
                 <p className="text-xs text-muted-foreground mt-3">
-                  {ro ? "PDF format A4 · Printabil · Gratuit" : "A4 PDF format · Printable · Free"}
+                  {ro
+                    ? "PDF format A4 · Printabil · Parte din pregătirea pentru consultație"
+                    : "A4 PDF format · Printable · Part of your consultation prep"}
                 </p>
               </CardContent>
             </Card>
