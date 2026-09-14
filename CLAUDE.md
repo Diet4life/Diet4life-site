@@ -1520,6 +1520,76 @@ planned here unless the user reopens it.
   `src/App.tsx: Property 'env' does not exist on type 'ImportMeta'` (missing
   Vite client types in `tsconfig.json`) — vite build itself succeeds fine.
 
+## NETOPIA Phase 2, step 1 — sandbox payment initiation only
+
+User approved exactly one step of NETOPIA integration: initiating a card
+payment in **SANDBOX only** via NETOPIA Payments API v2 and redirecting the
+browser to the hosted payment page. Explicitly NOT approved and NOT built:
+callback/IPN verification, ever setting `order.status = "paid"`, anything in
+production, DB schema/migration changes, writes to the `payments` table.
+
+**This sandbox's network egress blocks every `netopia-payments.com` host**
+(confirmed with `curl`: `CONNECT tunnel failed, response 403`, same as the
+long-documented `*.netlify.app` block above) — the canonical Stoplight API
+spec page could not be read directly. The request/response shape below was
+reconstructed from NETOPIA's public docs and multiple independent SDK
+READMEs via web search, cross-checked across sources, but **not
+independently verified against the primary spec, and never executed live**
+(also blocked). Treat it as a well-researched first draft, not a confirmed
+integration — the header comment in `payments-initiate.ts` marks exactly
+which fields are solidly corroborated vs. best-effort.
+
+**New files:**
+- `netlify/functions/payments-initiate.ts` — looks up an order by
+  `public_status_token` (never trusts a client-supplied amount/currency —
+  always re-reads `priceSnapshotCents`/`currency` from the order row),
+  refuses anything not in `pending_payment` status (409), calls NETOPIA's
+  sandbox `POST /payment/card/start`, returns only `{ paymentURL,
+  orderNumber }` to the browser (never the full NETOPIA response). Blocked
+  in production via the same `isProductionContext()` guard as
+  `orders-create.ts`, checked first, before body parsing. Reads
+  `NETOPIA_API_KEY` / `NETOPIA_POS_SIGNATURE` — server-side only, fails
+  closed (500) if either is unset rather than silently proceeding. Logs only
+  requestId + outcome + NETOPIA's `error.code`, never the request/response
+  body (which carries billing data) or either secret.
+- `netlify/functions/payments-netopia-notify.ts` — **safe stub only**, exists
+  because `config.notifyUrl` appeared as part of the standard request shape
+  in every source found (never shown omitted). Does not verify any
+  signature, does not touch the DB, does not read/log the notification body
+  — just returns `200 {"received": true}`. Real callback verification +
+  status transition to `paid` is a separate, later, explicitly-approved
+  round.
+- `src/server/orders/orderService.ts` — added `getOrderForPaymentInitiation()`,
+  a second read query (billing-joined) alongside the existing
+  `getOrderByPublicToken()`; no schema change, no new table writes.
+- `.env.example` — documents `NETOPIA_API_KEY` / `NETOPIA_POS_SIGNATURE`
+  (names given directly by the user, not invented), same server-side-only
+  pattern as `RESEND_API_KEY`. Real sandbox values already live in Netlify,
+  scoped to Deploy Previews + Branch deploys only — Production intentionally
+  has neither set.
+- `src/pages/Checkout.tsx` — `onSubmit` now calls `payments-initiate` right
+  after a successful `orders-create` and redirects the browser to the
+  returned `paymentURL`; falls back to the existing `/checkout/retur`
+  redirect if initiation fails, so a created order is never stranded.
+  **`PaymentButton.tsx` itself was deliberately left untouched** — it's a
+  presentational `type="submit"` control with no logic of its own; the real
+  submit handler (and thus the natural place for this) already lived in
+  `Checkout.tsx`. Flagged here since the approved plan named
+  `PaymentButton.tsx` specifically.
+
+**Verified without live network** (bundled each new function with
+`esbuild --bundle` and invoked directly, same method as Phase 1): production
+guard fires first (503, before method/body are even checked); missing
+token, invalid JSON, wrong HTTP method all rejected correctly; missing
+`NETOPIA_API_KEY`/`NETOPIA_POS_SIGNATURE` fails closed (500) rather than
+calling NETOPIA anyway; the notify stub returns 200 without touching
+anything. Grepped the production `npm run build` output (`dist/assets/*.js`)
+for "netopia" (any case) and for both env var names — zero matches, confirms
+nothing NETOPIA-related reaches the client bundle. **Not verified**: the
+actual live sandbox request/response (blocked from this sandbox's network on
+both counts) — that can only happen from a real Deploy Preview/branch
+deploy, which is exactly where she needs to test this next.
+
 ## Netlify
 
 - Site: `diet4life` (id `fb46b783-0032-4b51-971b-b255c590f8b8`), team requires

@@ -161,3 +161,35 @@ export async function getOrderByPublicToken(token: string) {
 
   return row ?? null;
 }
+
+// Resolves an order (also strictly by public_status_token) with the billing
+// fields a payment-provider request needs to be built. Separate from
+// getOrderByPublicToken() above because that one is deliberately minimal for
+// the public status UI -- this one is for payments-initiate.ts only, never
+// returned to the browser as-is. Still excludes patient_details (never
+// relevant to a payment request) and never includes medical data (there is
+// none in this schema).
+export async function getOrderForPaymentInitiation(token: string) {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      status: orders.status,
+      productName: orders.productNameSnapshot,
+      priceSnapshotCents: orders.priceSnapshotCents,
+      currency: orders.currency,
+      billingPersonType: billingDetails.personType,
+      billingFullName: billingDetails.fullName,
+      billingCompanyName: billingDetails.companyName,
+      billingEmail: billingDetails.email,
+      billingPhone: billingDetails.phone,
+      billingCity: billingDetails.city,
+      billingCountryCode: billingDetails.countryCode,
+    })
+    .from(orders)
+    .innerJoin(billingDetails, eq(billingDetails.orderId, orders.id))
+    .where(eq(orders.publicStatusToken, token));
+
+  return row ?? null;
+}

@@ -134,6 +134,26 @@ export default function Checkout() {
         throw new Error("order_create_failed");
       }
       const data = (await res.json()) as { publicStatusToken: string };
+
+      // Order exists now (pending_payment) -- try to start a NETOPIA sandbox
+      // payment and send the browser to the hosted page. If this step fails
+      // for any reason, the order itself is not lost: fall back to the
+      // existing status page, which already handles "pending_payment"
+      // correctly (see StatusStates.tsx) rather than showing a dead-end error.
+      try {
+        const initiateRes = await fetch("/.netlify/functions/payments-initiate", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ publicStatusToken: data.publicStatusToken }),
+        });
+        if (initiateRes.ok) {
+          const initiateData = (await initiateRes.json()) as { paymentURL: string };
+          window.location.href = initiateData.paymentURL;
+          return;
+        }
+      } catch {
+        // fall through to the safe redirect below
+      }
       window.location.href = `/checkout/retur?token=${encodeURIComponent(data.publicStatusToken)}`;
     } catch {
       toast({
