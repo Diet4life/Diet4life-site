@@ -32,16 +32,16 @@ interface ServiceOffering {
 }
 
 const ANALYSIS_LINE_RO =
-  "Revizuirea analizelor medicale recente disponibile, pentru a adapta recomandările nutriționale la contextul metabolic și nutrițional.";
+  "revizuirea analizelor medicale recente disponibile, dacă există, pentru a adapta recomandările nutriționale la contextul metabolic și nutrițional;";
 const ANALYSIS_LINE_EN =
-  "Reviewing recent available medical test results, to adapt nutritional recommendations to your metabolic and nutritional context.";
+  "reviewing your recent available medical test results, if any, to adapt nutritional recommendations to your metabolic and nutritional context;";
 
 const services: ServiceOffering[] = [
   {
-    id: "ghidaj-nutritional",
+    id: "primii-pasi",
     icon: MessageCircle,
-    nameRo: "Ghidaj Nutrițional",
-    nameEn: "Nutritional Guidance",
+    nameRo: "Primii Pași",
+    nameEn: "First Steps",
     price: 200,
     periodRo: "21 zile",
     periodEn: "21 days",
@@ -54,24 +54,24 @@ const services: ServiceOffering[] = [
     includeLabelRo: "Cum se desfășoară",
     includeLabelEn: "How it works",
     includeRo: [
-      "îmi trimiți un jurnal alimentar pe 7 zile;",
-      "analizez alimentația actuală;",
-      "estimez necesarul energetic și stabilesc un aport orientativ pentru obiectiv;",
-      "primești recomandări și modificări pe WhatsApp;",
-      "în următoarele 14 zile aplici recomandările și continui jurnalul;",
-      "la final primești feedback și ajustări pe WhatsApp.",
+      "jurnal alimentar 7 zile;",
+      "analizarea alimentației actuale;",
+      "estimarea necesarului energetic și stabilirea unui aport orientativ;",
+      "primește recomandări și modificări pe WhatsApp;",
+      "în următoarele 14 zile aplică recomandările și continuă jurnalul;",
+      "la final primește feedback și ajustări pe WhatsApp.",
     ],
     includeEn: [
-      "you send me a 7-day food journal;",
-      "I analyze your current eating habits;",
-      "I estimate your energy needs and set an orientative intake for your goal;",
+      "a 7-day food journal;",
+      "reviewing your current eating habits;",
+      "estimating your energy needs and setting an orientative intake;",
       "you receive recommendations and adjustments on WhatsApp;",
       "over the following 14 days you apply the recommendations and continue the journal;",
       "at the end you receive feedback and adjustments on WhatsApp.",
     ],
-    noteRo: "Comunicare: clarificări punctuale pe WhatsApp, fără monitorizare zilnică în timp real.",
-    noteEn: "Communication: point-in-time clarifications on WhatsApp, without real-time daily monitoring.",
-    ctaRo: "Alege acest serviciu",
+    noteRo: "Clarificări punctuale pe WhatsApp, fără monitorizare zilnică în timp real.",
+    noteEn: "Point-in-time clarifications on WhatsApp, without real-time daily monitoring.",
+    ctaRo: "Alege serviciul",
     ctaEn: "Choose this service",
   },
   {
@@ -89,35 +89,35 @@ const services: ServiceOffering[] = [
     includeRo: [
       "jurnal alimentar 7 zile;",
       "evaluarea alimentației actuale și a istoricului relevant;",
-      "obiective și dificultăți;",
+      "evaluarea obiectivelor și a principalelor dificultăți;",
       ANALYSIS_LINE_RO,
-      "necesar energetic și obiective;",
-      "recomandări nutriționale;",
+      "stabilirea necesarului energetic și a obiectivelor;",
+      "recomandări nutriționale adaptate;",
       "plan alimentar orientativ pentru 7 zile;",
       "recomandări practice și pașii următori.",
     ],
     includeEn: [
       "a 7-day food journal;",
       "assessment of your current eating habits and relevant history;",
-      "goals and difficulties;",
+      "assessing your goals and main difficulties;",
       ANALYSIS_LINE_EN,
-      "energy needs and goals;",
-      "nutritional recommendations;",
+      "determining your energy needs and goals;",
+      "tailored nutritional recommendations;",
       "an orientative 7-day meal plan;",
       "practical recommendations and next steps.",
     ],
     showAnalysisLink: true,
-    noteRo: "Fără monitorizare ulterioară inclusă.",
-    noteEn: "No follow-up monitoring included.",
-    ctaRo: "Programează o consultație",
-    ctaEn: "Book a consultation",
+    noteRo: "Consultația nu include monitorizare ulterioară.",
+    noteEn: "The consultation does not include follow-up monitoring.",
+    ctaRo: "Alege serviciul",
+    ctaEn: "Choose this service",
   },
   {
     id: "program-6-saptamani",
     icon: CalendarCheck2,
     nameRo: "Program Nutrițional 6 săptămâni",
     nameEn: "6-Week Nutrition Program",
-    price: 600,
+    price: 480,
     periodRo: "6 săptămâni",
     periodEn: "6 weeks",
     shortRo: "Pentru persoanele care au nevoie de evaluare, intervenție și ajustări pe parcurs.",
@@ -126,39 +126,39 @@ const services: ServiceOffering[] = [
     includeLabelRo: "Include",
     includeLabelEn: "Includes",
     includeRo: [
-      "consultație inițială 45–60 minute;",
+      "consultație inițială de 45–60 minute;",
       "jurnal alimentar 7 zile;",
-      "evaluarea alimentației și contextului;",
+      "evaluarea alimentației și contextului relevant;",
       ANALYSIS_LINE_RO,
-      "necesar energetic și obiective;",
-      "plan alimentar 7 zile;",
+      "stabilirea necesarului energetic și a obiectivelor;",
+      "plan alimentar pentru 7 zile;",
       "1 monitorizare de aproximativ 20 minute;",
-      "ajustări dacă sunt necesare;",
+      "ajustarea recomandărilor, dacă este necesar;",
       "clarificări punctuale pe WhatsApp.",
     ],
     includeEn: [
       "an initial 45–60 minute consultation;",
       "a 7-day food journal;",
-      "assessment of your eating habits and context;",
+      "assessment of your eating habits and relevant context;",
       ANALYSIS_LINE_EN,
-      "energy needs and goals;",
+      "determining your energy needs and goals;",
       "a 7-day meal plan;",
       "1 check-in of about 20 minutes;",
-      "adjustments if needed;",
+      "adjusting recommendations, if needed;",
       "point-in-time clarifications on WhatsApp.",
     ],
     showAnalysisLink: true,
     noteRo: "Clarificările pe WhatsApp nu înseamnă monitorizare continuă sau răspuns în timp real.",
     noteEn: "WhatsApp clarifications do not mean continuous monitoring or real-time replies.",
-    ctaRo: "Alege Programul 6 săptămâni",
-    ctaEn: "Choose the 6-Week Program",
+    ctaRo: "Alege serviciul",
+    ctaEn: "Choose this service",
   },
   {
     id: "program-3-luni",
     icon: CalendarRange,
     nameRo: "Program Nutrițional 3 luni",
     nameEn: "3-Month Nutrition Program",
-    price: 900,
+    price: 850,
     periodRo: "3 luni",
     periodEn: "3 months",
     shortRo: "Pentru persoanele care au nevoie de intervenție mai amplă și monitorizare pe termen mai lung.",
@@ -166,44 +166,46 @@ const services: ServiceOffering[] = [
     includeLabelRo: "Include",
     includeLabelEn: "Includes",
     includeRo: [
-      "consultație inițială 45–60 minute;",
+      "consultație inițială de 45–60 minute;",
       "jurnal alimentar 7 zile;",
-      "evaluare nutrițională;",
+      "evaluarea alimentației și istoricului relevant;",
       ANALYSIS_LINE_RO,
-      "necesar energetic și obiective;",
-      "plan alimentar 7 zile;",
+      "stabilirea necesarului energetic și a obiectivelor;",
+      "plan alimentar pentru 7 zile;",
       "3 monitorizări de aproximativ 20 minute;",
-      "aproximativ o monitorizare pe lună;",
-      "ajustări pe parcurs;",
+      "aproximativ una pe lună;",
+      "ajustarea recomandărilor pe parcurs;",
       "feedback asupra progresului;",
-      "clarificări punctuale pe WhatsApp.",
+      "clarificări punctuale pe WhatsApp între monitorizări.",
     ],
     includeEn: [
       "an initial 45–60 minute consultation;",
       "a 7-day food journal;",
-      "nutritional assessment;",
+      "assessment of your eating habits and relevant history;",
       ANALYSIS_LINE_EN,
-      "energy needs and goals;",
+      "determining your energy needs and goals;",
       "a 7-day meal plan;",
       "3 check-ins of about 20 minutes each;",
       "about one check-in per month;",
       "adjustments along the way;",
-      "feedback on progress;",
-      "point-in-time clarifications on WhatsApp.",
+      "feedback on your progress;",
+      "point-in-time clarifications on WhatsApp between check-ins.",
     ],
     showAnalysisLink: true,
     noteRo: "Clarificările pe WhatsApp nu înseamnă monitorizare continuă sau răspuns în timp real.",
     noteEn: "WhatsApp clarifications do not mean continuous monitoring or real-time replies.",
-    ctaRo: "Alege Programul 3 luni",
-    ctaEn: "Choose the 3-Month Program",
+    ctaRo: "Alege serviciul",
+    ctaEn: "Choose this service",
   },
 ];
 
 const MONITORING = {
-  nameRo: "Monitorizare nutrițională",
+  nameRo: "Monitorizare Nutrițională",
   nameEn: "Nutritional Monitoring",
-  price: 180,
-  ctaRo: "Alege acest serviciu",
+  subtitleRo: "Pentru pacienții care au avut deja o consultație și au nevoie de o reevaluare punctuală.",
+  subtitleEn: "For patients who have already had a consultation and need a one-time reassessment.",
+  price: 200,
+  ctaRo: "Alege serviciul",
   ctaEn: "Choose this service",
 };
 
@@ -369,9 +371,14 @@ export default function Services() {
         >
           <Card className="border-border">
             <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <h3 className="font-serif font-bold text-lg text-foreground">
-                {ro ? MONITORING.nameRo : MONITORING.nameEn}
-              </h3>
+              <div>
+                <h3 className="font-serif font-bold text-lg text-foreground">
+                  {ro ? MONITORING.nameRo : MONITORING.nameEn}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {ro ? MONITORING.subtitleRo : MONITORING.subtitleEn}
+                </p>
+              </div>
               <span className="text-xl font-bold text-primary sm:hidden">{MONITORING.price} lei</span>
               <div className="flex items-center gap-4">
                 <span className="hidden sm:inline text-xl font-bold text-primary">{MONITORING.price} lei</span>

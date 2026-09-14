@@ -18,8 +18,8 @@ export interface ServiceOffering {
 
 export const services: ServiceOffering[] = [
   {
-    id: "ghidaj-nutritional",
-    name: { ro: "Ghidaj Nutrițional", en: "Nutritional Guidance" },
+    id: "primii-pasi",
+    name: { ro: "Primii Pași", en: "First Steps" },
     priceCents: 20000,
     currency: "RON",
     purchaseMode: "contact",
@@ -32,23 +32,23 @@ export const services: ServiceOffering[] = [
     purchaseMode: "contact",
   },
   {
+    id: "monitorizare-nutritionala",
+    name: { ro: "Monitorizare Nutrițională", en: "Nutritional Monitoring" },
+    priceCents: 20000,
+    currency: "RON",
+    purchaseMode: "contact",
+  },
+  {
     id: "program-6-saptamani",
     name: { ro: "Program Nutrițional 6 săptămâni", en: "6-Week Nutrition Program" },
-    priceCents: 60000,
+    priceCents: 48000,
     currency: "RON",
     purchaseMode: "contact",
   },
   {
     id: "program-3-luni",
     name: { ro: "Program Nutrițional 3 luni", en: "3-Month Nutrition Program" },
-    priceCents: 90000,
-    currency: "RON",
-    purchaseMode: "contact",
-  },
-  {
-    id: "monitorizare-nutritionala",
-    name: { ro: "Monitorizare nutrițională", en: "Nutritional Monitoring" },
-    priceCents: 18000,
+    priceCents: 85000,
     currency: "RON",
     purchaseMode: "contact",
   },
