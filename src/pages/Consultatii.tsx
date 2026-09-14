@@ -690,7 +690,7 @@ export default function Consultatii() {
         </p>
 
         {/* Tab navigation */}
-        <div className="flex gap-2 mb-8 bg-muted/40 p-1.5 rounded-2xl">
+        <div className="flex gap-1.5 sm:gap-2 mb-8 bg-muted/40 p-1.5 rounded-2xl">
           {TABS.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -698,14 +698,14 @@ export default function Consultatii() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                className={`flex-1 min-w-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 px-1.5 sm:px-4 rounded-xl text-[11px] sm:text-sm font-medium leading-tight text-center transition-all ${
                   isActive
                     ? "bg-background text-primary shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{ro ? tab.labelRo : tab.labelEn}</span>
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{ro ? tab.labelRo : tab.labelEn}</span>
               </button>
             );
           })}
@@ -747,7 +747,10 @@ export default function Consultatii() {
                   onClick={handleDownloadBlank}
                 >
                   <Download className="w-5 h-5" />
-                  {ro ? "Descarcă jurnalul pentru pregătirea consultației" : "Download the journal for your consultation prep"}
+                  <span className="sm:hidden">{ro ? "Descarcă jurnalul" : "Download journal"}</span>
+                  <span className="hidden sm:inline">
+                    {ro ? "Descarcă jurnalul pentru pregătirea consultației" : "Download the journal for your consultation prep"}
+                  </span>
                 </Button>
                 <p className="text-xs text-muted-foreground mt-3">
                   {ro
@@ -931,7 +934,7 @@ export default function Consultatii() {
                           </button>
                         )}
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">
                             {ro ? "Ora" : "Time"}
@@ -943,7 +946,7 @@ export default function Consultatii() {
                             className="rounded-lg text-sm h-9"
                           />
                         </div>
-                        <div className="col-span-2 sm:col-span-1">
+                        <div className="sm:col-span-1">
                           <label className="text-xs text-muted-foreground mb-1 block">
                             {ro ? "Ce am mâncat" : "What I ate"}
                           </label>
@@ -993,18 +996,18 @@ export default function Consultatii() {
                       </div>
 
                       {/* Hunger before / Fullness after (1-5) */}
-                      <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                         <div>
                           <label className="text-xs text-muted-foreground mb-1.5 block">
                             {ro ? "Foame înainte de masă" : "Hunger before eating"}
                           </label>
-                          <div className="flex gap-1.5">
+                          <div className="grid grid-cols-5 gap-1.5">
                             {["1", "2", "3", "4", "5"].map(n => (
                               <button
                                 key={n}
                                 type="button"
                                 onClick={() => setMealField(activeDay, mi, "hungerBefore", n)}
-                                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
+                                className={`w-full min-w-0 h-11 rounded-lg text-xs font-semibold transition-colors ${
                                   journal[activeDay][mi].hungerBefore === n
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-background border border-border text-muted-foreground hover:border-primary/40"
@@ -1023,13 +1026,13 @@ export default function Consultatii() {
                           <label className="text-xs text-muted-foreground mb-1.5 block">
                             {ro ? "Sațietate după masă" : "Fullness after eating"}
                           </label>
-                          <div className="flex gap-1.5">
+                          <div className="grid grid-cols-5 gap-1.5">
                             {["1", "2", "3", "4", "5"].map(n => (
                               <button
                                 key={n}
                                 type="button"
                                 onClick={() => setMealField(activeDay, mi, "fullnessAfter", n)}
-                                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
+                                className={`w-full min-w-0 h-11 rounded-lg text-xs font-semibold transition-colors ${
                                   journal[activeDay][mi].fullnessAfter === n
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-background border border-border text-muted-foreground hover:border-primary/40"
@@ -1091,20 +1094,22 @@ export default function Consultatii() {
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
                   <Button
                     variant="outline"
-                    className="rounded-xl gap-1"
+                    className="rounded-xl gap-1 px-2.5 sm:px-4"
                     disabled={activeDay === 0}
                     onClick={() => setActiveDay(d => d - 1)}
                   >
-                    ← {ro ? "Ziua anterioară" : "Previous day"}
+                    ← <span className="sm:hidden">{ro ? "Anterioară" : "Previous"}</span>
+                    <span className="hidden sm:inline">{ro ? "Ziua anterioară" : "Previous day"}</span>
                   </Button>
                   <span className="text-sm text-muted-foreground">{activeDay + 1} / 7</span>
                   <Button
                     variant="outline"
-                    className="rounded-xl gap-1"
+                    className="rounded-xl gap-1 px-2.5 sm:px-4"
                     disabled={activeDay === 6}
                     onClick={() => setActiveDay(d => d + 1)}
                   >
-                    {ro ? "Ziua următoare" : "Next day"} →
+                    <span className="sm:hidden">{ro ? "Următoare" : "Next"}</span>
+                    <span className="hidden sm:inline">{ro ? "Ziua următoare" : "Next day"}</span> →
                   </Button>
                 </div>
               </CardContent>

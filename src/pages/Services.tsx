@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { CheckCircle2, ArrowRight, MessageCircle, Stethoscope, CalendarCheck2, CalendarRange, ClipboardCheck } from "lucide-react";
+import { CheckCircle2, ArrowRight, ChevronDown, MessageCircle, Stethoscope, CalendarCheck2, CalendarRange, ClipboardCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -206,9 +207,12 @@ const MONITORING = {
   ctaEn: "Choose this service",
 };
 
+const MOBILE_VISIBLE_ITEMS = 3;
+
 export default function Services() {
   const { language } = useLanguage();
   const ro = language === "ro";
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   return (
     <div className="py-24 bg-secondary/30 min-h-screen">
@@ -234,10 +238,21 @@ export default function Services() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {services.map((service, i) => {
             const Icon = service.icon;
+            const includeItems = ro ? service.includeRo : service.includeEn;
+            const visibleItems = includeItems.slice(0, MOBILE_VISIBLE_ITEMS);
+            const restItems = includeItems.slice(MOBILE_VISIBLE_ITEMS);
+            const isExpanded = !!expanded[service.id];
+            // On mobile, everything past the first few bullets (remaining items,
+            // the analysis link, the WhatsApp note) is collapsed behind a toggle.
+            // On desktop (lg+) it's always shown, exactly as before -- this class
+            // combo is the only thing controlling that: "hidden lg:block" when
+            // collapsed, "block" (visible everywhere) once expanded.
+            const extraVisibilityClass = isExpanded ? "block" : "hidden lg:block";
+            const hasExtra = restItems.length > 0 || service.showAnalysisLink || (service.noteRo && service.noteEn);
             return (
               <motion.div
                 key={service.id}
-                className="relative"
+                className="relative min-w-0"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -248,7 +263,7 @@ export default function Services() {
                     {ro ? "Recomandat" : "Recommended"}
                   </Badge>
                 )}
-                <Card className={`h-full ${service.recommended ? "border-primary shadow-md" : "border-border"}`}>
+                <Card className={`h-full min-w-0 ${service.recommended ? "border-primary shadow-md" : "border-border"}`}>
                   <CardContent className="p-8 flex flex-col h-full">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-5">
                       <Icon className="w-6 h-6 text-primary" />
@@ -273,7 +288,7 @@ export default function Services() {
                       {ro ? service.includeLabelRo : service.includeLabelEn}
                     </h3>
                     <ul className="space-y-2 mb-2">
-                      {(ro ? service.includeRo : service.includeEn).map((item, j) => (
+                      {visibleItems.map((item, j) => (
                         <li key={j} className="flex items-start gap-2.5 text-sm text-foreground">
                           <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                           {item}
@@ -281,23 +296,49 @@ export default function Services() {
                       ))}
                     </ul>
 
-                    {service.showAnalysisLink && (
-                      <Link
-                        href="/consultatii#analize"
-                        className="inline-flex items-center gap-1.5 text-xs text-primary underline underline-offset-2 mb-6 hover:no-underline"
-                      >
-                        <ClipboardCheck className="w-3.5 h-3.5 shrink-0" />
-                        {ro
-                          ? "Vezi analizele recomandate înainte de consultație"
-                          : "See the recommended tests before your consultation"}
-                      </Link>
-                    )}
-                    {!service.showAnalysisLink && <div className="mb-6" />}
+                    <div className={extraVisibilityClass}>
+                      {restItems.length > 0 && (
+                        <ul className="space-y-2 mb-2">
+                          {restItems.map((item, j) => (
+                            <li key={j} className="flex items-start gap-2.5 text-sm text-foreground">
+                              <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
 
-                    {service.noteRo && service.noteEn && (
-                      <p className="text-xs text-muted-foreground leading-relaxed mb-6">
-                        {ro ? service.noteRo : service.noteEn}
-                      </p>
+                      {service.showAnalysisLink && (
+                        <Link
+                          href="/consultatii#analize"
+                          className="inline-flex items-center gap-1.5 text-xs text-primary underline underline-offset-2 mb-6 hover:no-underline"
+                        >
+                          <ClipboardCheck className="w-3.5 h-3.5 shrink-0" />
+                          {ro
+                            ? "Vezi analizele recomandate înainte de consultație"
+                            : "See the recommended tests before your consultation"}
+                        </Link>
+                      )}
+                      {!service.showAnalysisLink && <div className="mb-6" />}
+
+                      {service.noteRo && service.noteEn && (
+                        <p className="text-xs text-muted-foreground leading-relaxed mb-6">
+                          {ro ? service.noteRo : service.noteEn}
+                        </p>
+                      )}
+                    </div>
+
+                    {hasExtra && (
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(prev => ({ ...prev, [service.id]: !prev[service.id] }))}
+                        className="lg:hidden flex items-center gap-1.5 text-xs font-semibold text-primary mb-6 -mt-2"
+                      >
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                        {isExpanded
+                          ? (ro ? "Ascunde detaliile" : "Hide details")
+                          : (ro ? "Vezi toate detaliile" : "See all details")}
+                      </button>
                     )}
 
                     <Button
@@ -327,13 +368,14 @@ export default function Services() {
           className="mb-20"
         >
           <Card className="border-border">
-            <CardContent className="p-6 flex flex-wrap items-center justify-between gap-4">
+            <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <h3 className="font-serif font-bold text-lg text-foreground">
                 {ro ? MONITORING.nameRo : MONITORING.nameEn}
               </h3>
+              <span className="text-xl font-bold text-primary sm:hidden">{MONITORING.price} lei</span>
               <div className="flex items-center gap-4">
-                <span className="text-xl font-bold text-primary">{MONITORING.price} lei</span>
-                <Button asChild variant="outline" className="rounded-xl gap-2">
+                <span className="hidden sm:inline text-xl font-bold text-primary">{MONITORING.price} lei</span>
+                <Button asChild variant="outline" className="rounded-xl gap-2 w-full sm:w-auto">
                   <Link href="/contact">
                     {ro ? MONITORING.ctaRo : MONITORING.ctaEn}
                     <ArrowRight className="w-4 h-4" />
