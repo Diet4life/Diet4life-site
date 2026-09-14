@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
@@ -57,9 +57,9 @@ const services: ServiceOffering[] = [
       "jurnal alimentar 7 zile;",
       "analizarea alimentației actuale;",
       "estimarea necesarului energetic și stabilirea unui aport orientativ;",
-      "primește recomandări și modificări pe WhatsApp;",
-      "în următoarele 14 zile aplică recomandările și continuă jurnalul;",
-      "la final primește feedback și ajustări pe WhatsApp.",
+      "primești recomandări și modificări pe WhatsApp;",
+      "în următoarele 14 zile aplici recomandările și continui jurnalul;",
+      "la final primești feedback și ajustări pe WhatsApp.",
     ],
     includeEn: [
       "a 7-day food journal;",
@@ -252,8 +252,8 @@ export default function Services() {
             const extraVisibilityClass = isExpanded ? "block" : "hidden lg:block";
             const hasExtra = restItems.length > 0 || service.showAnalysisLink || (service.noteRo && service.noteEn);
             return (
+              <Fragment key={service.id}>
               <motion.div
-                key={service.id}
                 className="relative min-w-0"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -357,41 +357,50 @@ export default function Services() {
                   </CardContent>
                 </Card>
               </motion.div>
+
+              {/* Monitorizare Nutrițională — minimal, name + price only.
+                  Inserted right after Consultație Nutrițională (index 1) so
+                  the visual order is Primii Pași, Consultație, Monitorizare,
+                  Program 6 săptămâni, Program 3 luni. md:col-span-2 makes it
+                  span the full grid row on desktop; on mobile the grid is
+                  already single-column, so it just falls in place as the
+                  3rd stacked card. */}
+              {i === 1 && (
+                <motion.div
+                  className="md:col-span-2"
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Card className="border-border">
+                    <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                      <div>
+                        <h3 className="font-serif font-bold text-lg text-foreground">
+                          {ro ? MONITORING.nameRo : MONITORING.nameEn}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {ro ? MONITORING.subtitleRo : MONITORING.subtitleEn}
+                        </p>
+                      </div>
+                      <span className="text-xl font-bold text-primary sm:hidden">{MONITORING.price} lei</span>
+                      <div className="flex items-center gap-4">
+                        <span className="hidden sm:inline text-xl font-bold text-primary">{MONITORING.price} lei</span>
+                        <Button asChild variant="outline" className="rounded-xl gap-2 w-full sm:w-auto">
+                          <Link href="/contact">
+                            {ro ? MONITORING.ctaRo : MONITORING.ctaEn}
+                            <ArrowRight className="w-4 h-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+              </Fragment>
             );
           })}
         </div>
-
-        {/* Monitorizare nutrițională — minimal, name + price only */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mb-20"
-        >
-          <Card className="border-border">
-            <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <div>
-                <h3 className="font-serif font-bold text-lg text-foreground">
-                  {ro ? MONITORING.nameRo : MONITORING.nameEn}
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {ro ? MONITORING.subtitleRo : MONITORING.subtitleEn}
-                </p>
-              </div>
-              <span className="text-xl font-bold text-primary sm:hidden">{MONITORING.price} lei</span>
-              <div className="flex items-center gap-4">
-                <span className="hidden sm:inline text-xl font-bold text-primary">{MONITORING.price} lei</span>
-                <Button asChild variant="outline" className="rounded-xl gap-2 w-full sm:w-auto">
-                  <Link href="/contact">
-                    {ro ? MONITORING.ctaRo : MONITORING.ctaEn}
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
         {/* Bottom CTA */}
         <motion.div
