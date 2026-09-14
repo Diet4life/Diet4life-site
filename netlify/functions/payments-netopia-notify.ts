@@ -16,17 +16,17 @@ import type { Handler } from "@netlify/functions";
 // Real signature verification and order-status updates are a separate,
 // later round, only once explicitly approved.
 //
-// The exact acknowledgement NETOPIA expects back was not independently
-// confirmed against the primary spec (blocked from this sandbox's network,
-// see payments-initiate.ts) -- this returns a plain 200 with a small JSON
-// body, the universal "received, don't retry" webhook convention. Verify
-// against a real sandbox notification before building the real handler.
+// Acknowledgement format per NETOPIA Payments API v2 (confirmed by user):
+// 200, Content-Type: application/json, body {"errorCode":0} -- this is the
+// exact, specific ack NETOPIA's notifyUrl expects, not a generic webhook
+// "200 OK" convention. errorCode is always 0 here regardless of what the
+// notification actually contains, because this stub never inspects it.
 export const handler: Handler = async (event, context) => {
   console.log(`payments-netopia-notify[${context.awsRequestId}] received (stub, no processing)`);
 
   return {
     statusCode: 200,
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ received: true }),
+    body: JSON.stringify({ errorCode: 0 }),
   };
 };
