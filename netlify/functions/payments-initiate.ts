@@ -12,30 +12,39 @@ import { isProductionContext } from "@/server/environment";
 // already stored in our own DB, and return the resulting paymentURL.
 
 // ---- What is solidly confirmed vs. best-effort ---------------------------
-// Everything below was reconstructed from NETOPIA's public API v2
-// documentation and multiple independent SDK READMEs -- this sandbox
+// Everything below was originally reconstructed from NETOPIA's public API
+// v2 documentation and multiple independent SDK READMEs -- this sandbox
 // environment's network egress is blocked to every netopia-payments.com
 // host (confirmed directly with curl: "CONNECT tunnel failed, response
-// 403"), so the canonical Stoplight spec page could not be read directly.
-// Solidly corroborated across every source found: the response shape
-// (payment.paymentURL / payment.ntpID / payment.status, error.code), and
-// the request's config.{notifyUrl,redirectUrl,language} + order.{
-// posSignature,dateTime,description,orderID,amount,currency,billing} shape.
-// Best-effort, NOT independently confirmed against the primary spec --
-// verify against the real sandbox response before relying on this in a
-// later round:
+// 403"), so the canonical Stoplight spec page could not be read directly
+// from this session at any point. Solidly corroborated across every source
+// found: the response shape (payment.paymentURL / payment.ntpID /
+// payment.status, error.code), and the request's
+// config.{notifyUrl,redirectUrl,language} + order.{posSignature,dateTime,
+// description,orderID,amount,currency,billing} shape.
+//
+// The request body's top-level `payment` section (below) was added after
+// a real sandbox request returned HTTP 400 "Validation error" with only
+// `config`+`order`, and the user independently checked the current
+// official NETOPIA v2 SDK/docs and confirmed: the request has three
+// top-level sections (config, payment, order), and for the hosted
+// payment-page flow, `payment.instrument` is left null so NETOPIA
+// prompts the customer for card details itself -- no card data is ever
+// collected or sent from this codebase. That confirmation is the user's
+// own, from outside this sandbox; still not independently re-verified
+// against the primary spec from here (same network block as above).
+//
+// Still best-effort, NOT independently confirmed against the primary
+// spec -- verify against the real sandbox response before relying on
+// this further:
 //   1) Authorization header: every source shows the raw API key as the
 //      header value directly (e.g. "Authorization: <key>"), never a
 //      "Bearer <key>" prefix. Implemented that way below.
-//   2) payment.instrument: omitted entirely here (not even an empty
-//      object) to request the hosted-page redirect flow rather than
-//      direct card-field submission. Not independently confirmed that
-//      omission is the correct way to ask for a hosted page.
-//   3) order.billing field names (firstName/lastName split, country as
+//   2) order.billing field names (firstName/lastName split, country as
 //      the ISO alpha-2 code): inferred from an SDK example; our own
 //      billing_details table stores one combined fullName/companyName,
 //      split heuristically below.
-//   4) The notify-stub's exact acknowledgement format (see
+//   3) The notify-stub's exact acknowledgement format (see
 //      payments-netopia-notify.ts) -- best-effort 200 JSON ack.
 
 const NETOPIA_SANDBOX_URL = "https://secure.sandbox.netopia-payments.com/payment/card/start";
@@ -45,6 +54,55 @@ function splitName(fullName: string): { firstName: string; lastName: string } {
   const spaceIndex = trimmed.indexOf(" ");
   if (spaceIndex === -1) return { firstName: trimmed, lastName: trimmed };
   return { firstName: trimmed.slice(0, spaceIndex), lastName: trimmed.slice(spaceIndex + 1) };
+}
+
+type OrderForPayment = NonNullable<Awaited<ReturnType<typeof getOrderForPaymentInitiation>>>;
+
+// Pure request-body builder, exported for testing (see
+// payments-initiate.test.ts) -- no DB/network access here. Builds exactly
+// the three top-level sections NETOPIA's v2 card/start contract requires:
+// config, payment, order. `payment.instrument` stays null -- this
+// implementation never collects or sends a card number, expiry, CVV, or
+// any other PCI-sensitive field; NETOPIA's own hosted page is where the
+// customer enters card details.
+export function buildNetopiaRequestBody(
+  order: OrderForPayment,
+  amount: number,
+  currency: string,
+  posSignature: string,
+  siteUrl: string,
+  publicStatusToken: string,
+) {
+  const { firstName, lastName } = splitName(
+    order.billingPersonType === "company" ? order.billingCompanyName ?? "" : order.billingFullName ?? "",
+  );
+
+  return {
+    config: {
+      notifyUrl: `${siteUrl}/.netlify/functions/payments-netopia-notify`,
+      redirectUrl: `${siteUrl}/checkout/retur?token=${encodeURIComponent(publicStatusToken)}`,
+      language: "ro",
+    },
+    payment: {
+      instrument: null,
+    },
+    order: {
+      posSignature,
+      dateTime: new Date().toISOString(),
+      description: `${order.orderNumber} - ${order.productName}`,
+      orderID: order.orderNumber,
+      amount,
+      currency,
+      billing: {
+        email: order.billingEmail,
+        phone: order.billingPhone,
+        firstName,
+        lastName,
+        city: order.billingCity,
+        country: order.billingCountryCode,
+      },
+    },
+  };
 }
 
 // Diagnostic-only helpers for logging a rejected NETOPIA response. Never
@@ -140,33 +198,7 @@ export const handler: Handler = async (event, context) => {
   }
 
   const siteUrl = process.env.URL ?? ""; // Netlify's own injected site-URL var (not one we define)
-  const { firstName, lastName } = splitName(
-    order.billingPersonType === "company" ? order.billingCompanyName ?? "" : order.billingFullName ?? "",
-  );
-
-  const netopiaRequestBody = {
-    config: {
-      notifyUrl: `${siteUrl}/.netlify/functions/payments-netopia-notify`,
-      redirectUrl: `${siteUrl}/checkout/retur?token=${encodeURIComponent(publicStatusToken)}`,
-      language: "ro",
-    },
-    order: {
-      posSignature,
-      dateTime: new Date().toISOString(),
-      description: `${order.orderNumber} - ${order.productName}`,
-      orderID: order.orderNumber,
-      amount,
-      currency,
-      billing: {
-        email: order.billingEmail,
-        phone: order.billingPhone,
-        firstName,
-        lastName,
-        city: order.billingCity,
-        country: order.billingCountryCode,
-      },
-    },
-  };
+  const netopiaRequestBody = buildNetopiaRequestBody(order, amount, currency, posSignature, siteUrl, publicStatusToken);
 
   try {
     const netopiaRes = await fetch(NETOPIA_SANDBOX_URL, {
