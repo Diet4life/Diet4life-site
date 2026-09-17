@@ -1,6 +1,7 @@
 import type { Handler } from "@netlify/functions";
 import { getOrderForPaymentInitiation } from "@/server/orders/orderService";
 import { isProductionContext } from "@/server/environment";
+import { getCountryName, getCountryNumericCode } from "@/lib/checkout/countries";
 
 // Step 1 of NETOPIA Payments API v2 integration: initiate a card payment in
 // SANDBOX only and hand the browser a redirect URL to NETOPIA's hosted
@@ -23,27 +24,46 @@ import { isProductionContext } from "@/server/environment";
 // config.{notifyUrl,redirectUrl,language} + order.{posSignature,dateTime,
 // description,orderID,amount,currency,billing} shape.
 //
-// The request body's top-level `payment` section (below) was added after
-// a real sandbox request returned HTTP 400 "Validation error" with only
-// `config`+`order`, and the user independently checked the current
-// official NETOPIA v2 SDK/docs and confirmed: the request has three
-// top-level sections (config, payment, order), and for the hosted
-// payment-page flow, `payment.instrument` is left null so NETOPIA
-// prompts the customer for card details itself -- no card data is ever
-// collected or sent from this codebase. That confirmation is the user's
-// own, from outside this sandbox; still not independently re-verified
-// against the primary spec from here (same network block as above).
+// The request body's top-level `payment` section was added after a real
+// sandbox request returned HTTP 400 "Validation error" with only
+// `config`+`order` -- the user independently checked the current official
+// NETOPIA v2 SDK/docs and confirmed the three top-level sections
+// (config, payment, order).
 //
-// Still best-effort, NOT independently confirmed against the primary
-// spec -- verify against the real sandbox response before relying on
-// this further:
+// After adding `payment: { instrument: null }` alone, the same sandbox
+// request still returned HTTP 400 "Validation error". The user then read
+// the live NETOPIA sandbox OpenAPI spec directly at
+// https://secure.sandbox.netopia-payments.com/spec (still unreachable from
+// this sandbox's own network -- same block as above) and confirmed two
+// further, definite schema mismatches, both fixed below:
+//   1) `payment.options` (an object with `installments`/`bonus`) is part
+//      of the schema alongside `instrument` -- now sent as
+//      `{ installments: 0, bonus: 0 }`, meaning no installment plan and no
+//      bonus-points redemption, i.e. a plain single-charge payment.
+//   2) `order.billing` uses NETOPIA's `Address` schema, which requires
+//      email, phone, firstName, lastName, city, country, countryName,
+//      state, postalCode, and details -- all of them, not just the first
+//      six. `country` must be the ISO 3166-1 *numeric* code as an integer
+//      (e.g. 642 for Romania), not the alpha-2 code used everywhere else
+//      in this codebase. See getCountryNumericCode()/getCountryName() in
+//      src/lib/checkout/countries.ts for the alpha-2 -> numeric mapping
+//      (sourced from the same generated country data used by the checkout
+//      country selector, not a separate list) and
+//      getOrderForPaymentInitiation() in orderService.ts for where
+//      state/postalCode/details are read from (billing_details.county /
+//      .postalCode / .streetAddress+.buildingDetails -- all already
+//      collected by checkout, never invented).
+//
+// These two fixes are based on the user's own direct reading of the live
+// spec, not independently re-verified by this session (still no network
+// path to netopia-payments.com from here). Still best-effort / unverified
+// from this session specifically:
 //   1) Authorization header: every source shows the raw API key as the
 //      header value directly (e.g. "Authorization: <key>"), never a
 //      "Bearer <key>" prefix. Implemented that way below.
-//   2) order.billing field names (firstName/lastName split, country as
-//      the ISO alpha-2 code): inferred from an SDK example; our own
-//      billing_details table stores one combined fullName/companyName,
-//      split heuristically below.
+//   2) order.billing field names (firstName/lastName split): inferred
+//      from an SDK example; our own billing_details table stores one
+//      combined fullName/companyName, split heuristically below.
 //   3) The notify-stub's exact acknowledgement format (see
 //      payments-netopia-notify.ts) -- best-effort 200 JSON ack.
 
@@ -58,13 +78,27 @@ function splitName(fullName: string): { firstName: string; lastName: string } {
 
 type OrderForPayment = NonNullable<Awaited<ReturnType<typeof getOrderForPaymentInitiation>>>;
 
+// Thrown by buildNetopiaRequestBody() when a billing country code has no
+// ISO 3166-1 numeric mapping -- should not happen in practice (checkout's
+// zod schema only ever accepts a code from the same generated country
+// list this looks up against), but NETOPIA's Address schema requires a
+// numeric `country`, so failing closed here beats silently sending a
+// broken/undefined value.
+export class UnknownCountryCodeError extends Error {
+  constructor(code: string) {
+    super(`No ISO 3166-1 numeric mapping for country code "${code}"`);
+    this.name = "UnknownCountryCodeError";
+  }
+}
+
 // Pure request-body builder, exported for testing (see
-// payments-initiate.test.ts) -- no DB/network access here. Builds exactly
-// the three top-level sections NETOPIA's v2 card/start contract requires:
-// config, payment, order. `payment.instrument` stays null -- this
-// implementation never collects or sends a card number, expiry, CVV, or
-// any other PCI-sensitive field; NETOPIA's own hosted page is where the
-// customer enters card details.
+// src/server/payments/payments-initiate.test.ts) -- no DB/network access
+// here. Builds exactly the three top-level sections NETOPIA's v2
+// card/start contract requires: config, payment, order.
+// `payment.instrument` stays null and `payment.options` carries no
+// installments/bonus -- this implementation never collects or sends a
+// card number, expiry, CVV, or any other PCI-sensitive field; NETOPIA's
+// own hosted page is where the customer enters card details.
 export function buildNetopiaRequestBody(
   order: OrderForPayment,
   amount: number,
@@ -77,6 +111,16 @@ export function buildNetopiaRequestBody(
     order.billingPersonType === "company" ? order.billingCompanyName ?? "" : order.billingFullName ?? "",
   );
 
+  const country = getCountryNumericCode(order.billingCountryCode);
+  if (country === undefined) {
+    throw new UnknownCountryCodeError(order.billingCountryCode);
+  }
+
+  // Real collected checkout data only -- streetAddress is a required
+  // billing_details column, buildingDetails (bloc/scară/apartament) is
+  // optional and simply omitted from `details` when not provided.
+  const details = [order.billingStreetAddress, order.billingBuildingDetails].filter(Boolean).join(", ");
+
   return {
     config: {
       notifyUrl: `${siteUrl}/.netlify/functions/payments-netopia-notify`,
@@ -84,6 +128,10 @@ export function buildNetopiaRequestBody(
       language: "ro",
     },
     payment: {
+      options: {
+        installments: 0,
+        bonus: 0,
+      },
       instrument: null,
     },
     order: {
@@ -99,7 +147,16 @@ export function buildNetopiaRequestBody(
         firstName,
         lastName,
         city: order.billingCity,
-        country: order.billingCountryCode,
+        country,
+        countryName: getCountryName(order.billingCountryCode, "en"),
+        state: order.billingCounty,
+        // Not every country requires a postal code at checkout (see
+        // isPostalCodeRequired() in countries.ts) -- when the buyer left
+        // it blank, NETOPIA's Address schema still requires the field to
+        // be present, so an empty string (never an invented value) fills
+        // it, per the explicit "safest schema-valid neutral value" rule.
+        postalCode: order.billingPostalCode ?? "",
+        details,
       },
     },
   };
@@ -198,7 +255,16 @@ export const handler: Handler = async (event, context) => {
   }
 
   const siteUrl = process.env.URL ?? ""; // Netlify's own injected site-URL var (not one we define)
-  const netopiaRequestBody = buildNetopiaRequestBody(order, amount, currency, posSignature, siteUrl, publicStatusToken);
+  let netopiaRequestBody: ReturnType<typeof buildNetopiaRequestBody>;
+  try {
+    netopiaRequestBody = buildNetopiaRequestBody(order, amount, currency, posSignature, siteUrl, publicStatusToken);
+  } catch (err) {
+    if (err instanceof UnknownCountryCodeError) {
+      console.error(`payments-initiate[${requestId}] failure unknown_country_code`);
+      return { statusCode: 500, body: JSON.stringify({ error: "invalid_billing_country" }) };
+    }
+    throw err;
+  }
 
   try {
     const netopiaRes = await fetch(NETOPIA_SANDBOX_URL, {

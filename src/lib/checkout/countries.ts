@@ -22,6 +22,24 @@ export function getCountryName(code: string, language: "ro" | "en"): string {
   return language === "ro" ? match.ro : match.en;
 }
 
+// ISO 3166-1 alpha-2 -> ISO 3166-1 *numeric* (e.g. "RO" -> 642), needed only
+// by the NETOPIA payment request builder (netlify/functions/payments-initiate.ts):
+// its Address schema requires `country` as an integer numeric code, not the
+// alpha-2 code used everywhere else in this codebase (including the DB's
+// billing_details.country_code column, which is never changed). Sourced
+// from the same generated country list as everything else here -- see
+// scripts/generate-countries.cjs -- not a separate/duplicate mapping.
+// Every one of the 250 generated entries has a numeric code (verified at
+// generation time), so an unknown code is a genuine bug upstream, not a
+// case to silently paper over -- callers should treat undefined as fatal
+// for that request rather than guessing a country.
+export function getCountryNumericCode(code: string): number | undefined {
+  const match = COUNTRIES.find((c) => c.code === code);
+  if (!match) return undefined;
+  const numeric = Number(match.numeric);
+  return Number.isFinite(numeric) ? numeric : undefined;
+}
+
 // Whether a postal code should be a required field for this country's
 // billing address. Sourced from Google's own address-metadata (via
 // lib-address, see countries.generated.ts) rather than a hand-picked

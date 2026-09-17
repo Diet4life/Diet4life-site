@@ -169,6 +169,12 @@ export async function getOrderByPublicToken(token: string) {
 // returned to the browser as-is. Still excludes patient_details (never
 // relevant to a payment request) and never includes medical data (there is
 // none in this schema).
+//
+// county/postalCode/streetAddress/buildingDetails were added alongside
+// email/phone/firstName-lastName/city so NETOPIA's required Address schema
+// (state/postalCode/details) can be filled from data checkout already
+// collects, instead of inventing placeholder values -- no schema/migration
+// change, this is still a read of existing billing_details columns.
 export async function getOrderForPaymentInitiation(token: string) {
   const db = getDb();
   const [row] = await db
@@ -186,6 +192,10 @@ export async function getOrderForPaymentInitiation(token: string) {
       billingPhone: billingDetails.phone,
       billingCity: billingDetails.city,
       billingCountryCode: billingDetails.countryCode,
+      billingCounty: billingDetails.county,
+      billingPostalCode: billingDetails.postalCode,
+      billingStreetAddress: billingDetails.streetAddress,
+      billingBuildingDetails: billingDetails.buildingDetails,
     })
     .from(orders)
     .innerJoin(billingDetails, eq(billingDetails.orderId, orders.id))
