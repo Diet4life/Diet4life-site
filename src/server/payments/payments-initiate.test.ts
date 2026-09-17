@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildNetopiaRequestBody } from "./payments-initiate";
+import { buildNetopiaRequestBody } from "../../../netlify/functions/payments-initiate";
 
 // Minimal stand-in matching getOrderForPaymentInitiation()'s return shape
 // (src/server/orders/orderService.ts) -- only the fields buildNetopiaRequestBody
