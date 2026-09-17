@@ -47,6 +47,40 @@ function splitName(fullName: string): { firstName: string; lastName: string } {
   return { firstName: trimmed.slice(0, spaceIndex), lastName: trimmed.slice(spaceIndex + 1) };
 }
 
+// Diagnostic-only helpers for logging a rejected NETOPIA response. Never
+// log the request we sent (it carries billing data) or any secret -- only
+// what NETOPIA sent back, and even that goes through redaction + a length
+// cap before it ever reaches console.error, in case their error body ever
+// echoes something we sent (e.g. an email in a validation message).
+function redactSensitive(text: string): string {
+  return text
+    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "[redacted-email]")
+    .replace(/\+?\d[\d\s\-().]{6,}\d/g, "[redacted-number]");
+}
+
+function describeNetopiaFailure(parsedBody: Record<string, unknown> | null, rawBody: string): string {
+  if (parsedBody) {
+    const errorObj = parsedBody.error as { code?: unknown; message?: unknown } | undefined;
+    const errorsArr = Array.isArray(parsedBody.errors) ? parsedBody.errors : undefined;
+    const code = errorObj?.code ?? parsedBody.errorCode ?? parsedBody.code;
+    const message = errorObj?.message ?? parsedBody.message;
+    if (code !== undefined || message !== undefined || errorsArr) {
+      const codeStr = typeof code === "string" || typeof code === "number" ? String(code) : "none";
+      const messageStr =
+        typeof message === "string"
+          ? redactSensitive(message).slice(0, 200)
+          : errorsArr
+            ? redactSensitive(JSON.stringify(errorsArr)).slice(0, 200)
+            : "none";
+      return `code=${codeStr} message="${messageStr}"`;
+    }
+  }
+  // Not JSON, or JSON without any recognizable error field -- fall back to
+  // a redacted, truncated snippet of the raw body so there's still
+  // something to go on.
+  return `body="${redactSensitive(rawBody).slice(0, 300)}"`;
+}
+
 export const handler: Handler = async (event, context) => {
   const requestId = context.awsRequestId;
 
@@ -148,11 +182,18 @@ export const handler: Handler = async (event, context) => {
       body: JSON.stringify(netopiaRequestBody),
     });
 
-    const netopiaBody = (await netopiaRes.json().catch(() => null)) as
-      | { payment?: { paymentURL?: string; ntpID?: string }; error?: { code?: string; message?: string } }
-      | null;
+    const contentType = netopiaRes.headers.get("content-type") ?? "none";
+    const rawBody = await netopiaRes.text();
+    let parsedBody: Record<string, unknown> | null = null;
+    try {
+      const json = JSON.parse(rawBody);
+      if (json && typeof json === "object") parsedBody = json as Record<string, unknown>;
+    } catch {
+      parsedBody = null;
+    }
 
-    const paymentURL = netopiaBody?.payment?.paymentURL;
+    const payment = parsedBody?.payment as { paymentURL?: string; ntpID?: string } | undefined;
+    const paymentURL = payment?.paymentURL;
     if (netopiaRes.ok && paymentURL) {
       console.log(`payments-initiate[${requestId}] success order=${order.orderNumber}`);
       // Deliberately minimal: only what the browser needs to redirect.
@@ -164,10 +205,13 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    // Never log the full NETOPIA response body (could contain billing
-    // data we just sent) -- only the provider's own error code.
+    // Diagnostic-only: status, response content-type, order number, and
+    // either the recognizable error fields (if the body is JSON) or a
+    // redacted/truncated snippet of the raw body. Never the request we
+    // sent, never any secret. See describeNetopiaFailure()/redactSensitive()
+    // above for exactly what's included.
     console.error(
-      `payments-initiate[${requestId}] failure netopia_rejected status=${netopiaRes.status} code=${netopiaBody?.error?.code ?? "unknown"}`,
+      `payments-initiate[${requestId}] failure netopia_rejected order=${order.orderNumber} status=${netopiaRes.status} contentType=${contentType} ${describeNetopiaFailure(parsedBody, rawBody)}`,
     );
     return { statusCode: 502, body: JSON.stringify({ error: "payment_initiation_failed" }) };
   } catch (error) {
