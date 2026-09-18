@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   buildNetopiaRequestBody,
+  isValidHttpsUrl,
   resolveSiteBaseUrl,
   safeHostname,
   UnknownCountryCodeError,
@@ -144,8 +145,27 @@ describe("buildNetopiaRequestBody", () => {
   });
 });
 
+describe("isValidHttpsUrl", () => {
+  it("accepts a well-formed https:// URL", () => {
+    expect(isValidHttpsUrl("https://claude-tool-usage-check-htkbjz--diet4life.netlify.app")).toBe(true);
+    expect(isValidHttpsUrl("https://diet4lifeconcept.ro")).toBe(true);
+  });
+
+  it("rejects http:// (not https), a bare hostname, a non-URL scheme, and garbage", () => {
+    expect(isValidHttpsUrl("http://claude-tool-usage-check-htkbjz--diet4life.netlify.app")).toBe(false);
+    expect(isValidHttpsUrl("claude-tool-usage-check-htkbjz--diet4life.netlify.app")).toBe(false);
+    expect(isValidHttpsUrl("javascript:alert(1)")).toBe(false);
+    expect(isValidHttpsUrl("")).toBe(false);
+    expect(isValidHttpsUrl("not a url at all")).toBe(false);
+  });
+
+  it("never throws on malformed input", () => {
+    expect(() => isValidHttpsUrl("::::not-a-url::::")).not.toThrow();
+  });
+});
+
 describe("resolveSiteBaseUrl", () => {
-  const ENV_KEYS = ["CONTEXT", "URL", "DEPLOY_URL", "DEPLOY_PRIME_URL"] as const;
+  const ENV_KEYS = ["CONTEXT", "URL", "D4L_SITE_BASE_URL"] as const;
   const saved: Record<string, string | undefined> = {};
 
   afterEach(() => {
@@ -168,52 +188,47 @@ describe("resolveSiteBaseUrl", () => {
     expect(resolveSiteBaseUrl.length).toBe(0);
   });
 
-  it("production URLs: pins to URL (the custom domain), even if DEPLOY_PRIME_URL/DEPLOY_URL point somewhere else", () => {
+  it("production: ignores D4L_SITE_BASE_URL entirely and uses URL, even if D4L_SITE_BASE_URL is set to something else", () => {
     setEnv({
       CONTEXT: "production",
       URL: "https://diet4lifeconcept.ro",
-      DEPLOY_URL: "https://deadbeef123--diet4life.netlify.app",
-      DEPLOY_PRIME_URL: "https://diet4life.netlify.app",
+      D4L_SITE_BASE_URL: "https://claude-tool-usage-check-htkbjz--diet4life.netlify.app",
     });
     expect(resolveSiteBaseUrl()).toBe("https://diet4lifeconcept.ro");
   });
 
-  it("branch-deploy URLs: uses DEPLOY_PRIME_URL first when it's set -- the actual required branch-deploy URL", () => {
+  it("branch deploy: uses D4L_SITE_BASE_URL when it's set to a valid https:// URL", () => {
     setEnv({
       CONTEXT: "branch-deploy",
       URL: "https://diet4lifeconcept.ro",
-      DEPLOY_URL: "https://deadbeef123--diet4life.netlify.app",
-      DEPLOY_PRIME_URL: "https://claude-tool-usage-check-htkbjz--diet4life.netlify.app",
+      D4L_SITE_BASE_URL: "https://claude-tool-usage-check-htkbjz--diet4life.netlify.app",
     });
     expect(resolveSiteBaseUrl()).toBe("https://claude-tool-usage-check-htkbjz--diet4life.netlify.app");
   });
 
-  it("branch-deploy URLs: falls back to DEPLOY_URL when DEPLOY_PRIME_URL is unset -- covers the case observed in production, where DEPLOY_PRIME_URL was apparently not populated at Function runtime", () => {
+  it("also works when CONTEXT itself is unset, matching the real Function-runtime behavior confirmed via diagnostics (context=unset)", () => {
     setEnv({
-      CONTEXT: "branch-deploy",
+      CONTEXT: undefined,
       URL: "https://diet4lifeconcept.ro",
-      DEPLOY_URL: "https://deadbeef123--diet4life.netlify.app",
-      DEPLOY_PRIME_URL: undefined,
+      D4L_SITE_BASE_URL: "https://claude-tool-usage-check-htkbjz--diet4life.netlify.app",
     });
-    expect(resolveSiteBaseUrl()).toBe("https://deadbeef123--diet4life.netlify.app");
+    expect(resolveSiteBaseUrl()).toBe("https://claude-tool-usage-check-htkbjz--diet4life.netlify.app");
   });
 
-  it("deploy-preview URLs: also uses DEPLOY_PRIME_URL", () => {
-    setEnv({
-      CONTEXT: "deploy-preview",
-      URL: "https://diet4lifeconcept.ro",
-      DEPLOY_PRIME_URL: "https://deploy-preview-12--diet4life.netlify.app",
-    });
-    expect(resolveSiteBaseUrl()).toBe("https://deploy-preview-12--diet4life.netlify.app");
+  it("falls back safely to URL when D4L_SITE_BASE_URL is not a valid https:// URL (http://, bare hostname, garbage)", () => {
+    for (const invalid of ["http://claude-tool-usage-check-htkbjz--diet4life.netlify.app", "not-a-url", ""]) {
+      setEnv({ CONTEXT: "branch-deploy", URL: "https://diet4lifeconcept.ro", D4L_SITE_BASE_URL: invalid });
+      expect(resolveSiteBaseUrl()).toBe("https://diet4lifeconcept.ro");
+    }
   });
 
-  it("falls back to URL in a non-production context only when both DEPLOY_PRIME_URL and DEPLOY_URL are unset (e.g. local netlify dev)", () => {
-    setEnv({ CONTEXT: "dev", URL: "https://diet4lifeconcept.ro", DEPLOY_URL: undefined, DEPLOY_PRIME_URL: undefined });
+  it("falls back to URL in a non-production context when D4L_SITE_BASE_URL is simply unset", () => {
+    setEnv({ CONTEXT: "dev", URL: "https://diet4lifeconcept.ro", D4L_SITE_BASE_URL: undefined });
     expect(resolveSiteBaseUrl()).toBe("https://diet4lifeconcept.ro");
   });
 
   it("returns an empty string, never throws, when nothing is set at all", () => {
-    setEnv({ CONTEXT: undefined, URL: undefined, DEPLOY_URL: undefined, DEPLOY_PRIME_URL: undefined });
+    setEnv({ CONTEXT: undefined, URL: undefined, D4L_SITE_BASE_URL: undefined });
     expect(resolveSiteBaseUrl()).toBe("");
   });
 });

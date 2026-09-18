@@ -202,49 +202,60 @@ function describeNetopiaFailure(parsedBody: Record<string, unknown> | null, rawB
   return `body="${redactSensitive(rawBody).slice(0, 300)}"`;
 }
 
-// The base URL used to build config.notifyUrl/config.redirectUrl. Takes no
-// arguments -- reads only Netlify-injected, read-only, server-side env
-// vars, never a browser-supplied Host/Origin header (which would be
-// attacker-controllable and could enable an open redirect).
+// Round 1 (commit 5c43916): pinned production to URL and everything else to
+// DEPLOY_PRIME_URL, reasoning from Netlify's documented *build-time*
+// behavior alone. Still resolved to production from the branch deploy.
 //
-// Round 1 (commit 5c43916): pinned production to URL and everything else
-// to DEPLOY_PRIME_URL, reasoning from Netlify's documented behavior alone
-// (this sandbox has no network path to a live Netlify deploy to verify
-// against). That still resolved to production when invoked from the
-// branch deploy on a real sandbox payment.
+// Round 2 (commit 7a97557): added DEPLOY_URL as a second fallback and
+// temporary diagnostic logging to see real Function-runtime values instead
+// of guessing from documentation.
 //
-// Since checkout has been working end-to-end on this branch deploy this
-// entire session (orders created, payments initiated) -- and both
-// orders-create.ts's CheckoutDisabledInProductionError and this file's own
-// 503 checkout_disabled guard immediately below trigger whenever
-// isProductionContext() is true -- isProductionContext() MUST already be
-// returning false at Function runtime on this branch deploy (otherwise
-// none of that would have worked at all). So the bug was never in the
-// production/non-production branch itself; it was in the non-production
-// fallback chain: DEPLOY_PRIME_URL was apparently not populated (or not
-// truthy) at Function runtime for this branch deploy specifically, despite
-// being documented as available in the Functions scope generally, so
-// `process.env.DEPLOY_PRIME_URL || process.env.URL` fell straight through
-// to the production URL.
+// Round 3 (this commit) -- the diagnostics from round 2 came back with the
+// actual answer: on a real branch-deploy invocation, context=unset,
+// deployUrlHost=unset, deployPrimeUrlHost=unset, urlHost=diet4lifeconcept.ro.
+// CONTEXT, DEPLOY_URL, and DEPLOY_PRIME_URL are build-time-only variables
+// and are NOT available in the Functions runtime at all -- URL is the only
+// one of the previously-tried variables that's actually populated there,
+// and it's always the production domain. No env-var-only approach can ever
+// distinguish branch-deploy from production this way; the fallback chain
+// from rounds 1-2 could never have worked.
 //
-// Round 2: added DEPLOY_URL (the unique per-deploy URL, e.g.
-// https://<deploy-id>--diet4life.netlify.app -- still 100%
-// Netlify-controlled, still never the request/response for this same
-// invocation) as a second fallback before URL, and added the diagnostics
-// below (logged from the handler) so the NEXT real branch-deploy payment
-// shows, in the function logs, exactly which of CONTEXT / URL / DEPLOY_URL
-// / DEPLOY_PRIME_URL were actually set and what this function resolved --
-// confirming (or correcting) this reasoning against real values, not just
-// documentation. DEPLOY_PRIME_URL is still tried first since it's the one
-// documented to be the *stable* branch-alias URL
-// (claude-tool-usage-check-htkbjz--diet4life.netlify.app) rather than a
-// per-deploy hash; DEPLOY_URL is a safety net, not the preferred source.
-// Production is still pinned to URL unconditionally, unchanged from round 1.
+// Fix: a new, explicit, self-defined variable -- D4L_SITE_BASE_URL -- set
+// by hand in Netlify's dashboard, scoped to the Branch deploys context only
+// (never Production, so production is structurally incapable of picking it
+// up regardless of this code). In non-production, if it's set and is a
+// valid https:// URL, it's used; otherwise this falls back to URL, same as
+// production. Production remains pinned to URL unconditionally, exactly as
+// in every previous round -- production behavior never depended on, and
+// still does not depend on, any of the build-time-only variables.
+//
+// Takes no arguments -- reads only server-side env vars, never a
+// browser-supplied Host/Origin header (which would be attacker-
+// controllable and could enable an open redirect). No branch name or
+// Netlify hostname is hardcoded anywhere in this file; the actual branch
+// URL lives only in Netlify's own environment-variable configuration.
 export function resolveSiteBaseUrl(): string {
   if (isProductionContext()) {
     return process.env.URL ?? "";
   }
-  return process.env.DEPLOY_PRIME_URL || process.env.DEPLOY_URL || process.env.URL || "";
+  const custom = process.env.D4L_SITE_BASE_URL;
+  if (custom && isValidHttpsUrl(custom)) {
+    return custom;
+  }
+  return process.env.URL ?? "";
+}
+
+// HTTPS-only, well-formed-URL validation for D4L_SITE_BASE_URL. Rejects
+// anything that isn't exactly a valid absolute https:// URL (plain http://,
+// a bare hostname with no scheme, javascript:, an empty string, garbage
+// text) -- resolveSiteBaseUrl() falls back to the safe URL-based default
+// rather than trust an unvalidated value. Never throws.
+export function isValidHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 // Hostname-only extraction for the temporary diagnostic log below -- even
@@ -320,15 +331,18 @@ export const handler: Handler = async (event, context) => {
   }
 
   const siteUrl = resolveSiteBaseUrl();
-  // TEMPORARY diagnostics (remove once the branch-deploy redirectUrl bug
-  // is confirmed fixed against real logs) -- hostnames only, no secrets,
-  // no query strings, no full URLs. See resolveSiteBaseUrl()'s comment for
-  // why this exists.
+  // TEMPORARY diagnostics (remove once the branch-deploy redirectUrl fix is
+  // confirmed against real logs) -- hostnames only, no secrets, no paths,
+  // no query strings, no full URLs. context/deployUrlHost/deployPrimeUrlHost
+  // are kept even though round 2's real logs already showed them unset at
+  // Function runtime (they're build-time-only), as a cheap early warning if
+  // Netlify's behavior there ever changes. See resolveSiteBaseUrl()'s
+  // comment for the full history.
   console.log(
     `payments-initiate[${requestId}] diag context=${process.env.CONTEXT ?? "unset"} ` +
       `isProduction=${isProductionContext()} urlHost=${safeHostname(process.env.URL)} ` +
       `deployUrlHost=${safeHostname(process.env.DEPLOY_URL)} deployPrimeUrlHost=${safeHostname(process.env.DEPLOY_PRIME_URL)} ` +
-      `resolvedHost=${safeHostname(siteUrl)}`,
+      `d4lSiteBaseUrlHost=${safeHostname(process.env.D4L_SITE_BASE_URL)} resolvedHost=${safeHostname(siteUrl)}`,
   );
   let netopiaRequestBody: ReturnType<typeof buildNetopiaRequestBody>;
   try {
