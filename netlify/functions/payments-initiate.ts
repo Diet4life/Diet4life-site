@@ -207,31 +207,58 @@ function describeNetopiaFailure(parsedBody: Record<string, unknown> | null, rawB
 // vars, never a browser-supplied Host/Origin header (which would be
 // attacker-controllable and could enable an open redirect).
 //
-// Root cause this fixes: the previous code always read process.env.URL,
-// which Netlify documents as the site's primary/production domain
-// (https://diet4lifeconcept.ro) REGARDLESS of which deploy context is
-// actually running. That's exactly why invoking this function from the
-// claude-tool-usage-check-htkbjz branch deploy built a redirectUrl
-// pointing at production, and NETOPIA correctly followed it -- sending the
-// browser to https://diet4lifeconcept.ro/checkout/retur?orderId=... after
-// a sandbox payment made from the branch deploy, instead of back to the
-// branch deploy itself.
+// Round 1 (commit 5c43916): pinned production to URL and everything else
+// to DEPLOY_PRIME_URL, reasoning from Netlify's documented behavior alone
+// (this sandbox has no network path to a live Netlify deploy to verify
+// against). That still resolved to production when invoked from the
+// branch deploy on a real sandbox payment.
 //
-// Fix: production is explicitly pinned to URL -- the one variable Netlify
-// documents as unambiguously always the primary/custom domain -- so
-// production behavior is unchanged and never depends on a less-certain
-// variable. Every other context (branch-deploy, deploy-preview, local
-// `netlify dev`) uses DEPLOY_PRIME_URL, Netlify's own per-context "primary
-// URL for this deploy" variable (the branch-deploy subdomain for a branch
-// deploy, the deploy-preview subdomain for a preview) -- confirmed
-// available inside Functions at runtime, not just at build time -- falling
-// back to URL if DEPLOY_PRIME_URL is somehow unset. No branch name, deploy
-// ID, or any other identifier is hardcoded anywhere in this resolution.
+// Since checkout has been working end-to-end on this branch deploy this
+// entire session (orders created, payments initiated) -- and both
+// orders-create.ts's CheckoutDisabledInProductionError and this file's own
+// 503 checkout_disabled guard immediately below trigger whenever
+// isProductionContext() is true -- isProductionContext() MUST already be
+// returning false at Function runtime on this branch deploy (otherwise
+// none of that would have worked at all). So the bug was never in the
+// production/non-production branch itself; it was in the non-production
+// fallback chain: DEPLOY_PRIME_URL was apparently not populated (or not
+// truthy) at Function runtime for this branch deploy specifically, despite
+// being documented as available in the Functions scope generally, so
+// `process.env.DEPLOY_PRIME_URL || process.env.URL` fell straight through
+// to the production URL.
+//
+// Round 2: added DEPLOY_URL (the unique per-deploy URL, e.g.
+// https://<deploy-id>--diet4life.netlify.app -- still 100%
+// Netlify-controlled, still never the request/response for this same
+// invocation) as a second fallback before URL, and added the diagnostics
+// below (logged from the handler) so the NEXT real branch-deploy payment
+// shows, in the function logs, exactly which of CONTEXT / URL / DEPLOY_URL
+// / DEPLOY_PRIME_URL were actually set and what this function resolved --
+// confirming (or correcting) this reasoning against real values, not just
+// documentation. DEPLOY_PRIME_URL is still tried first since it's the one
+// documented to be the *stable* branch-alias URL
+// (claude-tool-usage-check-htkbjz--diet4life.netlify.app) rather than a
+// per-deploy hash; DEPLOY_URL is a safety net, not the preferred source.
+// Production is still pinned to URL unconditionally, unchanged from round 1.
 export function resolveSiteBaseUrl(): string {
   if (isProductionContext()) {
     return process.env.URL ?? "";
   }
-  return process.env.DEPLOY_PRIME_URL || process.env.URL || "";
+  return process.env.DEPLOY_PRIME_URL || process.env.DEPLOY_URL || process.env.URL || "";
+}
+
+// Hostname-only extraction for the temporary diagnostic log below -- even
+// though none of these URLs are secret, logging only the hostname (never
+// the full URL, and never a query string, which could carry a token) is
+// the safest option that still answers "which deploy did this resolve
+// to". Never throws.
+export function safeHostname(value: string | undefined): string {
+  if (!value) return "unset";
+  try {
+    return new URL(value).hostname;
+  } catch {
+    return "unparseable";
+  }
 }
 
 export const handler: Handler = async (event, context) => {
@@ -293,6 +320,16 @@ export const handler: Handler = async (event, context) => {
   }
 
   const siteUrl = resolveSiteBaseUrl();
+  // TEMPORARY diagnostics (remove once the branch-deploy redirectUrl bug
+  // is confirmed fixed against real logs) -- hostnames only, no secrets,
+  // no query strings, no full URLs. See resolveSiteBaseUrl()'s comment for
+  // why this exists.
+  console.log(
+    `payments-initiate[${requestId}] diag context=${process.env.CONTEXT ?? "unset"} ` +
+      `isProduction=${isProductionContext()} urlHost=${safeHostname(process.env.URL)} ` +
+      `deployUrlHost=${safeHostname(process.env.DEPLOY_URL)} deployPrimeUrlHost=${safeHostname(process.env.DEPLOY_PRIME_URL)} ` +
+      `resolvedHost=${safeHostname(siteUrl)}`,
+  );
   let netopiaRequestBody: ReturnType<typeof buildNetopiaRequestBody>;
   try {
     netopiaRequestBody = buildNetopiaRequestBody(order, amount, currency, posSignature, siteUrl, publicStatusToken);

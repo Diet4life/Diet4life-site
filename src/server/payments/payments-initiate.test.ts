@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { buildNetopiaRequestBody, resolveSiteBaseUrl, UnknownCountryCodeError } from "../../../netlify/functions/payments-initiate";
+import {
+  buildNetopiaRequestBody,
+  resolveSiteBaseUrl,
+  safeHostname,
+  UnknownCountryCodeError,
+} from "../../../netlify/functions/payments-initiate";
 
 // Minimal stand-in matching getOrderForPaymentInitiation()'s return shape
 // (src/server/orders/orderService.ts) -- only the fields buildNetopiaRequestBody
@@ -140,7 +145,7 @@ describe("buildNetopiaRequestBody", () => {
 });
 
 describe("resolveSiteBaseUrl", () => {
-  const ENV_KEYS = ["CONTEXT", "URL", "DEPLOY_PRIME_URL"] as const;
+  const ENV_KEYS = ["CONTEXT", "URL", "DEPLOY_URL", "DEPLOY_PRIME_URL"] as const;
   const saved: Record<string, string | undefined> = {};
 
   afterEach(() => {
@@ -163,22 +168,34 @@ describe("resolveSiteBaseUrl", () => {
     expect(resolveSiteBaseUrl.length).toBe(0);
   });
 
-  it("production URLs: pins to URL (the custom domain), even if DEPLOY_PRIME_URL points somewhere else", () => {
+  it("production URLs: pins to URL (the custom domain), even if DEPLOY_PRIME_URL/DEPLOY_URL point somewhere else", () => {
     setEnv({
       CONTEXT: "production",
       URL: "https://diet4lifeconcept.ro",
+      DEPLOY_URL: "https://deadbeef123--diet4life.netlify.app",
       DEPLOY_PRIME_URL: "https://diet4life.netlify.app",
     });
     expect(resolveSiteBaseUrl()).toBe("https://diet4lifeconcept.ro");
   });
 
-  it("branch-deploy URLs: uses DEPLOY_PRIME_URL, not the production URL -- this is the actual bug fix", () => {
+  it("branch-deploy URLs: uses DEPLOY_PRIME_URL first when it's set -- the actual required branch-deploy URL", () => {
     setEnv({
       CONTEXT: "branch-deploy",
       URL: "https://diet4lifeconcept.ro",
+      DEPLOY_URL: "https://deadbeef123--diet4life.netlify.app",
       DEPLOY_PRIME_URL: "https://claude-tool-usage-check-htkbjz--diet4life.netlify.app",
     });
     expect(resolveSiteBaseUrl()).toBe("https://claude-tool-usage-check-htkbjz--diet4life.netlify.app");
+  });
+
+  it("branch-deploy URLs: falls back to DEPLOY_URL when DEPLOY_PRIME_URL is unset -- covers the case observed in production, where DEPLOY_PRIME_URL was apparently not populated at Function runtime", () => {
+    setEnv({
+      CONTEXT: "branch-deploy",
+      URL: "https://diet4lifeconcept.ro",
+      DEPLOY_URL: "https://deadbeef123--diet4life.netlify.app",
+      DEPLOY_PRIME_URL: undefined,
+    });
+    expect(resolveSiteBaseUrl()).toBe("https://deadbeef123--diet4life.netlify.app");
   });
 
   it("deploy-preview URLs: also uses DEPLOY_PRIME_URL", () => {
@@ -190,13 +207,28 @@ describe("resolveSiteBaseUrl", () => {
     expect(resolveSiteBaseUrl()).toBe("https://deploy-preview-12--diet4life.netlify.app");
   });
 
-  it("falls back to URL in a non-production context if DEPLOY_PRIME_URL is unset (e.g. local netlify dev)", () => {
-    setEnv({ CONTEXT: "dev", URL: "https://diet4lifeconcept.ro", DEPLOY_PRIME_URL: undefined });
+  it("falls back to URL in a non-production context only when both DEPLOY_PRIME_URL and DEPLOY_URL are unset (e.g. local netlify dev)", () => {
+    setEnv({ CONTEXT: "dev", URL: "https://diet4lifeconcept.ro", DEPLOY_URL: undefined, DEPLOY_PRIME_URL: undefined });
     expect(resolveSiteBaseUrl()).toBe("https://diet4lifeconcept.ro");
   });
 
   it("returns an empty string, never throws, when nothing is set at all", () => {
-    setEnv({ CONTEXT: undefined, URL: undefined, DEPLOY_PRIME_URL: undefined });
+    setEnv({ CONTEXT: undefined, URL: undefined, DEPLOY_URL: undefined, DEPLOY_PRIME_URL: undefined });
     expect(resolveSiteBaseUrl()).toBe("");
+  });
+});
+
+describe("safeHostname", () => {
+  it("extracts only the hostname, never the protocol, path, or query string", () => {
+    expect(safeHostname("https://claude-tool-usage-check-htkbjz--diet4life.netlify.app/checkout/retur?token=SECRET")).toBe(
+      "claude-tool-usage-check-htkbjz--diet4life.netlify.app",
+    );
+    expect(safeHostname("https://diet4lifeconcept.ro")).toBe("diet4lifeconcept.ro");
+  });
+
+  it("never throws and never leaks a secret-looking value -- returns a fixed label instead", () => {
+    expect(safeHostname(undefined)).toBe("unset");
+    expect(safeHostname("")).toBe("unset");
+    expect(safeHostname("not a url at all, could be anything")).toBe("unparseable");
   });
 });
