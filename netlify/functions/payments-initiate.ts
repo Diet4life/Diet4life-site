@@ -124,6 +124,12 @@ export function buildNetopiaRequestBody(
   return {
     config: {
       notifyUrl: `${siteUrl}/.netlify/functions/payments-netopia-notify`,
+      // Still requested with ?token=... (the stronger, unguessable
+      // identifier) -- but confirmed on a real sandbox payment that
+      // NETOPIA's own redirect drops this and lands the browser on
+      // ?orderId=<order_number> instead. CheckoutReturn.tsx/orders-status.ts
+      // handle both; kept as ?token= here in case some other NETOPIA flow
+      // does preserve it.
       redirectUrl: `${siteUrl}/checkout/retur?token=${encodeURIComponent(publicStatusToken)}`,
       language: "ro",
     },

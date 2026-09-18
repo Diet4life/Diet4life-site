@@ -79,9 +79,16 @@ export const products = pgTable("products", {
 });
 
 // ---- orders -----------------------------------------------------------
-// public_status_token is the only identifier ever exposed to the browser
-// for status lookups -- order_number is a human-readable/sequential label
-// (invoice-facing) and must never be used to resolve order status.
+// public_status_token is the preferred identifier exposed to the browser
+// for status lookups (256 bits of randomness). order_number is a
+// human-readable/sequential-looking label (invoice-facing) -- it is also
+// accepted as a fallback read-only status-lookup key (see
+// getOrderByOrderNumber() in orderService.ts and
+// netlify/functions/orders-status.ts), because NETOPIA's hosted-page
+// return redirect was observed to drop the token we request and
+// substitute its own ?orderId=<order_number> instead. Neither identifier
+// -- token or order_number -- can ever be used to set order.status; only a
+// verified server-side NETOPIA notify may do that.
 
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),

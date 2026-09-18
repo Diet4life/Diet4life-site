@@ -6,8 +6,11 @@ export function generatePublicStatusToken(): string {
   return randomBytes(32).toString("base64url");
 }
 
-// Human-facing, invoice-style order number. Sequential-looking but NOT used
-// for status lookups (see public_status_token) and not a security boundary.
+// Human-facing, invoice-style order number. Sequential-looking, not a
+// security boundary -- public_status_token remains the preferred status-
+// lookup identifier, but order_number is also accepted as a read-only
+// fallback (see getOrderByOrderNumber() in orderService.ts) since NETOPIA's
+// hosted-page return redirect echoes this back as ?orderId=, not the token.
 export function generateOrderNumber(): string {
   const year = new Date().getFullYear();
   const suffix = randomBytes(4).toString("hex").toUpperCase();

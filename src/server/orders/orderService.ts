@@ -139,25 +139,55 @@ export async function createOrder(input: CreateOrderInput) {
   throw lastError instanceof Error ? lastError : new Error("failed to create order");
 }
 
-// Resolves an order strictly by its public_status_token -- never by
-// order_number or id. Returns only the minimum the checkout-result UI
-// needs; billing_details/patient_details are never included.
+// Shared by getOrderByPublicToken() and getOrderByOrderNumber() below --
+// both must expose exactly the same minimal, public fields regardless of
+// which identifier resolved the row. Never billing_details/patient_details.
+const PUBLIC_ORDER_STATUS_FIELDS = {
+  orderNumber: orders.orderNumber,
+  status: orders.status,
+  productName: orders.productNameSnapshot,
+  priceSnapshotCents: orders.priceSnapshotCents,
+  currency: orders.currency,
+  invoiceStatus: orders.invoiceStatus,
+  deliveryStatus: orders.deliveryStatus,
+  productType: products.productType,
+};
+
+// Resolves an order strictly by its public_status_token. Returns only the
+// minimum the checkout-result UI needs; billing_details/patient_details are
+// never included.
 export async function getOrderByPublicToken(token: string) {
   const db = getDb();
   const [row] = await db
-    .select({
-      orderNumber: orders.orderNumber,
-      status: orders.status,
-      productName: orders.productNameSnapshot,
-      priceSnapshotCents: orders.priceSnapshotCents,
-      currency: orders.currency,
-      invoiceStatus: orders.invoiceStatus,
-      deliveryStatus: orders.deliveryStatus,
-      productType: products.productType,
-    })
+    .select(PUBLIC_ORDER_STATUS_FIELDS)
     .from(orders)
     .innerJoin(products, eq(orders.productId, products.id))
     .where(eq(orders.publicStatusToken, token));
+
+  return row ?? null;
+}
+
+// Resolves an order by its human-facing order_number -- the "orderID"
+// NETOPIA echoes back on its hosted-page return redirect. Added because,
+// on a real sandbox payment, NETOPIA's redirect to redirectUrl dropped the
+// ?token=<public_status_token> we requested entirely and substituted its
+// own ?orderId=<order_number> instead (see CheckoutReturn.tsx and
+// netlify/functions/orders-status.ts's resolveOrderIdentifier()).
+//
+// order_number is still NOT a security boundary for payment authorization
+// -- it never has been and still isn't -- but this is a strictly read-only
+// lookup that returns the exact same minimal, public fields as
+// getOrderByPublicToken() above (no billing/patient data). There is no
+// write path here at all: only a verified server-side NETOPIA notify may
+// ever change order.status (payments-netopia-notify.ts, still a stub,
+// still never marks anything paid).
+export async function getOrderByOrderNumber(orderNumber: string) {
+  const db = getDb();
+  const [row] = await db
+    .select(PUBLIC_ORDER_STATUS_FIELDS)
+    .from(orders)
+    .innerJoin(products, eq(orders.productId, products.id))
+    .where(eq(orders.orderNumber, orderNumber));
 
   return row ?? null;
 }

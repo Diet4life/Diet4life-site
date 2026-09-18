@@ -4,23 +4,33 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { StatusStates } from "@/components/checkout/StatusStates";
 import type { PublicOrderStatus } from "@/lib/checkout/types";
 
-// Reads the order strictly via the public_status_token query param -- never
-// order_number/id. This is also where a real NETOPIA redirect will land in
-// Phase 2; for now it reflects whatever the order's real status is
-// (pending_payment, since no payment provider exists yet).
+// Reads the order via one of two query params, both strictly read-only
+// lookups on orders-status.ts (never order paid-status, never billing/
+// patient data): the public_status_token we ourselves request as
+// ?token=... in payments-initiate.ts's redirectUrl, preferred whenever
+// present, or ?orderId=<order_number> as a fallback -- confirmed necessary
+// on a real sandbox payment, where NETOPIA's hosted-page return redirect
+// dropped our ?token= entirely and substituted its own ?orderId= instead.
 export default function CheckoutReturn() {
   const { language } = useLanguage();
   const ro = language === "ro";
-  const [state, setState] = useState<"loading" | "missing-token" | "not-found" | PublicOrderStatus>("loading");
+  const [state, setState] = useState<"loading" | "missing-identifier" | "not-found" | PublicOrderStatus>("loading");
 
   useEffect(() => {
-    const token = new URLSearchParams(window.location.search).get("token");
-    if (!token) {
-      setState("missing-token");
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const orderId = params.get("orderId");
+    const query = token
+      ? `token=${encodeURIComponent(token)}`
+      : orderId
+        ? `orderId=${encodeURIComponent(orderId)}`
+        : null;
+    if (!query) {
+      setState("missing-identifier");
       return;
     }
     let cancelled = false;
-    fetch(`/.netlify/functions/orders-status?token=${encodeURIComponent(token)}`)
+    fetch(`/.netlify/functions/orders-status?${query}`)
       .then((res) => {
         if (res.status === 404) return null;
         if (!res.ok) throw new Error("failed");
@@ -47,7 +57,7 @@ export default function CheckoutReturn() {
           </div>
         )}
 
-        {(state === "missing-token" || state === "not-found") && (
+        {(state === "missing-identifier" || state === "not-found") && (
           <div className="rounded-2xl border border-border bg-card shadow-sm p-8 sm:p-10 text-center">
             <HelpCircle className="w-14 h-14 text-muted-foreground mx-auto mb-5" />
             <h1 className="font-serif font-bold text-2xl text-foreground mb-2">
