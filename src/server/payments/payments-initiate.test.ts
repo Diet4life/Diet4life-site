@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { buildNetopiaRequestBody, UnknownCountryCodeError } from "../../../netlify/functions/payments-initiate";
+import { afterEach, describe, expect, it } from "vitest";
+import { buildNetopiaRequestBody, resolveSiteBaseUrl, UnknownCountryCodeError } from "../../../netlify/functions/payments-initiate";
 
 // Minimal stand-in matching getOrderForPaymentInitiation()'s return shape
 // (src/server/orders/orderService.ts) -- only the fields buildNetopiaRequestBody
@@ -130,5 +130,73 @@ describe("buildNetopiaRequestBody", () => {
     const body = buildNetopiaRequestBody(companyOrder, 300, "RON", "POS-SIG", "https://example.netlify.app", "tok123");
     expect(body.order.billing.firstName).toBe("Acme");
     expect(body.order.billing.lastName).toBe("Nutriție SRL");
+  });
+
+  it("config.notifyUrl and config.redirectUrl always use the exact same trusted base passed in", () => {
+    const body = buildNetopiaRequestBody(baseOrder, 300, "RON", "POS-SIG", "https://claude-tool-usage-check-htkbjz--diet4life.netlify.app", "tok123");
+    expect(body.config.notifyUrl.startsWith("https://claude-tool-usage-check-htkbjz--diet4life.netlify.app/")).toBe(true);
+    expect(body.config.redirectUrl.startsWith("https://claude-tool-usage-check-htkbjz--diet4life.netlify.app/")).toBe(true);
+  });
+});
+
+describe("resolveSiteBaseUrl", () => {
+  const ENV_KEYS = ["CONTEXT", "URL", "DEPLOY_PRIME_URL"] as const;
+  const saved: Record<string, string | undefined> = {};
+
+  afterEach(() => {
+    for (const key of ENV_KEYS) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+  });
+
+  function setEnv(vars: Partial<Record<(typeof ENV_KEYS)[number], string | undefined>>) {
+    for (const key of ENV_KEYS) {
+      saved[key] = process.env[key];
+      const value = vars[key];
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+
+  it("takes no arguments -- there is no way to pass a browser-supplied Host/Origin into it (no open-redirect surface)", () => {
+    expect(resolveSiteBaseUrl.length).toBe(0);
+  });
+
+  it("production URLs: pins to URL (the custom domain), even if DEPLOY_PRIME_URL points somewhere else", () => {
+    setEnv({
+      CONTEXT: "production",
+      URL: "https://diet4lifeconcept.ro",
+      DEPLOY_PRIME_URL: "https://diet4life.netlify.app",
+    });
+    expect(resolveSiteBaseUrl()).toBe("https://diet4lifeconcept.ro");
+  });
+
+  it("branch-deploy URLs: uses DEPLOY_PRIME_URL, not the production URL -- this is the actual bug fix", () => {
+    setEnv({
+      CONTEXT: "branch-deploy",
+      URL: "https://diet4lifeconcept.ro",
+      DEPLOY_PRIME_URL: "https://claude-tool-usage-check-htkbjz--diet4life.netlify.app",
+    });
+    expect(resolveSiteBaseUrl()).toBe("https://claude-tool-usage-check-htkbjz--diet4life.netlify.app");
+  });
+
+  it("deploy-preview URLs: also uses DEPLOY_PRIME_URL", () => {
+    setEnv({
+      CONTEXT: "deploy-preview",
+      URL: "https://diet4lifeconcept.ro",
+      DEPLOY_PRIME_URL: "https://deploy-preview-12--diet4life.netlify.app",
+    });
+    expect(resolveSiteBaseUrl()).toBe("https://deploy-preview-12--diet4life.netlify.app");
+  });
+
+  it("falls back to URL in a non-production context if DEPLOY_PRIME_URL is unset (e.g. local netlify dev)", () => {
+    setEnv({ CONTEXT: "dev", URL: "https://diet4lifeconcept.ro", DEPLOY_PRIME_URL: undefined });
+    expect(resolveSiteBaseUrl()).toBe("https://diet4lifeconcept.ro");
+  });
+
+  it("returns an empty string, never throws, when nothing is set at all", () => {
+    setEnv({ CONTEXT: undefined, URL: undefined, DEPLOY_PRIME_URL: undefined });
+    expect(resolveSiteBaseUrl()).toBe("");
   });
 });

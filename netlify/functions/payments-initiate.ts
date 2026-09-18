@@ -202,6 +202,38 @@ function describeNetopiaFailure(parsedBody: Record<string, unknown> | null, rawB
   return `body="${redactSensitive(rawBody).slice(0, 300)}"`;
 }
 
+// The base URL used to build config.notifyUrl/config.redirectUrl. Takes no
+// arguments -- reads only Netlify-injected, read-only, server-side env
+// vars, never a browser-supplied Host/Origin header (which would be
+// attacker-controllable and could enable an open redirect).
+//
+// Root cause this fixes: the previous code always read process.env.URL,
+// which Netlify documents as the site's primary/production domain
+// (https://diet4lifeconcept.ro) REGARDLESS of which deploy context is
+// actually running. That's exactly why invoking this function from the
+// claude-tool-usage-check-htkbjz branch deploy built a redirectUrl
+// pointing at production, and NETOPIA correctly followed it -- sending the
+// browser to https://diet4lifeconcept.ro/checkout/retur?orderId=... after
+// a sandbox payment made from the branch deploy, instead of back to the
+// branch deploy itself.
+//
+// Fix: production is explicitly pinned to URL -- the one variable Netlify
+// documents as unambiguously always the primary/custom domain -- so
+// production behavior is unchanged and never depends on a less-certain
+// variable. Every other context (branch-deploy, deploy-preview, local
+// `netlify dev`) uses DEPLOY_PRIME_URL, Netlify's own per-context "primary
+// URL for this deploy" variable (the branch-deploy subdomain for a branch
+// deploy, the deploy-preview subdomain for a preview) -- confirmed
+// available inside Functions at runtime, not just at build time -- falling
+// back to URL if DEPLOY_PRIME_URL is somehow unset. No branch name, deploy
+// ID, or any other identifier is hardcoded anywhere in this resolution.
+export function resolveSiteBaseUrl(): string {
+  if (isProductionContext()) {
+    return process.env.URL ?? "";
+  }
+  return process.env.DEPLOY_PRIME_URL || process.env.URL || "";
+}
+
 export const handler: Handler = async (event, context) => {
   const requestId = context.awsRequestId;
 
@@ -260,7 +292,7 @@ export const handler: Handler = async (event, context) => {
     return { statusCode: 500, body: JSON.stringify({ error: "invalid_order_amount" }) };
   }
 
-  const siteUrl = process.env.URL ?? ""; // Netlify's own injected site-URL var (not one we define)
+  const siteUrl = resolveSiteBaseUrl();
   let netopiaRequestBody: ReturnType<typeof buildNetopiaRequestBody>;
   try {
     netopiaRequestBody = buildNetopiaRequestBody(order, amount, currency, posSignature, siteUrl, publicStatusToken);
