@@ -4,6 +4,7 @@ import {
   isValidHttpsUrl,
   resolveSiteBaseUrl,
   safeHostname,
+  stripTrailingSlash,
   UnknownCountryCodeError,
 } from "../../../netlify/functions/payments-initiate";
 
@@ -230,6 +231,34 @@ describe("resolveSiteBaseUrl", () => {
   it("returns an empty string, never throws, when nothing is set at all", () => {
     setEnv({ CONTEXT: undefined, URL: undefined, D4L_SITE_BASE_URL: undefined });
     expect(resolveSiteBaseUrl()).toBe("");
+  });
+
+  it("strips a trailing slash from D4L_SITE_BASE_URL so notifyUrl/redirectUrl never get a double slash", () => {
+    setEnv({
+      CONTEXT: "branch-deploy",
+      URL: "https://diet4lifeconcept.ro",
+      D4L_SITE_BASE_URL: "https://claude-tool-usage-check-htkbjz--diet4life.netlify.app/",
+    });
+    expect(resolveSiteBaseUrl()).toBe("https://claude-tool-usage-check-htkbjz--diet4life.netlify.app");
+  });
+
+  it("strips a trailing slash from URL in production too", () => {
+    setEnv({ CONTEXT: "production", URL: "https://diet4lifeconcept.ro/", D4L_SITE_BASE_URL: undefined });
+    expect(resolveSiteBaseUrl()).toBe("https://diet4lifeconcept.ro");
+  });
+});
+
+describe("stripTrailingSlash", () => {
+  it("removes exactly one trailing slash", () => {
+    expect(stripTrailingSlash("https://example.netlify.app/")).toBe("https://example.netlify.app");
+  });
+
+  it("leaves a URL without a trailing slash unchanged", () => {
+    expect(stripTrailingSlash("https://example.netlify.app")).toBe("https://example.netlify.app");
+  });
+
+  it("leaves an empty string unchanged", () => {
+    expect(stripTrailingSlash("")).toBe("");
   });
 });
 

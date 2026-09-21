@@ -234,15 +234,26 @@ function describeNetopiaFailure(parsedBody: Record<string, unknown> | null, rawB
 // controllable and could enable an open redirect). No branch name or
 // Netlify hostname is hardcoded anywhere in this file; the actual branch
 // URL lives only in Netlify's own environment-variable configuration.
+//
+// Both branches strip a trailing slash before returning: this value is
+// always interpolated as `${siteUrl}/checkout/retur` /
+// `${siteUrl}/.netlify/functions/...` in buildNetopiaRequestBody(), so a
+// base URL entered with a trailing slash (an easy copy-paste mistake when
+// setting D4L_SITE_BASE_URL by hand in Netlify's dashboard) would otherwise
+// produce a double slash in both notifyUrl and redirectUrl.
 export function resolveSiteBaseUrl(): string {
   if (isProductionContext()) {
-    return process.env.URL ?? "";
+    return stripTrailingSlash(process.env.URL ?? "");
   }
   const custom = process.env.D4L_SITE_BASE_URL;
   if (custom && isValidHttpsUrl(custom)) {
-    return custom;
+    return stripTrailingSlash(custom);
   }
-  return process.env.URL ?? "";
+  return stripTrailingSlash(process.env.URL ?? "");
+}
+
+export function stripTrailingSlash(url: string): string {
+  return url.endsWith("/") ? url.slice(0, -1) : url;
 }
 
 // HTTPS-only, well-formed-URL validation for D4L_SITE_BASE_URL. Rejects
