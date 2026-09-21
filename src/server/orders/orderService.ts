@@ -1,8 +1,9 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/server/db/client";
-import { billingDetails, orders, patientDetails, products } from "../../../db/schema";
+import { billingDetails, orders, patientDetails, payments, products } from "../../../db/schema";
 import { generateOrderNumber, generatePublicStatusToken } from "@/server/security/publicToken";
 import { isProductionContext } from "@/server/environment";
+import { resolveMonotonicOrderStatus, type OrderStatus } from "./netopiaStatusMapping";
 import type { BillingInput, PatientInput } from "@/lib/checkout/schemas";
 
 export class ProductNotFoundError extends Error {}
@@ -57,8 +58,22 @@ function patientRow(orderId: number, patient: PatientInput) {
   };
 }
 
+// Checks both err.code directly (the raw pg driver error shape) and
+// err.cause.code -- drizzle-orm@1.0.0-beta wraps every query error in a
+// DrizzleQueryError whose own .code is undefined, with the real pg error
+// (the one carrying .code === "23505") nested at .cause. Found via a real
+// scratch-Postgres duplicate-insert test while implementing
+// recordNetopiaNotification()'s idempotency path -- the original
+// top-level-only check silently never matched, so a genuine duplicate
+// notification threw instead of being caught as "duplicate". This also
+// retroactively fixes createOrder()'s order_number/public_status_token
+// collision-retry loop below, which had the same latent bug (never
+// exercised before, since a random-token collision is astronomically
+// unlikely to occur in ordinary testing).
 function isUniqueViolation(err: unknown): boolean {
-  return typeof err === "object" && err !== null && (err as { code?: string }).code === "23505";
+  const hasCode23505 = (value: unknown): boolean =>
+    typeof value === "object" && value !== null && (value as { code?: string }).code === "23505";
+  return hasCode23505(err) || hasCode23505((err as { cause?: unknown } | null)?.cause);
 }
 
 export async function listActiveProducts() {
@@ -232,4 +247,85 @@ export async function getOrderForPaymentInitiation(token: string) {
     .where(eq(orders.publicStatusToken, token));
 
   return row ?? null;
+}
+
+export interface RecordNetopiaNotificationInput {
+  orderNumber: string; // NETOPIA's echoed-back "orderID" -- our order_number
+  providerTransactionId: string; // NETOPIA's ntpID
+  providerStatus: string; // raw provider status/code text, for support/debugging only
+  mappedStatus: "paid" | "payment_failed" | "payment_processing";
+  amountCents: number; // as reported by NETOPIA for this transaction
+  // currency is deliberately NOT an input here -- it's read from the
+  // order itself inside the same transaction below, rather than trusted
+  // from the notification body (not confirmed to reliably carry one, and
+  // an order's currency is already known once it's found by order_number).
+}
+
+export type RecordNetopiaNotificationResult =
+  | { outcome: "order_not_found" }
+  | { outcome: "duplicate" }
+  | { outcome: "processed"; previousStatus: OrderStatus; newStatus: OrderStatus };
+
+// The only place order.status may ever move to "paid" -- called exclusively
+// from payments-netopia-notify.ts, and only after verifyNetopiaNotification()
+// has confirmed the notification is authentically from NETOPIA (see
+// src/server/security/netopiaVerification.ts). Nothing here trusts a
+// browser-supplied value of any kind.
+//
+// Idempotency has two layers:
+//   1. payments.provider_transaction_id is UNIQUE (see db/schema.ts) -- a
+//      second delivery of the exact same NETOPIA transaction hits that
+//      constraint and is reported back as "duplicate" without touching
+//      orders.status again.
+//   2. resolveMonotonicOrderStatus() (netopiaStatusMapping.ts) additionally
+//      refuses to move an order out of a terminal status (paid/
+//      payment_failed/cancelled/refunded), so even a *different* NETOPIA
+//      transaction ID that maps to a worse-sounding status than the
+//      order's current one (e.g. a late "processing" notification
+//      arriving after an earlier "paid" one, possible with at-least-once
+//      webhook delivery) can never regress an already-resolved order.
+// Both the payments insert and the conditional orders update happen inside
+// one transaction, so two near-simultaneous deliveries of the same
+// transaction can't both "win" a race and double-apply a status change.
+export async function recordNetopiaNotification(
+  input: RecordNetopiaNotificationInput,
+): Promise<RecordNetopiaNotificationResult> {
+  const db = getDb();
+
+  return db.transaction(async (tx) => {
+    const [order] = await tx
+      .select({ id: orders.id, status: orders.status, currency: orders.currency })
+      .from(orders)
+      .where(eq(orders.orderNumber, input.orderNumber));
+
+    if (!order) {
+      return { outcome: "order_not_found" };
+    }
+
+    try {
+      await tx.insert(payments).values({
+        orderId: order.id,
+        provider: "netopia",
+        providerTransactionId: input.providerTransactionId,
+        providerStatus: input.providerStatus,
+        amountCents: input.amountCents,
+        currency: order.currency,
+      });
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        return { outcome: "duplicate" };
+      }
+      throw err;
+    }
+
+    const nextStatus = resolveMonotonicOrderStatus(order.status, input.mappedStatus);
+    if (nextStatus !== null) {
+      await tx
+        .update(orders)
+        .set({ status: nextStatus, paidAt: nextStatus === "paid" ? new Date() : undefined })
+        .where(eq(orders.id, order.id));
+    }
+
+    return { outcome: "processed", previousStatus: order.status, newStatus: nextStatus ?? order.status };
+  });
 }
