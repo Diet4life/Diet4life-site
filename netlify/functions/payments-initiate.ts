@@ -105,6 +105,7 @@ export function buildNetopiaRequestBody(
   currency: string,
   posSignature: string,
   siteUrl: string,
+  notifyBaseUrl: string,
   publicStatusToken: string,
 ) {
   const { firstName, lastName } = splitName(
@@ -123,7 +124,14 @@ export function buildNetopiaRequestBody(
 
   return {
     config: {
-      notifyUrl: `${siteUrl}/.netlify/functions/payments-netopia-notify`,
+      // notifyUrl deliberately uses its OWN base (notifyBaseUrl), separate
+      // from redirectUrl's siteUrl -- see resolveNotifyBaseUrl()'s comment
+      // below for why: Netlify's Visitor Access/team-SSO gate blocks
+      // server-to-server POSTs to the branch deploy's own domain (confirmed
+      // via a real failed sandbox notification: HTTP 401 before this
+      // function ever ran), so notify often needs a different, publicly
+      // reachable host than the browser redirect does.
+      notifyUrl: `${notifyBaseUrl}/.netlify/functions/payments-netopia-notify`,
       // Still requested with ?token=... (the stronger, unguessable
       // identifier) -- but confirmed on a real sandbox payment that
       // NETOPIA's own redirect drops this and lands the browser on
@@ -256,6 +264,45 @@ export function stripTrailingSlash(url: string): string {
   return url.endsWith("/") ? url.slice(0, -1) : url;
 }
 
+// Round 4: the site's Netlify Visitor Access is team-SSO-gated and cannot
+// be made public on the current plan (confirmed by the user in her own
+// dashboard). A real sandbox payment proved this blocks server-to-server
+// requests too, not just browser page loads -- NETOPIA's notify POST to the
+// branch deploy's own domain got HTTP 401 from Netlify's own access layer
+// before payments-netopia-notify.ts ever ran. redirectUrl doesn't have this
+// problem (the browser's own session on the branch deploy is already
+// authenticated via team SSO), so only notifyUrl needs a way to point
+// somewhere else.
+//
+// A same-site "relay" function was considered and rejected: Visitor Access
+// gates the whole site, including every Function on it, so a relay
+// forwarding to this same domain would hit the identical 401 -- there is no
+// in-repo code fix for an access-control layer enforced in front of the
+// whole site. The viable path is a second, separate Netlify site (a
+// standard, well-supported Netlify capability: multiple sites can be linked
+// to the same git repo/branch, each with its own independently configured
+// settings, including Visitor Access) deployed as a sandbox-only public
+// relay for exactly this one Function -- see the accompanying report for
+// the manual dashboard steps, which only the user can do from here.
+//
+// D4L_NETOPIA_NOTIFY_BASE_URL is that second site's URL, set by hand,
+// scoped the same way as D4L_SITE_BASE_URL (never Production). When unset
+// or invalid, this simply falls back to resolveSiteBaseUrl() -- i.e.
+// notifyUrl and redirectUrl share the same base exactly as before this
+// variable existed, so leaving it unset changes nothing. Production is
+// pinned to URL unconditionally, exactly like resolveSiteBaseUrl(), and
+// never reads this variable at all.
+export function resolveNotifyBaseUrl(): string {
+  if (isProductionContext()) {
+    return stripTrailingSlash(process.env.URL ?? "");
+  }
+  const custom = process.env.D4L_NETOPIA_NOTIFY_BASE_URL;
+  if (custom && isValidHttpsUrl(custom)) {
+    return stripTrailingSlash(custom);
+  }
+  return resolveSiteBaseUrl();
+}
+
 // HTTPS-only, well-formed-URL validation for D4L_SITE_BASE_URL. Rejects
 // anything that isn't exactly a valid absolute https:// URL (plain http://,
 // a bare hostname with no scheme, javascript:, an empty string, garbage
@@ -342,6 +389,7 @@ export const handler: Handler = async (event, context) => {
   }
 
   const siteUrl = resolveSiteBaseUrl();
+  const notifyBaseUrl = resolveNotifyBaseUrl();
   // TEMPORARY diagnostics (remove once the branch-deploy redirectUrl fix is
   // confirmed against real logs) -- hostnames only, no secrets, no paths,
   // no query strings, no full URLs. context/deployUrlHost/deployPrimeUrlHost
@@ -353,11 +401,12 @@ export const handler: Handler = async (event, context) => {
     `payments-initiate[${requestId}] diag context=${process.env.CONTEXT ?? "unset"} ` +
       `isProduction=${isProductionContext()} urlHost=${safeHostname(process.env.URL)} ` +
       `deployUrlHost=${safeHostname(process.env.DEPLOY_URL)} deployPrimeUrlHost=${safeHostname(process.env.DEPLOY_PRIME_URL)} ` +
-      `d4lSiteBaseUrlHost=${safeHostname(process.env.D4L_SITE_BASE_URL)} resolvedHost=${safeHostname(siteUrl)}`,
+      `d4lSiteBaseUrlHost=${safeHostname(process.env.D4L_SITE_BASE_URL)} resolvedHost=${safeHostname(siteUrl)} ` +
+      `d4lNotifyBaseUrlHost=${safeHostname(process.env.D4L_NETOPIA_NOTIFY_BASE_URL)} resolvedNotifyHost=${safeHostname(notifyBaseUrl)}`,
   );
   let netopiaRequestBody: ReturnType<typeof buildNetopiaRequestBody>;
   try {
-    netopiaRequestBody = buildNetopiaRequestBody(order, amount, currency, posSignature, siteUrl, publicStatusToken);
+    netopiaRequestBody = buildNetopiaRequestBody(order, amount, currency, posSignature, siteUrl, notifyBaseUrl, publicStatusToken);
   } catch (err) {
     if (err instanceof UnknownCountryCodeError) {
       console.error(`payments-initiate[${requestId}] failure unknown_country_code`);

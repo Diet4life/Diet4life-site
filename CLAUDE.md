@@ -1590,6 +1590,109 @@ actual live sandbox request/response (blocked from this sandbox's network on
 both counts) — that can only happen from a real Deploy Preview/branch
 deploy, which is exactly where she needs to test this next.
 
+## NETOPIA Phase 2 — sandbox-only public notify relay support (code side) — done; infra side needs the user's manual Netlify dashboard action
+
+User reported that Netlify Visitor Access (team-SSO gate) cannot be made
+Public on the current plan/configuration, and confirmed via a real failed
+sandbox payment that this blocks server-to-server requests too, not just
+browser page loads: NETOPIA's notify POST to the branch deploy's own domain
+got HTTP 401 from Netlify's own access layer before `payments-netopia-notify`
+ever ran. Explicit constraints: do not weaken/bypass the JWT/signature
+verification, do not accept browser/query-string status as authoritative,
+do not expose secrets, do not modify production checkout policy, do not mark
+paid unless the existing verification logic passes. Preferred architecture,
+her words: "reuse the existing `payments-netopia-notify` handler/verification
+logic rather than duplicating it... Do not guess. Inspect what is actually
+supported."
+
+**Investigated first, before writing code**: a same-site "relay" function
+cannot work — Visitor Access gates the whole site, including every Function
+on it, so anything forwarding to this same domain hits the identical 401.
+There is no in-repo code fix for an access-control layer enforced in front
+of the whole site. This sandbox has no Netlify dashboard/API access (no
+OAuth here), so the actual recommendation rests on genuinely standard,
+well-documented Netlify product behavior — multiple sites can be linked to
+one git repo/branch, each independently configured, including its own
+Visitor Access — not on anything verified against her specific account/plan.
+**Whether Visitor Access is site-level (so a second site can be public even
+if the first is gated) or team-level (enforced across every site in the
+team regardless) is unknown and can only be checked by her, in her own
+Netlify dashboard.** If it turns out to be team-enforced, the fallback is a
+genuinely separate Netlify account/team outside any org-enforced SSO policy.
+
+**Code implemented (zero duplication, per her explicit instruction)**:
+existing `payments-netopia-notify.ts` is deployable as-is to a second Netlify
+site pointed at the same repo/branch — no new function file, no copied
+verification/DB logic. Two changes:
+- `payments-netopia-notify.ts` — added an `isProductionContext()` guard as
+  the very first check in the handler (503, before any header/body parsing),
+  mirroring `payments-initiate.ts`'s existing pattern. Previously this
+  function's only production protection was `NETOPIA_PUBLIC_KEY` being unset
+  there — a config omission, not a structural block. Matters specifically
+  because this file may now run on a second, standalone Netlify site: that
+  site must never be able to mark a real order paid even by misconfiguration.
+- `payments-initiate.ts` — `config.notifyUrl` and `config.redirectUrl` now
+  resolve from two **independently configurable** bases instead of one
+  shared `siteUrl`. New `resolveNotifyBaseUrl()` (mirrors `resolveSiteBaseUrl()`'s
+  shape/validation exactly — HTTPS-only, `stripTrailingSlash()`, production
+  pinned unconditionally to `URL`): reads a new env var
+  `D4L_NETOPIA_NOTIFY_BASE_URL`; if unset or invalid, falls back to
+  `resolveSiteBaseUrl()`'s own result, i.e. today's behavior (notify and
+  redirect sharing one base) is exactly preserved when the new variable
+  isn't set. `redirectUrl` still always uses `resolveSiteBaseUrl()`
+  (`D4L_SITE_BASE_URL`) unchanged — the browser's own session on the branch
+  deploy is already authenticated via team SSO, so redirect has never had
+  this problem. `buildNetopiaRequestBody()`'s signature grew one new
+  parameter (`notifyBaseUrl`, between `siteUrl` and `publicStatusToken`) —
+  every call site (the one real one in the handler, plus every test call)
+  updated accordingly.
+- `.env.example` — documents `D4L_NETOPIA_NOTIFY_BASE_URL`, same
+  hand-set/sandbox-only/never-a-secret framing as `D4L_SITE_BASE_URL`.
+
+**Manual steps only the user can do (not something this session can execute
+or verify)**:
+1. In the Netlify dashboard, create a second site from the same
+   `Diet4life/Diet4life-site` repo (same branch, `claude/tool-usage-check-htkbjz`,
+   or whichever the sandbox testing branch is) — a standard "add a new site
+   from an existing repo" flow, independent of the first site's settings.
+2. Check that new site's own Visitor Access setting. If it can be set to
+   Public (unlike the main site), that confirms Visitor Access is
+   site-level, not team-level, and this whole approach works. If it's still
+   forced to require login, Visitor Access is team-enforced and a genuinely
+   separate account/team is the only remaining option.
+3. If Public works: copy the same sandbox `NETOPIA_API_KEY` /
+   `NETOPIA_POS_SIGNATURE` / `NETOPIA_PUBLIC_KEY` values into the new site's
+   own environment variables (this session cannot read or copy real secret
+   values — never had them). This second site only ever needs to run
+   `payments-netopia-notify.ts`; it never initiates payments or serves the
+   checkout UI. Also give it the **same** `NETLIFY_DB_URL` connection string
+   as the branch-deploy site, so notifications land in the same test
+   database — I don't have and cannot obtain that real connection string
+   either.
+4. On the *original* branch-deploy site, set `D4L_NETOPIA_NOTIFY_BASE_URL`
+   to the new public site's URL, scoped to Branch deploys only (same scoping
+   discipline as `D4L_SITE_BASE_URL` — never Production).
+5. Re-run a sandbox payment and confirm NETOPIA's notify POST now reaches
+   the second site and the order transitions out of "Plată în așteptare".
+
+**Verified from this sandbox (no live network to Netlify/NETOPIA either
+way, same constraint as every prior NETOPIA round)**: `tsc --noEmit` clean
+(genuinely 0 output, not "same pre-existing error" — see the earlier
+tsc-fix round), `npx vitest run` 126/126 (was 41 unrelated + the prior
+NETOPIA rounds' tests; this round added the guard test in
+`payments-netopia-notify.test.ts` and the `resolveNotifyBaseUrl`/dual-base
+`buildNetopiaRequestBody` tests in `payments-initiate.test.ts`), `npm run
+build` clean (same one pre-existing chunk-size warning only). Both functions
+re-bundled with `esbuild --bundle` exactly as Netlify would and directly
+invoked in Node (not mocked): confirmed `CONTEXT=production` makes **both**
+`payments-initiate` (503 `checkout_disabled`, pre-existing) and
+`payments-netopia-notify` (503 `notify_disabled`, new this round) refuse to
+run at all, and confirmed the notify handler's existing fail-closed
+`public_key_not_configured` behavior is unaffected outside production.
+Grepped the production `npm run build` output (`dist/assets/*.js`) for
+"netopia" (any case) and both new/existing env var names — zero matches,
+same client-bundle-isolation guarantee as every prior round.
+
 ## Netlify
 
 - Site: `diet4life` (id `fb46b783-0032-4b51-971b-b255c590f8b8`), team requires

@@ -49,7 +49,7 @@ function buildEvent(body: string, token: string | undefined, queryStringParamete
   } as never;
 }
 
-const ENV_KEYS = ["NETOPIA_PUBLIC_KEY", "NETOPIA_POS_SIGNATURE"] as const;
+const ENV_KEYS = ["NETOPIA_PUBLIC_KEY", "NETOPIA_POS_SIGNATURE", "CONTEXT"] as const;
 const saved: Record<string, string | undefined> = {};
 
 beforeEach(() => {
@@ -57,6 +57,7 @@ beforeEach(() => {
   for (const key of ENV_KEYS) saved[key] = process.env[key];
   process.env.NETOPIA_PUBLIC_KEY = publicKey;
   process.env.NETOPIA_POS_SIGNATURE = POS_SIGNATURE;
+  delete process.env.CONTEXT;
 });
 
 afterEach(() => {
@@ -154,6 +155,13 @@ describe("payments-netopia-notify handler", () => {
     expect(res).toMatchObject({ statusCode: 200, body: JSON.stringify({ errorCode: 0 }) });
     // The order/status actually acted on came from the verified body, not the query string.
     expect(recordNetopiaNotification).toHaveBeenCalledWith(expect.objectContaining({ orderNumber: "D4L-2026-77354A78", mappedStatus: "paid" }));
+  });
+
+  it("refuses to run at all under a real production context, even with an otherwise fully valid, verified notification -- checked before signature verification", async () => {
+    process.env.CONTEXT = "production";
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-prod" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
   });
 
   it("never logs the verification token, the raw body, or anything billing-shaped", async () => {

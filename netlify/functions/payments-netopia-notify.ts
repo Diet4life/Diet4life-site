@@ -2,6 +2,7 @@ import type { Handler } from "@netlify/functions";
 import { verifyNetopiaNotification } from "@/server/security/netopiaVerification";
 import { recordNetopiaNotification } from "@/server/orders/orderService";
 import { mapNetopiaStatus } from "@/server/orders/netopiaStatusMapping";
+import { isProductionContext } from "@/server/environment";
 
 // Real NETOPIA v2 IPN/notify handler. See
 // src/server/security/netopiaVerification.ts's header comment for exactly
@@ -85,6 +86,23 @@ const ACK_REJECT = { statusCode: 400, headers: { "content-type": "application/js
 
 export const handler: Handler = async (event, context) => {
   const requestId = context.awsRequestId;
+
+  // Defense-in-depth, checked first, before anything else (mirrors
+  // payments-initiate.ts's own production guard). This endpoint's only
+  // *other* protection against running unverified in production is
+  // NETOPIA_PUBLIC_KEY being unset there -- a config omission, not a
+  // structural block. This guard matters specifically because this exact
+  // file is meant to be deployable as-is to a second, separate Netlify
+  // site dedicated only to relaying sandbox notifications (see
+  // resolveNotifyBaseUrl() in payments-initiate.ts) -- that second site
+  // must never be able to mark a real order paid even by misconfiguration.
+  if (isProductionContext()) {
+    return {
+      statusCode: 503,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ error: "notify_disabled" }),
+    };
+  }
 
   const rawBody: Buffer | string =
     event.isBase64Encoded && event.body ? Buffer.from(event.body, "base64") : (event.body ?? "");
