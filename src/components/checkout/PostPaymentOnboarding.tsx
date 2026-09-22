@@ -14,17 +14,11 @@ import { useJournalProgress } from "@/hooks/use-journal-progress";
 // more specific, deliberate value.
 const ACCENT = "#2F4F4F";
 
-// "Încarcă analizele" in the original spec would have meant building a
-// real upload-to-site widget for medical test results -- directly
-// contradicting this project's standing, twice-already-reconfirmed policy
-// ("NU crea sistem de upload. NU stoca analizele pe site.", see
-// Consultatii.tsx's Analize medicale step). Resolved (no strong preference
-// given either way) in favor of keeping that policy: no file ever reaches
-// this site. The CTA here is a plain mailto -- the same "send it directly,
-// don't store it" pattern already used for the journal's own upload/email
-// handoff elsewhere on Consultatii.tsx -- not a new upload mechanism.
-const ANALYSIS_MAILTO =
-  "mailto:contact@diet4lifeconcept.ro?subject=" + encodeURIComponent("Analize medicale - pregătire consultație");
+// Step 2 has deliberately NO CTA of any kind -- explicitly corrected after
+// the first round: no mailto, no upload widget. The patient is only ever
+// told to prepare what they already have and bring it up during the
+// consultation; nothing about medical analyses is ever transmitted through
+// the site or by email at this stage.
 
 export function PostPaymentOnboarding({ orderNumber }: { orderNumber: string }) {
   const { language } = useLanguage();
@@ -34,7 +28,7 @@ export function PostPaymentOnboarding({ orderNumber }: { orderNumber: string }) 
   const checklist = [
     { label: ro ? "Plata confirmată" : "Payment confirmed", done: true },
     { label: ro ? "Jurnal alimentar completat" : "Food journal completed", done: journalComplete },
-    { label: ro ? "Analize pregătite / încărcate" : "Medical tests ready / sent", done: false },
+    { label: ro ? "Analize pregătite pentru consultație" : "Medical tests ready for the consultation", done: false },
     { label: ro ? "Data consultației stabilită" : "Consultation date set", done: false },
   ];
 
@@ -97,21 +91,14 @@ export function PostPaymentOnboarding({ orderNumber }: { orderNumber: string }) 
               </h3>
               <p className="text-sm text-zinc-600 leading-relaxed mb-1">
                 {ro
-                  ? "Dacă ai analize medicale recente, le poți trimite înainte de consultație sau, dacă preferi, le poți păstra pentru a le discuta direct în timpul consultației."
-                  : "If you have recent medical test results, you can send them before your consultation or, if you prefer, keep them to discuss directly during the appointment."}
+                  ? "Dacă ai analize medicale recente, pregătește-le pentru consultație. Le vom putea discuta împreună în timpul întâlnirii."
+                  : "If you have recent medical test results, prepare them for the consultation. We'll be able to discuss them together during the appointment."}
               </p>
-              <p className="text-sm text-zinc-600 leading-relaxed mb-3">
+              <p className="text-sm text-zinc-600 leading-relaxed">
                 {ro
                   ? "Nu este necesar să faci analize noi doar pentru această etapă. Dacă vor fi utile investigații suplimentare, vom discuta acest lucru împreună."
                   : "You don't need to get new tests just for this step. If further tests would help, we'll discuss that together."}
               </p>
-              <a
-                href={ANALYSIS_MAILTO}
-                className="inline-flex text-sm font-medium underline underline-offset-2 hover:no-underline"
-                style={{ color: ACCENT }}
-              >
-                {ro ? "Trimite-le pe email (opțional)" : "Send them by email (optional)"}
-              </a>
             </div>
           </li>
 

@@ -42,7 +42,6 @@ export function resolveConfirmationRecipient(row: {
 }
 
 const JOURNAL_URL = "https://diet4lifeconcept.ro/consultatii";
-const ANALYSIS_MAILTO = "mailto:contact@diet4lifeconcept.ro";
 
 // Pure, exported for testing -- no network access, no env reads.
 export function buildOrderConfirmationEmail(ctx: OrderConfirmationContext): {
@@ -62,9 +61,9 @@ export function buildOrderConfirmationEmail(ctx: OrderConfirmationContext): {
     "Notează mesele, gustările și informațiile solicitate în jurnal — ne ajută să înțelegem mai bine obiceiurile tale alimentare.",
     `Completează jurnalul: ${JOURNAL_URL}`,
     "",
-    "2. Pregătește analizele medicale disponibile (opțional)",
-    "Dacă ai analize medicale recente, le poți trimite pe email înainte de consultație sau le poți păstra pentru a le discuta direct în timpul consultației. Nu este necesar să faci analize noi doar pentru această etapă.",
-    `Trimite-le pe email: ${ANALYSIS_MAILTO}`,
+    "2. Pregătește analizele medicale disponibile",
+    "Dacă ai analize medicale recente, pregătește-le pentru consultație. Le vom putea discuta împreună în timpul întâlnirii.",
+    "Nu este necesar să faci analize noi doar pentru această etapă. Dacă vor fi utile investigații suplimentare, vom discuta acest lucru împreună.",
     "",
     "3. Stabilim data consultației",
     "Vei fi contactat pentru stabilirea datei și orei consultației. În cadrul consultației vom discuta istoricul tău medical și alimentar, obiectivele tale și toate informațiile necesare pentru evaluare.",

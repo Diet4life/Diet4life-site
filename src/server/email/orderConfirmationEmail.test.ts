@@ -70,10 +70,16 @@ describe("buildOrderConfirmationEmail", () => {
     expect(text.toLowerCase()).not.toContain("calendar");
   });
 
-  it("is understandable standalone -- includes a link/contact for the journal and analize steps, not just a bare site reference", () => {
+  it("is understandable standalone -- includes a real link for the journal step", () => {
     const { text } = buildOrderConfirmationEmail(ctx);
     expect(text).toContain("https://");
-    expect(text).toContain("mailto:");
+  });
+
+  it("never mentions uploading or emailing medical test results -- no mailto for analize, no upload wording", () => {
+    const { text } = buildOrderConfirmationEmail(ctx);
+    expect(text).not.toContain("mailto:");
+    expect(text.toLowerCase()).not.toMatch(/încarc|upload/);
+    expect(text).toContain("Le vom putea discuta împreună în timpul întâlnirii.");
   });
 
   it("handles an empty recipient name gracefully, without a dangling comma/space", () => {

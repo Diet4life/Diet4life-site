@@ -1767,11 +1767,18 @@ touching code:
   project's own standing, twice-already-reconfirmed policy ("NU crea sistem
   de upload. NU stoca analizele pe site.", see `Consultatii.tsx`'s Analize
   medicale step). Asked her explicitly via a two-option question; she
-  answered "no preference." Given the policy has been reconfirmed twice
-  before in this exact project and a wrong call here has real data-handling
-  consequences, went with the safe default: no upload-to-site was built.
-  The CTA is a plain `mailto:` (same "send it directly, don't store it"
-  pattern already used for the journal), not a new storage mechanism.
+  answered "no preference." First pass kept a `mailto:` CTA as a
+  lower-risk middle ground ("send it directly, don't store it," the same
+  pattern already used for the journal). **Corrected in the very next
+  round, per her explicit follow-up**: no CTA of any kind under step 2 —
+  not mailto, not upload. She does not want patients transmitting medical
+  documents through the site or by email at this stage at all; step 2 is
+  now purely informational ("pregătește-le pentru consultație... le vom
+  putea discuta împreună în timpul întâlnirii"), same wording in the page,
+  the checklist ("Analize pregătite pentru consultație," not "...
+  încărcate"), and the confirmation email. `PostPaymentOnboarding.tsx`'s
+  `ANALYSIS_MAILTO` constant and `orderConfirmationEmail.ts`'s analogous
+  mailto line were both removed outright, not just hidden.
 
 **Nav / routing**:
 - `Layout.tsx` — removed the `/consultatii` entry from `navLinks`. The
@@ -1850,7 +1857,8 @@ round** (only `contact-submit.ts` sent any mail until now):
   `buildOrderConfirmationEmail()` (subject + plain-text body, her exact
   3-step copy, understandable standalone per her explicit "nu trimite
   pacientul doar către site fără context" instruction — includes the
-  journal link and the analize mailto directly in the email body) and
+  journal link directly in the email body; the analize step is
+  informational text only, no mailto, per the correction above) and
   `resolveConfirmationRecipient()` (patient's own email when named and
   different from the buyer, buyer's otherwise), both pure/tested; a third,
   impure `sendOrderConfirmationEmail()` posts to Resend's REST API exactly
