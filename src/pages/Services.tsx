@@ -6,6 +6,17 @@ import { CheckCircle2, ArrowRight, ChevronDown, MessageCircle, Stethoscope, Cale
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { services as checkoutCatalog } from "@/lib/catalog/services";
+
+// Services.tsx is the single purchase entry point: each card's CTA links to
+// real checkout (/checkout/:slug) when the matching catalog entry
+// (src/lib/catalog/services.ts) is purchaseMode "checkout", or falls back
+// to /contact for anything still "contact" -- so re-scoping an item back to
+// contact-only later is a one-line catalog change, no JSX edit needed here.
+function serviceCtaHref(id: string): string {
+  const entry = checkoutCatalog.find((s) => s.id === id);
+  return entry?.purchaseMode === "checkout" ? `/checkout/${id}` : "/contact";
+}
 
 interface ServiceOffering {
   id: string;
@@ -349,7 +360,7 @@ export default function Services() {
                       variant={service.recommended ? "default" : "outline"}
                       className="rounded-xl gap-2 w-full mt-auto"
                     >
-                      <Link href="/contact">
+                      <Link href={serviceCtaHref(service.id)}>
                         {ro ? service.ctaRo : service.ctaEn}
                         <ArrowRight className="w-4 h-4" />
                       </Link>
@@ -387,7 +398,7 @@ export default function Services() {
                       <div className="flex items-center gap-4">
                         <span className="hidden sm:inline text-xl font-bold text-primary">{MONITORING.price} lei</span>
                         <Button asChild variant="outline" className="rounded-xl gap-2 w-full sm:w-auto">
-                          <Link href="/contact">
+                          <Link href={serviceCtaHref("monitorizare-nutritionala")}>
                             {ro ? MONITORING.ctaRo : MONITORING.ctaEn}
                             <ArrowRight className="w-4 h-4" />
                           </Link>

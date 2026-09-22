@@ -19,7 +19,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/nutri-pentru-copii", label: t("nav.nutriKids") },
     { href: "/calculator", label: t("nav.calculator") },
     { href: "/products", label: t("nav.products") },
-    { href: "/consultatii", label: language === "ro" ? "Consultații" : "Appointments" },
   ];
 
   return (

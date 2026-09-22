@@ -2,13 +2,21 @@ import { createSign, generateKeyPairSync } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const recordNetopiaNotification = vi.fn();
+const getOrderConfirmationContext = vi.fn();
+const markConfirmationEmailStatus = vi.fn();
 
 // vi.mock is hoisted above every import in this file by vitest's
-// transform -- only the DB-touching orderService function is mocked, so
+// transform -- only the DB-touching orderService functions are mocked, so
 // this test exercises the REAL JWT/RS256 verification path end to end,
-// not a mocked one.
+// not a mocked one. RESEND_API_KEY is deliberately left unset by default
+// (see beforeEach) -- sendOrderConfirmationEmail() itself no-ops without a
+// real network call whenever it's missing, so these tests never need to
+// mock the email send itself, only assert whether the DB-side functions
+// around it were invoked.
 vi.mock("@/server/orders/orderService", () => ({
   recordNetopiaNotification: (...args: unknown[]) => recordNetopiaNotification(...args),
+  getOrderConfirmationContext: (...args: unknown[]) => getOrderConfirmationContext(...args),
+  markConfirmationEmailStatus: (...args: unknown[]) => markConfirmationEmailStatus(...args),
 }));
 
 import { extractNotificationFields, handler, isSandboxRelayEnabled } from "../../../netlify/functions/payments-netopia-notify";
@@ -49,16 +57,40 @@ function buildEvent(body: string, token: string | undefined, queryStringParamete
   } as never;
 }
 
-const ENV_KEYS = ["NETOPIA_PUBLIC_KEY", "NETOPIA_POS_SIGNATURE", "CONTEXT", "D4L_NETOPIA_SANDBOX_RELAY"] as const;
+const ENV_KEYS = ["NETOPIA_PUBLIC_KEY", "NETOPIA_POS_SIGNATURE", "CONTEXT", "D4L_NETOPIA_SANDBOX_RELAY", "RESEND_API_KEY"] as const;
 const saved: Record<string, string | undefined> = {};
+
+const DIGITAL_ORDER_CONTEXT = {
+  orderNumber: "D4L-2026-77354A78",
+  productName: "Ghid PDF",
+  productType: "digital_product",
+  billingFullName: "Ion Popescu",
+  billingCompanyName: null,
+  billingEmail: "ion@example.com",
+  patientSameAsBuyer: null,
+  patientFullName: null,
+  patientEmail: null,
+};
+
+const SERVICE_ORDER_CONTEXT = {
+  ...DIGITAL_ORDER_CONTEXT,
+  productName: "Consultație Nutrițională",
+  productType: "consultation",
+  patientSameAsBuyer: true,
+};
 
 beforeEach(() => {
   recordNetopiaNotification.mockReset();
+  getOrderConfirmationContext.mockReset();
+  markConfirmationEmailStatus.mockReset();
+  getOrderConfirmationContext.mockResolvedValue(SERVICE_ORDER_CONTEXT);
+  markConfirmationEmailStatus.mockResolvedValue(undefined);
   for (const key of ENV_KEYS) saved[key] = process.env[key];
   process.env.NETOPIA_PUBLIC_KEY = publicKey;
   process.env.NETOPIA_POS_SIGNATURE = POS_SIGNATURE;
   delete process.env.CONTEXT;
   delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
+  delete process.env.RESEND_API_KEY;
 });
 
 afterEach(() => {
@@ -239,6 +271,53 @@ describe("payments-netopia-notify handler", () => {
 
     logSpy.mockRestore();
     errorSpy.mockRestore();
+  });
+
+  it("on the first transition into paid, fetches the confirmation context and records the (failed, no RESEND_API_KEY in this test) send outcome", async () => {
+    recordNetopiaNotification.mockResolvedValue({ outcome: "processed", previousStatus: "pending_payment", newStatus: "paid" });
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-email-1" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 200 }); // an email failure never turns the ACK into a rejection
+    expect(getOrderConfirmationContext).toHaveBeenCalledWith("D4L-2026-77354A78");
+    expect(markConfirmationEmailStatus).toHaveBeenCalledWith("D4L-2026-77354A78", "failed"); // no RESEND_API_KEY set in this test
+  });
+
+  it("does not fetch confirmation context or send anything for a duplicate notification", async () => {
+    recordNetopiaNotification.mockResolvedValue({ outcome: "duplicate" });
+    await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-email-2" } as never, undefined as never);
+    expect(getOrderConfirmationContext).not.toHaveBeenCalled();
+    expect(markConfirmationEmailStatus).not.toHaveBeenCalled();
+  });
+
+  it("does not send anything when the order was already paid (no-op transition, previousStatus === newStatus === paid)", async () => {
+    recordNetopiaNotification.mockResolvedValue({ outcome: "processed", previousStatus: "paid", newStatus: "paid" });
+    await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-email-3" } as never, undefined as never);
+    expect(getOrderConfirmationContext).not.toHaveBeenCalled();
+    expect(markConfirmationEmailStatus).not.toHaveBeenCalled();
+  });
+
+  it("does not send a confirmation email for a digital_product order -- that product type keeps its own unrelated messaging", async () => {
+    getOrderConfirmationContext.mockResolvedValue(DIGITAL_ORDER_CONTEXT);
+    recordNetopiaNotification.mockResolvedValue({ outcome: "processed", previousStatus: "pending_payment", newStatus: "paid" });
+    await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-email-4" } as never, undefined as never);
+    expect(getOrderConfirmationContext).toHaveBeenCalledWith("D4L-2026-77354A78");
+    expect(markConfirmationEmailStatus).not.toHaveBeenCalled();
+  });
+
+  it("a real RESEND_API_KEY plus a mocked successful fetch results in confirmation_email_status = sent", async () => {
+    process.env.RESEND_API_KEY = "test-key";
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 200 }));
+    recordNetopiaNotification.mockResolvedValue({ outcome: "processed", previousStatus: "pending_payment", newStatus: "paid" });
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-email-5" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 200 });
+    expect(markConfirmationEmailStatus).toHaveBeenCalledWith("D4L-2026-77354A78", "sent");
+    fetchSpy.mockRestore();
+  });
+
+  it("an exception while building/sending the confirmation email never turns the ACK into a rejection", async () => {
+    getOrderConfirmationContext.mockRejectedValue(new Error("db unavailable"));
+    recordNetopiaNotification.mockResolvedValue({ outcome: "processed", previousStatus: "pending_payment", newStatus: "paid" });
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-email-6" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 200, body: JSON.stringify({ errorCode: 0 }) });
   });
 });
 

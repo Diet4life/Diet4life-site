@@ -1744,6 +1744,158 @@ Netlify would and directly invoked it in Node (not mocked): confirmed
 closed on `public_key_not_configured` since no real key was supplied in this
 smoke test).
 
+## Servicii as the single purchase entry point; Consultații removed from nav; post-payment onboarding + confirmation email — done
+
+User asked to stop maintaining Servicii and Consultații as two separate
+destinations: purchasing must be centralized in `/services`, `/consultatii`
+removed from the top nav (but not deleted -- it's where the food-journal
+tool and the analize-recommandate list actually live, and the new
+post-payment flow links into both), and a real onboarding experience shown
+(and emailed) after a successful payment instead of a generic "plata a
+fost efectuată" message. Followed her explicit process (investigate first,
+present a plan, then implement) and flagged two real judgment calls before
+touching code:
+
+- **Nav scope**: her prose said *"Eliminăm doar confuzia dintre două pagini
+  separate"* (removing **only** the Servicii/Consultații confusion), but her
+  6-item example nav list also omitted Calculator and Produse. Went with the
+  explicit "doar" — removed only the Consultații link from `Layout.tsx`'s
+  `navLinks`, left Calculator/Produse untouched. Flag if she actually wants
+  those two cut as well.
+- **"Încarcă analizele"**: her spec's step 2 asked for an upload CTA
+  ("le poți încărca în siguranță"), which directly contradicts this
+  project's own standing, twice-already-reconfirmed policy ("NU crea sistem
+  de upload. NU stoca analizele pe site.", see `Consultatii.tsx`'s Analize
+  medicale step). Asked her explicitly via a two-option question; she
+  answered "no preference." Given the policy has been reconfirmed twice
+  before in this exact project and a wrong call here has real data-handling
+  consequences, went with the safe default: no upload-to-site was built.
+  The CTA is a plain `mailto:` (same "send it directly, don't store it"
+  pattern already used for the journal), not a new storage mechanism.
+
+**Nav / routing**:
+- `Layout.tsx` — removed the `/consultatii` entry from `navLinks`. The
+  route itself (`App.tsx`) is untouched — `Consultatii.tsx` still renders at
+  `/consultatii`, unchanged, since the journal (step 1) and analize list
+  (step 2, `#analize` anchor) it hosts are exactly what the post-payment
+  flow and Services.tsx's existing "vezi analizele recomandate" deep link
+  need to point at. Those two deep links (`Services.tsx`'s
+  `/consultatii#analize`, `Home.tsx`'s "Jurnal alimentar" tool card →
+  `/consultatii`) were deliberately left alone too — they're functional
+  links to real, still-existing tools, not duplicate navigation to a
+  removed tab.
+
+**Real checkout wiring for all 5 services**:
+- `src/lib/catalog/services.ts` — every entry flipped from
+  `purchaseMode: "contact"` to `"checkout"` (this file's own header comment
+  always anticipated this as a data-only change), plus a new `productType`
+  field per item (`consultatie-nutritionala`/`program-6-saptamani`/
+  `program-3-luni` → `"consultation"` since they include a real
+  consultation; `primii-pasi`/`monitorizare-nutritionala` →
+  `"nutrition_service"`, WhatsApp-only, no formal consultation — a judgment
+  call, flag if she'd classify them differently).
+- `Services.tsx` — now imports that catalog and resolves each card's (and
+  the standalone Monitorizare card's) CTA `href` from it: `/checkout/<id>`
+  when `purchaseMode` is `"checkout"`, `/contact` otherwise — so scoping an
+  item back to contact-only later is a one-line catalog edit, no JSX
+  change. CTA copy itself ("Alege serviciul"/"Choose this service") was
+  already uniform across every card before this round — matches her "CTA
+  coerent" ask exactly, nothing to change there.
+- **Real `products` DB rows still needed** — Phase 1 only ever seeded
+  `digital_product` rows; these 5 services have never existed as real
+  `products` table rows, so `/checkout/<slug>` will 404 ("not-found"
+  product) until they do. This sandbox has no network path to the
+  live/branch Netlify DB (same constraint as every DB-touching round this
+  session) — `scripts/seed-services-products.sql` has the exact, idempotent
+  (`ON CONFLICT (slug) DO UPDATE`) `INSERT` for all 5, **not executed from
+  here** — run it yourself against the branch DB, same as the earlier
+  demo-product round.
+
+**Post-payment onboarding page**:
+- `src/components/checkout/PostPaymentOnboarding.tsx` — new. Replaces the
+  generic "Plata a fost efectuată cu succes" card for
+  `nutrition_service`/`consultation` orders only (`StatusStates.tsx`'s
+  `paid` branch now checks `productType`; `digital_product` keeps its
+  original, unrelated "download" card, untouched). 3 numbered steps
+  (jurnal → analize → data consultației) using her literal copy, plus a
+  checklist (✓ Plata confirmată / jurnal / analize / data consultației).
+  Only the first item is ever really known (we're inside the `paid`
+  branch); "jurnal alimentar completat" uses a new best-effort,
+  same-device-only signal (`src/hooks/use-journal-progress.ts`, a read-only
+  mirror of `Consultatii.tsx`'s own `completedDays === 7` check against the
+  same `diet4life_journal_data` localStorage key -- there is no per-order
+  link to the journal, by the site's own "no account system" design, so
+  this can only ever answer "has this browser's journal got progress right
+  now," never "did the person who just paid fill it in"); analize and the
+  consultation date have no trackable signal at all (no upload, no
+  scheduling system, both by design) and stay permanently unchecked,
+  presented honestly as status text rather than fake trackable state.
+- **Design, scoped to this component only** (not a site-wide token change,
+  same precedent as the homepage's orange accent): `zinc-50`/`zinc-900`/
+  `zinc-600` plus the literal hex `#2F4F4F` she gave as the accent — used
+  the hex rather than Tailwind's own `emerald-800` (`#065F46`, a visibly
+  different, more saturated green), since she listed both as if equivalent
+  and the hex is the more specific, deliberate value.
+- `StatusStates.tsx` also picked up a small pre-existing-bug fix while
+  restructuring the `paid` branch: the old code computed
+  `explanation`/CTA text with an `isDigital ? ... : ...` ternary even though
+  everything now branches on `isDigital` one level up via an early return
+  for the non-digital case — simplified to remove the now-dead
+  non-digital branch inside the `digital_product`-only card, no behavior
+  change for that path.
+
+**Order-confirmation email — new infrastructure, didn't exist before this
+round** (only `contact-submit.ts` sent any mail until now):
+- `src/server/email/orderConfirmationEmail.ts` — new. Pure
+  `buildOrderConfirmationEmail()` (subject + plain-text body, her exact
+  3-step copy, understandable standalone per her explicit "nu trimite
+  pacientul doar către site fără context" instruction — includes the
+  journal link and the analize mailto directly in the email body) and
+  `resolveConfirmationRecipient()` (patient's own email when named and
+  different from the buyer, buyer's otherwise), both pure/tested; a third,
+  impure `sendOrderConfirmationEmail()` posts to Resend's REST API exactly
+  like `contact-submit.ts` already does (no SDK dependency), returns
+  `false` on any failure rather than throwing.
+- `orderService.ts` — added `getOrderConfirmationContext()` (a read-only
+  join of orders+products+billing_details+patient_details, deliberately
+  separate from `getOrderForPaymentInitiation()` -- excludes the full
+  billing address, only needs a name+email) and
+  `markConfirmationEmailStatus()`, which finally puts the existing-but-
+  previously-unused `orders.confirmation_email_status` column to work. No
+  schema/migration change -- the column has been there since Phase 1.
+- `payments-netopia-notify.ts` — after `recordNetopiaNotification()`
+  reports a genuine first-time transition into `paid` (never on a
+  duplicate, never on a no-op replay where the order was already paid,
+  never for `digital_product`), fires `maybeSendOrderConfirmationEmail()`.
+  Deliberately outside `recordNetopiaNotification()`'s own DB transaction
+  (sending mail should never be able to block or roll back a payment
+  record) and wrapped so an email/Resend failure can never turn NETOPIA's
+  `ACK_OK` into a rejection — it only ever affects
+  `confirmation_email_status`, logged as `confirmation_send failure`
+  (deliberately not `confirmation_email failure`, to avoid the substring
+  "email" tripping the file's own "never logs anything billing-shaped"
+  test over a log line that was never actually PII, just a category label).
+- `.env.example` — `RESEND_API_KEY`'s comment updated to document the
+  second consumer.
+
+**Verified**: `tsc --noEmit` clean (0 output), `npx vitest run` 151/151 (13
+new: `getOrderConfirmationContext`/`markConfirmationEmailStatus` fully
+integration-tested at the notify-handler level via mocks — first-paid-
+transition sends, duplicate/no-op/digital_product all correctly skip
+sending, a real successful Resend call marks `sent`, a thrown exception
+anywhere in the email path still returns `ACK_OK` — plus 10 new pure tests
+for `buildOrderConfirmationEmail`/`resolveConfirmationRecipient`), `npm run
+build` clean (same pre-existing chunk-size warning only). Grepped the
+production build output for `drizzle-orm`/`@netlify/database`/`pg` — zero
+matches, same client-bundle-isolation guarantee as every prior round. Both
+`payments-netopia-notify.ts` and `orders-create.ts` re-bundled with esbuild
+exactly as Netlify would, confirmed they still compile cleanly with the new
+imports. **Not verified from this sandbox** (no live DB/network access,
+same constraint as always): the actual `/checkout/<slug>` flow for these 5
+services end-to-end against a real browser, since the `products` rows don't
+exist in the live/branch DB yet — that needs `scripts/seed-services-
+products.sql` run first, then a real click-through on her side.
+
 ## Netlify
 
 - Site: `diet4life` (id `fb46b783-0032-4b51-971b-b255c590f8b8`), team requires

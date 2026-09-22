@@ -249,6 +249,51 @@ export async function getOrderForPaymentInitiation(token: string) {
   return row ?? null;
 }
 
+// Read-only context for the post-payment confirmation email (see
+// src/server/email/orderConfirmationEmail.ts) -- called separately from
+// payments-netopia-notify.ts, after recordNetopiaNotification() below has
+// already committed the paid transition, never as part of that same
+// transaction (sending an email is not something a DB transaction should
+// ever be able to roll back or block on). Deliberately excludes
+// billing address fields (county/city/street/postal) -- the confirmation
+// email only ever needs a name and an email address to send to, not a full
+// billing address.
+export async function getOrderConfirmationContext(orderNumber: string) {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      orderNumber: orders.orderNumber,
+      productName: orders.productNameSnapshot,
+      productType: products.productType,
+      billingFullName: billingDetails.fullName,
+      billingCompanyName: billingDetails.companyName,
+      billingEmail: billingDetails.email,
+      patientSameAsBuyer: patientDetails.sameAsBuyer,
+      patientFullName: patientDetails.fullName,
+      patientEmail: patientDetails.email,
+    })
+    .from(orders)
+    .innerJoin(products, eq(orders.productId, products.id))
+    .innerJoin(billingDetails, eq(billingDetails.orderId, orders.id))
+    .leftJoin(patientDetails, eq(patientDetails.orderId, orders.id))
+    .where(eq(orders.orderNumber, orderNumber));
+
+  return row ?? null;
+}
+
+// Sets orders.confirmation_email_status -- an existing column that has
+// tracked nothing until now (no order-confirmation email infrastructure
+// existed before this round; see CLAUDE.md). Never gates order.status --
+// a failed email send does not undo a real payment, it's tracked
+// separately here purely for support/debugging visibility.
+export async function markConfirmationEmailStatus(
+  orderNumber: string,
+  status: "sent" | "failed",
+): Promise<void> {
+  const db = getDb();
+  await db.update(orders).set({ confirmationEmailStatus: status }).where(eq(orders.orderNumber, orderNumber));
+}
+
 export interface RecordNetopiaNotificationInput {
   orderNumber: string; // NETOPIA's echoed-back "orderID" -- our order_number
   providerTransactionId: string; // NETOPIA's ntpID

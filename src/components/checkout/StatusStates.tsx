@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { CheckCircle2, Clock, XCircle, AlertTriangle, type LucideIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { PostPaymentOnboarding } from "@/components/checkout/PostPaymentOnboarding";
 import type { PublicOrderStatus } from "@/lib/checkout/types";
 
 function formatPrice(cents: number, currency: string) {
@@ -67,6 +68,16 @@ export function StatusStates({ order }: { order: PublicOrderStatus }) {
 
   if (order.status === "paid") {
     const isDigital = order.productType === "digital_product";
+
+    // nutrition_service / consultation: the full onboarding flow (journal,
+    // analize, "we'll be in touch about the date") replaces the generic
+    // success card entirely -- it already carries its own "Plata a fost
+    // confirmată" heading. digital_product keeps the original, unrelated
+    // "download the product" card below, untouched.
+    if (!isDigital) {
+      return <PostPaymentOnboarding orderNumber={order.orderNumber} />;
+    }
+
     return (
       <StatusCard
         icon={CheckCircle2}
@@ -77,19 +88,13 @@ export function StatusStates({ order }: { order: PublicOrderStatus }) {
         title={ro ? "Plata a fost efectuată cu succes" : "Payment successful"}
         productName={order.productName}
         explanation={
-          isDigital
-            ? ro
-              ? "Mulțumim pentru comandă. Factura și confirmarea comenzii au fost trimise pe e-mail."
-              : "Thank you for your order. The invoice and order confirmation have been sent by e-mail."
-            : ro
-              ? "Am primit comanda ta. Vei primi pe e-mail confirmarea și informațiile necesare pentru următorul pas."
-              : "We've received your order. You'll receive the confirmation and next-step information by e-mail."
+          ro
+            ? "Mulțumim pentru comandă. Factura și confirmarea comenzii au fost trimise pe e-mail."
+            : "Thank you for your order. The invoice and order confirmation have been sent by e-mail."
         }
       >
         <Button disabled className="rounded-xl">
-          {isDigital
-            ? ro ? "Descarcă produsul (în curând)" : "Download product (coming soon)"
-            : ro ? "Continuă către formularul de evaluare (în curând)" : "Continue to the assessment form (coming soon)"}
+          {ro ? "Descarcă produsul (în curând)" : "Download product (coming soon)"}
         </Button>
       </StatusCard>
     );

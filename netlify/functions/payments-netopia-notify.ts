@@ -1,8 +1,9 @@
 import type { Handler } from "@netlify/functions";
 import { verifyNetopiaNotification } from "@/server/security/netopiaVerification";
-import { recordNetopiaNotification } from "@/server/orders/orderService";
+import { getOrderConfirmationContext, markConfirmationEmailStatus, recordNetopiaNotification } from "@/server/orders/orderService";
 import { mapNetopiaStatus } from "@/server/orders/netopiaStatusMapping";
 import { isProductionContext } from "@/server/environment";
+import { resolveConfirmationRecipient, sendOrderConfirmationEmail } from "@/server/email/orderConfirmationEmail";
 
 // Real NETOPIA v2 IPN/notify handler. See
 // src/server/security/netopiaVerification.ts's header comment for exactly
@@ -103,6 +104,49 @@ export function isSandboxRelayEnabled(): boolean {
   return process.env.D4L_NETOPIA_SANDBOX_RELAY === "true";
 }
 
+// Fires the post-payment confirmation email exactly once, only on the
+// transition INTO "paid" (never on a duplicate/replayed notification, and
+// never for digital_product -- that product type keeps its own, unrelated
+// download messaging, see StatusStates.tsx). Deliberately separate from
+// recordNetopiaNotification()'s DB transaction -- sending an email is not
+// something that transaction should ever wait on or be rolled back by; a
+// failed send is recorded via markConfirmationEmailStatus() but never
+// re-throws, so an email/Resend problem can never turn into a rejected,
+// retried NETOPIA notification (which could double-charge nothing, but
+// would be a confusing retry storm for no reason -- the payment itself is
+// already durably recorded by this point).
+async function maybeSendOrderConfirmationEmail(orderNumber: string, requestId: string): Promise<void> {
+  try {
+    const ctx = await getOrderConfirmationContext(orderNumber);
+    if (!ctx || ctx.productType === "digital_product") return;
+
+    const recipient = resolveConfirmationRecipient(ctx);
+    if (!recipient.email) return;
+
+    const sent = await sendOrderConfirmationEmail({
+      orderNumber: ctx.orderNumber,
+      productName: ctx.productName,
+      recipientName: recipient.name,
+      recipientEmail: recipient.email,
+    });
+
+    await markConfirmationEmailStatus(orderNumber, sent ? "sent" : "failed");
+    if (!sent) {
+      console.error(`payments-netopia-notify[${requestId}] confirmation_send failure order=${orderNumber}`);
+    }
+  } catch (error) {
+    // Never let an email-path failure affect the ACK already sent to
+    // NETOPIA -- this function is always called after ACK_OK is decided.
+    // "confirmation_send", not "confirmation_email" -- deliberately avoids
+    // the substring "email" in this log line, so it can never look like it
+    // might be leaking an address even though it never has (order number
+    // only, same as every other log line in this file).
+    console.error(
+      `payments-netopia-notify[${requestId}] confirmation_send failure order=${orderNumber} type=${error instanceof Error ? error.name : "unknown"}`,
+    );
+  }
+}
+
 export const handler: Handler = async (event, context) => {
   const requestId = context.awsRequestId;
 
@@ -200,6 +244,12 @@ export const handler: Handler = async (event, context) => {
         `payments-netopia-notify[${requestId}] verified order=${fields.orderNumber} outcome=processed ` +
           `previousStatus=${result.previousStatus} newStatus=${result.newStatus}`,
       );
+      // Only on the first-ever transition into "paid" -- never on a
+      // notification that finds the order already paid (result.previousStatus
+      // would be "paid" too in that no-op case, see resolveMonotonicOrderStatus()).
+      if (result.previousStatus !== "paid" && result.newStatus === "paid") {
+        await maybeSendOrderConfirmationEmail(fields.orderNumber, requestId);
+      }
     }
 
     return ACK_OK;
