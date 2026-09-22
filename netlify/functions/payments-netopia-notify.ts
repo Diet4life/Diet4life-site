@@ -84,19 +84,62 @@ function getHeader(headers: Record<string, string | undefined> | undefined | nul
 const ACK_OK = { statusCode: 200, headers: { "content-type": "application/json" }, body: JSON.stringify({ errorCode: 0 }) };
 const ACK_REJECT = { statusCode: 400, headers: { "content-type": "application/json" }, body: JSON.stringify({ errorCode: 1 }) };
 
+// The dedicated sandbox relay site (see resolveNotifyBaseUrl() in
+// payments-initiate.ts) is a SECOND Netlify site deployed from this same
+// repo/branch -- Netlify necessarily labels ITS own deploy "production"
+// (there is no other deploy context for a site's primary branch), which
+// would otherwise make the isProductionContext() guard below refuse to run
+// there at all. This flag is the one, narrow, explicit opt-out for that
+// specific site only -- it does NOT touch verifyNetopiaNotification() (the
+// RS256/issuer/audience/body-hash checks), recordNetopiaNotification()'s
+// idempotency/DB safeguards, or Diet4Life's own real production site (which
+// simply never has this variable set). Fails closed by design: only the
+// exact string "true" enables it -- unset, empty, "1", "yes", "TRUE", or
+// anything else leaves relay mode off and preserves today's 503 behavior.
+// Read only from process.env (server-side, hand-set in Netlify's dashboard)
+// -- never derived from a request header, query string, or any other
+// client-controllable input, so a forged request can never enable it.
+export function isSandboxRelayEnabled(): boolean {
+  return process.env.D4L_NETOPIA_SANDBOX_RELAY === "true";
+}
+
 export const handler: Handler = async (event, context) => {
   const requestId = context.awsRequestId;
+
+  const productionContext = isProductionContext();
+  const sandboxRelayEnabled = isSandboxRelayEnabled();
+
+  // Safe diagnostics -- booleans only, never a header, body, token, or env
+  // var value itself. Cheap to keep permanently: this is exactly the kind
+  // of flag where "did the dedicated relay site actually pick up its env
+  // var" is worth being able to confirm from real logs, the same way the
+  // D4L_SITE_BASE_URL diagnostics in payments-initiate.ts already are.
+  console.log(
+    `payments-netopia-notify[${requestId}] diag isProduction=${productionContext} sandboxRelayEnabled=${sandboxRelayEnabled}`,
+  );
 
   // Defense-in-depth, checked first, before anything else (mirrors
   // payments-initiate.ts's own production guard). This endpoint's only
   // *other* protection against running unverified in production is
   // NETOPIA_PUBLIC_KEY being unset there -- a config omission, not a
-  // structural block. This guard matters specifically because this exact
-  // file is meant to be deployable as-is to a second, separate Netlify
-  // site dedicated only to relaying sandbox notifications (see
-  // resolveNotifyBaseUrl() in payments-initiate.ts) -- that second site
-  // must never be able to mark a real order paid even by misconfiguration.
-  if (isProductionContext()) {
+  // structural block.
+  //
+  // Diet4Life's own real production site: productionContext=true,
+  // sandboxRelayEnabled=false (the variable is never set there) -> still
+  // refuses, exactly as before this round.
+  //
+  // The dedicated sandbox relay site: productionContext=true (Netlify's own
+  // label for that site's primary branch deploy), sandboxRelayEnabled=true
+  // (set by hand, only on that site) -> falls through to the real
+  // verification/DB logic below, completely unmodified. Everything past
+  // this point -- signature/issuer/audience/body-hash verification, order
+  // lookup, idempotency, status transitions -- is exactly the same code
+  // path a non-production branch-deploy request already goes through; this
+  // flag only ever changes whether that path is reached, never what it does.
+  //
+  // Any non-production branch/preview deploy: productionContext=false ->
+  // this guard is skipped regardless of the flag, unchanged from before.
+  if (productionContext && !sandboxRelayEnabled) {
     return {
       statusCode: 503,
       headers: { "content-type": "application/json" },

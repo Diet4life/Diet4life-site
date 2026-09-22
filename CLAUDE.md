@@ -1693,6 +1693,57 @@ Grepped the production `npm run build` output (`dist/assets/*.js`) for
 "netopia" (any case) and both new/existing env var names — zero matches,
 same client-bundle-isolation guarantee as every prior round.
 
+## NETOPIA Phase 2 — sandbox relay flag (`D4L_NETOPIA_SANDBOX_RELAY`) — done
+
+Before creating the dedicated sandbox relay site from the round above, the
+user caught a real deploy-blocking issue: that second site's own primary
+branch deploy is necessarily labeled `CONTEXT=production` by Netlify (a
+site's main branch has no other deploy context), which would make the
+`isProductionContext()` guard added in commit `5d89bcc` refuse to run there
+at all — the relay site would 503 on every real NETOPIA notification simply
+because Netlify calls its deploy "production," nothing to do with whether
+it's actually Diet4Life's live site.
+
+Fix: `payments-netopia-notify.ts` now also checks a new, narrow, explicit
+opt-out, `isSandboxRelayEnabled()` — `process.env.D4L_NETOPIA_SANDBOX_RELAY
+=== "true"` (exact-string match only; `"1"`/`"yes"`/`"TRUE"`/empty all leave
+it disabled, fails closed by design). The guard becomes
+`if (productionContext && !sandboxRelayEnabled)`: Diet4Life's real
+production site never sets this variable, so its behavior is byte-for-byte
+unchanged (still 503 `notify_disabled`); the dedicated relay site sets it to
+exactly `"true"` in its own env vars, so `productionContext=true` no longer
+short-circuits it, and the request falls through to the **exact same,
+completely unmodified** `verifyNetopiaNotification()` → `extractNotificationFields()`
+→ `recordNetopiaNotification()` path a non-production request already used —
+the flag only ever changes whether that path is reached, never what it does.
+Verified this explicitly: a forged/invalid signature is still rejected with
+the flag on, and a missing `NETOPIA_PUBLIC_KEY` still fails closed with the
+flag on. Added a permanent, secret-free diagnostic log line
+(`isProduction=<bool> sandboxRelayEnabled=<bool>`) so a real deploy's logs
+can confirm the relay site actually picked up its env var.
+
+`.env.example` documents `D4L_NETOPIA_SANDBOX_RELAY=false` — set to exactly
+`true` only on the dedicated relay site, never on the real production site.
+
+Nothing else from the prior round changed: `resolveSiteBaseUrl()`/
+`D4L_SITE_BASE_URL`, `resolveNotifyBaseUrl()`/`D4L_NETOPIA_NOTIFY_BASE_URL`,
+the checkout UI, the payment-initiation payload, and the DB schema are all
+untouched.
+
+Verified: `tsc --noEmit` clean (0 output), `npx vitest run` 135/135 (9 new
+tests: production+no-flag, production+`"false"`, production+near-miss
+values `"1"/"yes"/"TRUE"/"True"/""`, production+`"true"` proceeding to a
+successful verified notification, relay mode rejecting a forged signature,
+relay mode still failing closed with no public key configured, non-production
+unaffected by the flag either way, plus a dedicated `isSandboxRelayEnabled`
+unit-test block), `npm run build` clean (same pre-existing chunk-size warning
+only). Re-bundled `payments-netopia-notify.ts` with esbuild exactly as
+Netlify would and directly invoked it in Node (not mocked): confirmed
+`CONTEXT=production` + no flag/`"false"` both 503, and `CONTEXT=production` +
+`"true"` falls through to real verification (which then correctly fails
+closed on `public_key_not_configured` since no real key was supplied in this
+smoke test).
+
 ## Netlify
 
 - Site: `diet4life` (id `fb46b783-0032-4b51-971b-b255c590f8b8`), team requires

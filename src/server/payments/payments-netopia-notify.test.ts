@@ -11,7 +11,7 @@ vi.mock("@/server/orders/orderService", () => ({
   recordNetopiaNotification: (...args: unknown[]) => recordNetopiaNotification(...args),
 }));
 
-import { extractNotificationFields, handler } from "../../../netlify/functions/payments-netopia-notify";
+import { extractNotificationFields, handler, isSandboxRelayEnabled } from "../../../netlify/functions/payments-netopia-notify";
 import { hashRequestBody } from "@/server/security/netopiaVerification";
 
 const { publicKey, privateKey } = generateKeyPairSync("rsa", {
@@ -49,7 +49,7 @@ function buildEvent(body: string, token: string | undefined, queryStringParamete
   } as never;
 }
 
-const ENV_KEYS = ["NETOPIA_PUBLIC_KEY", "NETOPIA_POS_SIGNATURE", "CONTEXT"] as const;
+const ENV_KEYS = ["NETOPIA_PUBLIC_KEY", "NETOPIA_POS_SIGNATURE", "CONTEXT", "D4L_NETOPIA_SANDBOX_RELAY"] as const;
 const saved: Record<string, string | undefined> = {};
 
 beforeEach(() => {
@@ -58,6 +58,7 @@ beforeEach(() => {
   process.env.NETOPIA_PUBLIC_KEY = publicKey;
   process.env.NETOPIA_POS_SIGNATURE = POS_SIGNATURE;
   delete process.env.CONTEXT;
+  delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
 });
 
 afterEach(() => {
@@ -157,11 +158,72 @@ describe("payments-netopia-notify handler", () => {
     expect(recordNetopiaNotification).toHaveBeenCalledWith(expect.objectContaining({ orderNumber: "D4L-2026-77354A78", mappedStatus: "paid" }));
   });
 
-  it("refuses to run at all under a real production context, even with an otherwise fully valid, verified notification -- checked before signature verification", async () => {
+  it("Diet4Life's own production, no relay flag set: refuses to run at all, even with an otherwise fully valid, verified notification", async () => {
     process.env.CONTEXT = "production";
-    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-prod" } as never, undefined as never);
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-prod-1" } as never, undefined as never);
     expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
     expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
+  it("production + D4L_NETOPIA_SANDBOX_RELAY=false: still refuses -- the flag must be exactly \"true\" to enable relay mode", async () => {
+    process.env.CONTEXT = "production";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "false";
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-prod-2" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
+  it("production + D4L_NETOPIA_SANDBOX_RELAY set to a near-miss value (\"1\", \"yes\", \"TRUE\", empty): still refuses -- fails closed on anything but the exact string \"true\"", async () => {
+    for (const nearMiss of ["1", "yes", "TRUE", "True", ""]) {
+      process.env.CONTEXT = "production";
+      process.env.D4L_NETOPIA_SANDBOX_RELAY = nearMiss;
+      const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: `req-nearmiss-${nearMiss}` } as never, undefined as never);
+      expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
+    }
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
+  it("dedicated sandbox relay site (production + D4L_NETOPIA_SANDBOX_RELAY=true): proceeds to the normal verification/DB path for a genuinely valid notification", async () => {
+    process.env.CONTEXT = "production";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    recordNetopiaNotification.mockResolvedValue({ outcome: "processed", previousStatus: "pending_payment", newStatus: "paid" });
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-relay-ok" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 200, body: JSON.stringify({ errorCode: 0 }) });
+    expect(recordNetopiaNotification).toHaveBeenCalledWith({
+      orderNumber: "D4L-2026-77354A78",
+      providerTransactionId: "ntp-123",
+      providerStatus: "00",
+      mappedStatus: "paid",
+      amountCents: 30000,
+    });
+  });
+
+  it("relay mode does NOT bypass signature verification -- an invalid/forged notification is still rejected even with the relay flag on", async () => {
+    process.env.CONTEXT = "production";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    const forgedToken = signJwt({ iss: "Not NETOPIA", aud: POS_SIGNATURE, sub: hashRequestBody(VALID_BODY) }, privateKey);
+    const res = await handler(buildEvent(VALID_BODY, forgedToken), { awsRequestId: "req-relay-forged" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 400, body: JSON.stringify({ errorCode: 1 }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
+  it("relay mode still fails closed when NETOPIA_PUBLIC_KEY is unconfigured -- the flag doesn't substitute for real verification config", async () => {
+    process.env.CONTEXT = "production";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    delete process.env.NETOPIA_PUBLIC_KEY;
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-relay-nokey" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 400, body: JSON.stringify({ errorCode: 1 }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
+  it("non-production behavior is unaffected by the relay flag either way", async () => {
+    recordNetopiaNotification.mockResolvedValue({ outcome: "processed", previousStatus: "pending_payment", newStatus: "paid" });
+    for (const relay of [undefined, "true", "false"]) {
+      if (relay === undefined) delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
+      else process.env.D4L_NETOPIA_SANDBOX_RELAY = relay;
+      const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: `req-nonprod-${relay}` } as never, undefined as never);
+      expect(res).toMatchObject({ statusCode: 200, body: JSON.stringify({ errorCode: 0 }) });
+    }
   });
 
   it("never logs the verification token, the raw body, or anything billing-shaped", async () => {
@@ -216,5 +278,28 @@ describe("extractNotificationFields", () => {
       code: undefined,
       amountCents: 0,
     });
+  });
+});
+
+describe("isSandboxRelayEnabled", () => {
+  afterEach(() => {
+    delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
+  });
+
+  it("is true only for the exact string \"true\"", () => {
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    expect(isSandboxRelayEnabled()).toBe(true);
+  });
+
+  it("is false when unset", () => {
+    delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
+    expect(isSandboxRelayEnabled()).toBe(false);
+  });
+
+  it("is false for every near-miss value -- fails closed, never guesses truthiness", () => {
+    for (const value of ["1", "yes", "TRUE", "True", "on", "false", ""]) {
+      process.env.D4L_NETOPIA_SANDBOX_RELAY = value;
+      expect(isSandboxRelayEnabled()).toBe(false);
+    }
   });
 });
