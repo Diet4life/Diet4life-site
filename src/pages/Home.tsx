@@ -25,10 +25,10 @@ import {
 // "coming soon" item so it reads as its own full-width row rather than
 // leaving an awkward single-cell gap next to it.
 const heroTopicLinks = [
-  { icon: Clock, ro: "De ce nu slăbesc deși mănânc puțin?", en: "Why am I not losing weight even though I eat little?", slug: "controlul-greutatii", wide: true },
+  { icon: Apple, ro: "Ce alimente ar trebui să aleg?", en: "What foods should I choose?", slug: null as string | null, wide: true },
   { icon: Minus, ro: "Cum arată o masă echilibrată?", en: "What does a balanced meal look like?", slug: "nutritie-echilibrata" },
   { icon: Heart, ro: "Câtă proteină am nevoie?", en: "How much protein do I need?", slug: "cata-proteina-am-nevoie" },
-  { icon: Apple, ro: "Ce alimente ar trebui să aleg?", en: "What foods should I choose?", slug: null as string | null, wide: true },
+  { icon: Clock, ro: "De ce nu slăbesc deși mănânc puțin?", en: "Why am I not losing weight even though I eat little?", slug: "controlul-greutatii", wide: true },
 ];
 
 const nutriHubTopics = [
@@ -41,12 +41,27 @@ export default function Home() {
   const ro = language === "ro";
 
   return (
-    <div className="flex flex-col">
-      {/* Hero -- background pinned to the exact hex from the finalized hero-image
-          decision (#FBF6EE) so the photo's own feathered edges (baked into
-          hero.jpg/hero.webp, see the composite script) dissolve into it with
-          no visible seam. Scoped to this section only, not the shared
-          --background token.
+    <div
+      className="flex flex-col"
+      style={{
+        // Page-scoped palette correction (approved hex direction), applied
+        // as local CSS custom-property overrides on Home only -- never
+        // touches the shared :root tokens, so Services/NutriHub/Calculator/
+        // checkout/header/footer are unaffected. Only --primary,
+        // --muted-foreground, --background and --card actually differed
+        // meaningfully from the approved values; --foreground and --rodie
+        // were already a near-exact match and are left alone.
+        "--background": "37 62% 96%", // #FBF6EE
+        "--card": "38 73% 97%", // #FDF9F2 -- "suprafețe deschise"
+        "--primary": "141 33% 27%", // #2F5D3F
+        "--muted-foreground": "22 16% 41%", // #7A6559 -- was a cool sage-gray, now warm taupe
+      } as any}
+    >
+      {/* Hero -- background now comes from the page-scoped --background
+          override above (exact #FBF6EE) so the photo's own feathered edges
+          (baked into hero.jpg/hero.webp, see the composite script) dissolve
+          into it with no visible seam, and the rest of the page's
+          bg-background sections match it exactly too.
 
           Grid is 3 top-level items in DOM order (text-top, image, chips) so
           mobile needs zero reordering -- it's already eyebrow/H1/subtitle/
@@ -54,7 +69,7 @@ export default function Home() {
           restores the original 2-column split via explicit placement: col 1
           gets text-top (row 1) + chips (row 2), col 2 gets the image
           spanning both rows, centered. */}
-      <section className="relative bg-[#FBF6EE] overflow-hidden pt-7 pb-9 md:pt-14 md:pb-14 lg:pt-20 lg:pb-20">
+      <section className="relative bg-background overflow-hidden pt-7 pb-9 md:pt-14 md:pb-14 lg:pt-20 lg:pb-20">
         <div className="max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8">
           <div className="grid lg:grid-cols-[1fr_0.9fr] lg:grid-rows-[auto_auto] lg:gap-x-[68px] items-center">
             <motion.div
@@ -70,21 +85,15 @@ export default function Home() {
                 {ro ? "Nutriție. Fără mituri." : "Nutrition. No myths."}
               </span>
 
-              <h1 className="font-serif font-bold text-foreground text-[32px] min-[390px]:text-[35px] lg:text-[57px] leading-[1.08] lg:leading-[1.06] tracking-[-0.01em] max-w-[340px] lg:max-w-[560px] mb-3 lg:mb-4">
+              <h1 className="font-serif font-bold text-foreground text-[36px] min-[390px]:text-[38px] lg:text-[57px] leading-[1.08] lg:leading-[1.06] tracking-[-0.01em] max-w-[340px] lg:max-w-[560px] mb-3 lg:mb-4">
                 {ro ? "În spatele fiecărui aliment există " : "Behind every food, there's "}
                 <span className="text-primary">{ro ? "o întrebare." : "a question."}</span>
               </h1>
 
-              <p className="text-base lg:text-[18px] leading-[1.5] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-2 lg:mb-2.5">
+              <p className="text-base lg:text-[18px] leading-[1.5] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-[21px] lg:mb-7">
                 {ro
                   ? "Ce alimente ar trebui să aleg? Cum arată o masă echilibrată? De câtă proteină am nevoie? Ce contează atunci când vreau să slăbesc sau să-mi mențin greutatea?"
                   : "What foods should I choose? What does a balanced meal look like? How much protein do I need? What matters when I want to lose weight or maintain it?"}
-              </p>
-
-              <p className="text-sm lg:text-[15px] leading-[1.5] text-muted-foreground/80 italic max-w-[360px] lg:max-w-[480px] mb-[21px] lg:mb-7">
-                {ro
-                  ? "Calitate, varietate și alegeri potrivite pentru tine."
-                  : "Quality, variety, and choices that fit you."}
               </p>
 
               <div className="flex flex-col min-[380px]:flex-row gap-3">
@@ -130,11 +139,11 @@ export default function Home() {
 
               {/* Editorial caption, not a card -- no background/border/shadow,
                   small and airy so it doesn't compete with the hero copy. */}
-              <div className="mt-4 lg:mt-5 max-w-[360px] md:max-w-[480px] lg:max-w-[380px] mx-auto lg:mx-0 lg:ml-auto lg:mr-9 xl:mr-16">
+              <div className="mt-4 lg:mt-3 max-w-[360px] md:max-w-[480px] lg:max-w-[380px] mx-auto lg:mx-0 lg:ml-auto lg:mr-9 xl:mr-16">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--rodie))] mb-1.5">
                   {ro ? "De ce rodia?" : "Why pomegranate?"}
                 </p>
-                <p className="text-xs lg:text-[13px] leading-relaxed text-muted-foreground/80">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   {ro
                     ? "Pentru că este un exemplu bun că un aliment poate fi interesant fără să fie „magic”. Conține polifenoli și antocianine, dar ceea ce contează pentru sănătatea ta este alimentația în ansamblu, nu un singur „superaliment”."
                     : "Because it's a good example that a food can be interesting without being \"magic\". It contains polyphenols and anthocyanins, but what matters for your health is your diet as a whole, not a single \"superfood\"."}
@@ -217,13 +226,13 @@ export default function Home() {
               >
                 <Link
                   href={`/nutrihub/${topic.slug}`}
-                  className="block rounded-2xl bg-card border border-border p-8 text-center hover:border-primary/30 hover:shadow-md transition-all"
+                  className="block rounded-2xl bg-card border border-border p-7 text-center hover:border-primary/30 hover:shadow-md transition-all"
                   data-testid={`card-nutrihub-topic-${i}`}
                 >
                   <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <topic.icon className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="font-serif font-bold text-foreground text-lg">
+                  <h3 className="font-serif font-bold text-foreground text-xl">
                     {ro ? topic.ro : topic.en}
                   </h3>
                 </Link>
@@ -236,8 +245,10 @@ export default function Home() {
       {/* Servicii scurt */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4 max-w-2xl text-center">
-          <span className="inline-block text-xs font-bold tracking-wide uppercase text-primary bg-primary/15 border border-primary/20 px-3 py-1 rounded-full mb-4">
+          <span className="inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
+            <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
             {ro ? "Sprijin personalizat" : "Personalized support"}
+            <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
           </span>
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-5 text-balance">
             {ro ? "Când informația generală nu este suficientă" : "When general information isn't enough"}
@@ -249,7 +260,7 @@ export default function Home() {
           </p>
           <Link
             href="/services"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary/90 active:scale-[0.97] text-primary-foreground font-medium px-8 h-12 transition-all"
+            className="inline-flex items-center justify-center gap-2 h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
             data-testid="button-see-services"
           >
             {ro ? "Vezi serviciile" : "See services"}
@@ -268,7 +279,8 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <span className="inline-block text-xs font-bold tracking-wide uppercase text-primary bg-primary/15 border border-primary/20 px-3 py-1 rounded-full mb-4">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
+                <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
                 {ro ? "Pentru cei mici" : "For little ones"}
               </span>
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3 text-balance">
@@ -300,7 +312,7 @@ export default function Home() {
               <div>
                 <Link
                   href="/nutri-pentru-copii"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 text-primary-foreground font-medium px-8 h-12 transition-all"
+                  className="inline-flex items-center justify-center gap-2 h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
                   data-testid="button-discover-nutri"
                 >
                   {ro ? "Descoperă lumea lui Nutri" : "Discover Nutri's world"}
@@ -345,7 +357,7 @@ export default function Home() {
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                 <CalculatorIcon className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-serif font-bold text-foreground text-lg mb-2">
+              <h3 className="font-serif font-bold text-foreground text-xl mb-2">
                 {ro ? "Calculator necesar caloric" : "Calorie needs calculator"}
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
@@ -366,7 +378,7 @@ export default function Home() {
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                 <NotebookPen className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-serif font-bold text-foreground text-lg mb-2">
+              <h3 className="font-serif font-bold text-foreground text-xl mb-2">
                 {ro ? "Jurnal alimentar" : "Food journal"}
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
@@ -390,17 +402,17 @@ export default function Home() {
       {/* Final CTA */}
       <section className="py-20 bg-background border-t">
         <div className="container mx-auto px-4 max-w-2xl text-center">
-          <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4 text-balance">
             {ro ? "Ai găsit răspunsurile pe care le căutai?" : "Did you find the answers you were looking for?"}
           </h2>
-          <p className="text-muted-foreground mb-8 leading-relaxed">
+          <p className="text-base md:text-lg text-muted-foreground mb-8 leading-relaxed">
             {ro
               ? "Dacă încă ai întrebări sau îți dorești recomandări adaptate istoricului, obiectivelor și stilului tău de viață, mi-ar face plăcere să ne cunoaștem și să construim împreună un plan potrivit pentru tine."
               : "If you still have questions or want recommendations tailored to your history, goals, and lifestyle, I'd love to get to know you and build a plan that fits you together."}
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary/90 active:scale-[0.97] text-white font-medium px-8 h-12 transition-all"
+            className="inline-flex items-center justify-center gap-2 h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white font-semibold text-[15px] lg:text-base transition-all"
             data-testid="button-lets-meet"
           >
             <Heart className="w-4 h-4" />
