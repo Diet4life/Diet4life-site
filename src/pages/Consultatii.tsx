@@ -117,22 +117,27 @@ function preloadFonts(): Promise<void> {
   if (fontsLoaded) return Promise.resolve();
   if (!fontsLoadPromise) {
     fontsLoadPromise = (async () => {
-      const [interRegRes, interBoldRes, playfairBoldRes] = await Promise.all([
+      // "Bold" style throughout is actually backed by the SemiBold (600)
+      // weight, not true Bold (700) -- the whole document's spec calls for
+      // Inter/Playfair Display Semibold wherever emphasis is needed, never
+      // full Bold, so the 600-weight files are registered under jsPDF's
+      // "bold" style key (jsPDF just needs a style label, not the real name).
+      const [interRegRes, interSemiRes, playfairSemiRes] = await Promise.all([
         fetch("/fonts/Inter-Regular.ttf"),
-        fetch("/fonts/Inter-Bold.ttf"),
-        fetch("/fonts/PlayfairDisplay-Bold.ttf"),
+        fetch("/fonts/Inter-SemiBold.ttf"),
+        fetch("/fonts/PlayfairDisplay-SemiBold.ttf"),
       ]);
-      if (!interRegRes.ok || !interBoldRes.ok || !playfairBoldRes.ok) {
+      if (!interRegRes.ok || !interSemiRes.ok || !playfairSemiRes.ok) {
         throw new Error(
-          `Font fetch failed (Inter regular: ${interRegRes.status}, Inter bold: ${interBoldRes.status}, Playfair bold: ${playfairBoldRes.status})`
+          `Font fetch failed (Inter regular: ${interRegRes.status}, Inter semibold: ${interSemiRes.status}, Playfair semibold: ${playfairSemiRes.status})`
         );
       }
-      const [interRegular, interBold, playfairBold] = await Promise.all([
+      const [interRegular, interSemiBold, playfairSemiBold] = await Promise.all([
         arrayBufferToBase64(await interRegRes.arrayBuffer()),
-        arrayBufferToBase64(await interBoldRes.arrayBuffer()),
-        arrayBufferToBase64(await playfairBoldRes.arrayBuffer()),
+        arrayBufferToBase64(await interSemiRes.arrayBuffer()),
+        arrayBufferToBase64(await playfairSemiRes.arrayBuffer()),
       ]);
-      (window as any).__diet4lifeFontCache = { interRegular, interBold, playfairBold };
+      (window as any).__diet4lifeFontCache = { interRegular, interSemiBold, playfairSemiBold };
       fontsLoaded = true;
     })();
   }
@@ -141,13 +146,13 @@ function preloadFonts(): Promise<void> {
 
 async function registerFonts(doc: jsPDF) {
   await preloadFonts();
-  const { interRegular, interBold, playfairBold } = (window as any).__diet4lifeFontCache;
+  const { interRegular, interSemiBold, playfairSemiBold } = (window as any).__diet4lifeFontCache;
   doc.addFileToVFS("Inter-Regular.ttf", interRegular);
   doc.addFont("Inter-Regular.ttf", "Inter", "normal");
-  doc.addFileToVFS("Inter-Bold.ttf", interBold);
-  doc.addFont("Inter-Bold.ttf", "Inter", "bold");
-  doc.addFileToVFS("PlayfairDisplay-Bold.ttf", playfairBold);
-  doc.addFont("PlayfairDisplay-Bold.ttf", "PlayfairDisplay", "bold");
+  doc.addFileToVFS("Inter-SemiBold.ttf", interSemiBold);
+  doc.addFont("Inter-SemiBold.ttf", "Inter", "bold");
+  doc.addFileToVFS("PlayfairDisplay-SemiBold.ttf", playfairSemiBold);
+  doc.addFont("PlayfairDisplay-SemiBold.ttf", "PlayfairDisplay", "bold");
   doc.setFont("Inter", "normal");
 }
 
@@ -160,6 +165,9 @@ const COLOR_GREEN: [number, number, number] = [47, 93, 63]; // #2F5D3F
 const COLOR_GREEN_TINT: [number, number, number] = [234, 239, 236]; // subtle green-tinted fill
 const COLOR_RUBY: [number, number, number] = [156, 43, 62]; // #9C2B3E -- rare editorial accent only
 const COLOR_BORDER: [number, number, number] = [213, 223, 217]; // subtle, warm-neutral table border
+const COLOR_INSTR_BG: [number, number, number] = [243, 245, 241]; // #F3F5F1 -- instructions box only
+const COLOR_RUBY_TINT: [number, number, number] = [251, 245, 246]; // extremely subtle ruby wash behind "De reținut"
+const LINE_WIDTH_THIN = 0.15; // one consistent, very light border weight, used everywhere in the document
 
 // ─── PDF Generator ─────────────────────────────────────────────────────────
 async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
@@ -201,14 +209,14 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.setTextColor(...COLOR_TEXT_SECONDARY);
   doc.text("contact@diet4lifeconcept.ro  ·  0766 572 968", pageW - margin, 16, { align: "right" });
   doc.setDrawColor(...COLOR_GREEN);
-  doc.setLineWidth(0.4);
+  doc.setLineWidth(0.3);
   doc.line(margin, 21, pageW - margin, 21);
-  y = 33;
+  y = 34;
 
   // Title
   doc.setTextColor(...COLOR_TEXT);
   doc.setFont("PlayfairDisplay", "bold");
-  doc.setFontSize(21);
+  doc.setFontSize(27);
   doc.text("Jurnal Alimentar – 7 Zile", margin, y);
   y += 7;
   doc.setFont("Inter", "normal");
@@ -231,15 +239,15 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   // Height computed from wrapped line counts so text never overflows it.
   const instrText1 = "Notează toate mesele și gustările timp de 7 zile consecutive. Include orele, cantitățile aproximative, lichidele consumate și orice simptome sau observații relevante.";
   const instrText2 = "Cantitățile pot fi notate aproximativ, folosind repere simple: linguri pentru garnituri sau sosuri, palma pentru dimensiunea unei porții de carne sau pește, iar degetele pentru grosime.";
-  doc.setFontSize(8.5);
+  doc.setFontSize(9);
   const instrWrapped1 = doc.splitTextToSize(instrText1, pageW - 2 * margin - 10);
   const instrWrapped2 = doc.splitTextToSize(instrText2, pageW - 2 * margin - 10);
-  const instrLineH = 4;
-  const instrParaGap = 2.5;
+  const instrLineH = 4.2;
+  const instrParaGap = 4;
   const instrBoxHeight = 7 + instrWrapped1.length * instrLineH + instrParaGap + instrWrapped2.length * instrLineH;
-  doc.setFillColor(...COLOR_GREEN_TINT);
+  doc.setFillColor(...COLOR_INSTR_BG);
   doc.setDrawColor(...COLOR_BORDER);
-  doc.setLineWidth(0.2);
+  doc.setLineWidth(LINE_WIDTH_THIN);
   doc.roundedRect(margin, y, pageW - 2 * margin, instrBoxHeight, 1.5, 1.5, "FD");
   doc.setFont("Inter", "bold");
   doc.setTextColor(...COLOR_GREEN);
@@ -271,7 +279,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     ["Alimente preferate", patient.preferredFoods || "___________________________________"],
     ["Alimente pe care nu le consum", patient.avoidedFoods || "___________________________________"],
     ["Alimente care îmi provoacă disconfort", patient.discomfortFoods || "___________________________________"],
-    ["Ce îți este cel mai dificil în alimentația de zi cu zi?", patient.mainDifficulty || "___________________________________"],
+    ["Cea mai mare dificultate alimentară", patient.mainDifficulty || "___________________________________"],
   ];
 
   autoTable(doc, {
@@ -279,10 +287,10 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     head: [],
     body: fields,
     theme: "grid",
-    styles: { fontSize: 7.8, cellPadding: 2.1, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: 0.2 },
+    styles: { cellPadding: 2.1, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: LINE_WIDTH_THIN },
     columnStyles: {
-      0: { fontStyle: "bold", cellWidth: 68, fillColor: COLOR_GREEN_TINT },
-      1: { cellWidth: pageW - 2 * margin - 68 },
+      0: { fontStyle: "bold", fontSize: 8.3, cellWidth: 68, fillColor: COLOR_GREEN_TINT },
+      1: { fontSize: 8.75, cellWidth: pageW - 2 * margin - 68 },
     },
     margin: { left: margin, right: margin },
   });
@@ -304,11 +312,11 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     head: [["Nivel", "Foame înainte de masă", "Sațietate după masă"]],
     body: HUNGER_SCALE.map(h => [h.level, h.before, h.after]),
     theme: "grid",
-    headStyles: { fillColor: COLOR_GREEN, textColor: 255, fontSize: 7.5, fontStyle: "bold" },
-    styles: { fontSize: 7.5, cellPadding: 1.8, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: 0.2 },
+    headStyles: { fillColor: COLOR_GREEN, textColor: 255, fontSize: 8.2, fontStyle: "bold" },
+    styles: { fontSize: 8.2, cellPadding: 1.5, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: LINE_WIDTH_THIN },
     margin: { left: margin, right: margin },
     columnStyles: {
-      0: { cellWidth: 16, fontStyle: "bold", halign: "center", cellPadding: { top: 1.8, right: 1.8, bottom: 1.8, left: 7 } },
+      0: { cellWidth: 16, fontStyle: "bold", halign: "center", cellPadding: { top: 1.5, right: 1.5, bottom: 1.5, left: 7 } },
       1: { cellWidth: (pageW - 2 * margin - 16) / 2 },
       2: { cellWidth: (pageW - 2 * margin - 16) / 2 },
     },
@@ -323,24 +331,26 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   y = (doc as any).lastAutoTable.finalY + 7;
 
   // ── "De reținut" editorial note ─────────────────────────────────────────
-  // A rare, discreet ruby accent (a thin left rule, no filled card) — not
-  // decorative, just a professional editorial callout.
+  // A rare, discreet ruby accent — a left rule plus an extremely subtle ruby
+  // wash behind it (no stroke, no shadow), kept editorial rather than a card.
   addPageIfNeeded(22);
   const noteText = "Nu încerca să mănânci «mai bine» doar pentru că notezi. Jurnalul este mai util atunci când reflectă cât mai fidel alimentația ta obișnuită.";
   doc.setFont("Inter", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(8.8);
   const noteWrapped = doc.splitTextToSize(noteText, pageW - 2 * margin - 8);
   const noteTextX = margin + 6;
-  const noteBlockHeight = 6 + noteWrapped.length * 4.2 + 2;
+  const noteBlockHeight = 6 + noteWrapped.length * 4.2 + 3;
+  doc.setFillColor(...COLOR_RUBY_TINT);
+  doc.rect(margin, y, pageW - 2 * margin, noteBlockHeight, "F");
   doc.setFillColor(...COLOR_RUBY);
-  doc.rect(margin, y, 0.9, noteBlockHeight, "F");
+  doc.rect(margin, y, 1.3, noteBlockHeight, "F");
   doc.setFont("Inter", "bold");
-  doc.setFontSize(8.5);
+  doc.setFontSize(9);
   doc.setTextColor(...COLOR_RUBY);
-  doc.text("DE REȚINUT", noteTextX, y + 4.5);
+  doc.text("DE REȚINUT", noteTextX, y + 5);
   doc.setFont("Inter", "normal");
   doc.setTextColor(...COLOR_TEXT_SECONDARY);
-  doc.text(noteWrapped, noteTextX, y + 9.3);
+  doc.text(noteWrapped, noteTextX, y + 10);
 
   drawFooter();
 
@@ -378,18 +388,18 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
 
     autoTable(doc, {
       startY: y,
-      head: [["Masă", "Ora", "Ce am mâncat / băut", "Cantitate", "Foame înainte /\ndupă masă (1-5)", "De ce ai mâncat?"]],
+      head: [["Masă", "Ora", "Ce am mâncat / băut", "Cantitate", "Foame / sațietate\n(1–5)", "De ce ai mâncat?"]],
       body: rows,
       theme: "grid",
-      headStyles: { fillColor: COLOR_GREEN, textColor: 255, fontSize: 7, fontStyle: "bold", halign: "center" },
-      styles: { fontSize: 7.5, cellPadding: 2.5, minCellHeight: 26, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: 0.2 },
+      headStyles: { fillColor: COLOR_GREEN, textColor: 255, fontSize: 8.2, fontStyle: "bold", halign: "center" },
+      styles: { fontSize: 8.75, cellPadding: 2.5, minCellHeight: 26, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: LINE_WIDTH_THIN },
       columnStyles: {
-        0: { cellWidth: 22, fontStyle: "bold", fillColor: COLOR_SURFACE },
+        0: { cellWidth: 26, fontStyle: "bold", fillColor: COLOR_SURFACE },
         1: { cellWidth: 16, halign: "center" },
-        2: { cellWidth: 44 },
-        3: { cellWidth: 34, overflow: "ellipsize" },
+        2: { cellWidth: 50 },
+        3: { cellWidth: 30, overflow: "ellipsize" },
         4: { cellWidth: 22, halign: "center" },
-        5: { cellWidth: pageW - 2 * margin - 138 },
+        5: { cellWidth: pageW - 2 * margin - 144 },
       },
       margin: { left: margin, right: margin },
     });
@@ -400,27 +410,27 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     doc.setFontSize(7);
     doc.setTextColor(...COLOR_TEXT_SECONDARY);
     doc.setFont("Inter", "normal");
-    doc.text("Î = Înainte de masă   ·   D = După masă", margin, y);
+    doc.text("Î = înainte de masă   ·   D = după masă", margin, y);
     y += 6;
 
     // Notes box — renamed to also cover symptoms, with a small example line
     doc.setFont("Inter", "bold");
-    doc.setFontSize(8.5);
+    doc.setFontSize(9.5);
     doc.setTextColor(...COLOR_TEXT);
     doc.text("Note suplimentare / simptome", margin, y);
-    y += 4;
+    y += 4.5;
     doc.setFont("Inter", "normal");
-    doc.setFontSize(7);
+    doc.setFontSize(8);
     doc.setTextColor(...COLOR_TEXT_SECONDARY);
     const notesHintWrapped = doc.splitTextToSize(
       "Ex.: balonare, greață, reflux, disconfort abdominal, energie, somn sau alte observații.",
       pageW - 2 * margin
     );
     doc.text(notesHintWrapped, margin, y);
-    y += notesHintWrapped.length * 3.6 + 3;
+    y += notesHintWrapped.length * 3.8 + 3;
 
     doc.setDrawColor(...COLOR_BORDER);
-    doc.setLineWidth(0.2);
+    doc.setLineWidth(LINE_WIDTH_THIN);
     doc.setFillColor(...COLOR_SURFACE);
     const dayPageBottom = 273;
     const notesBoxHeight = Math.max(18, dayPageBottom - y);
