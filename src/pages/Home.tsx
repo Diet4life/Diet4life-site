@@ -40,16 +40,27 @@ export default function Home() {
           decision (#FBF6EE) so the photo's own feathered edges (baked into
           hero.jpg/hero.webp, see the composite script) dissolve into it with
           no visible seam. Scoped to this section only, not the shared
-          --background token. */}
+          --background token.
+
+          Grid is 3 top-level items in DOM order (text-top, image, chips) so
+          mobile needs zero reordering -- it's already eyebrow/H1/subtitle/
+          CTA -> image -> chips by default single-column stacking. Desktop
+          restores the original 2-column split via explicit placement: col 1
+          gets text-top (row 1) + chips (row 2), col 2 gets the image
+          spanning both rows, centered. */}
       <section className="relative bg-[#FBF6EE] overflow-hidden pt-7 pb-9 md:pt-14 md:pb-14 lg:pt-20 lg:pb-20">
         <div className="max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8">
-          <div className="grid lg:grid-cols-[1fr_0.9fr] gap-2 lg:gap-[68px] items-center">
+          <div className="grid lg:grid-cols-[1fr_0.9fr] lg:grid-rows-[auto_auto] lg:gap-x-[68px] items-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
+              className="lg:col-start-1 lg:row-start-1"
             >
-              <span className="inline-block text-xs font-bold tracking-wide uppercase text-[hsl(var(--rodie))] bg-[hsl(var(--rodie)/0.08)] border border-[hsl(var(--rodie)/0.2)] px-3 py-1 rounded-full mb-4">
+              {/* Editorial kicker -- no pill/background/border, a thin rule
+                  instead of a badge shape. */}
+              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-[hsl(var(--rodie))] mb-4">
+                <span className="inline-block w-4 h-px bg-[hsl(var(--rodie))]" aria-hidden="true" />
                 {ro ? "Nutriție. Fără mituri." : "Nutrition. No myths."}
               </span>
 
@@ -66,11 +77,11 @@ export default function Home() {
 
               <p className="text-sm lg:text-[15px] leading-[1.5] text-muted-foreground/80 italic max-w-[360px] lg:max-w-[480px] mb-[21px] lg:mb-7">
                 {ro
-                  ? "Nu e vorba doar despre cifre, ci despre calitate, varietate și alegeri potrivite pentru tine."
-                  : "It's not just about numbers -- it's about quality, variety, and choices that fit you."}
+                  ? "Calitate, varietate și alegeri potrivite pentru tine."
+                  : "Quality, variety, and choices that fit you."}
               </p>
 
-              <div className="flex flex-col min-[380px]:flex-row gap-3 mb-[21px] lg:mb-7">
+              <div className="flex flex-col min-[380px]:flex-row gap-3">
                 <Link
                   href="/nutrihub"
                   className="inline-flex items-center justify-center min-[380px]:min-w-[200px] h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white font-semibold text-[15px] lg:text-base transition-all"
@@ -86,7 +97,33 @@ export default function Home() {
                   {ro ? "Vezi serviciile" : "See services"}
                 </Link>
               </div>
+            </motion.div>
 
+            {/* Image -- moved up in mobile DOM order (right after the CTAs,
+                before the topic chips) so it lands as a scroll-stopper
+                earlier, not after everything else. No card: no border, no
+                shadow, no radius, no aspect-square clip -- the feathered
+                edge baked into the file is what integrates it. */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+              className="my-7 lg:my-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-center"
+            >
+              <picture>
+                <source srcSet="/images/hero.webp" type="image/webp" />
+                <img
+                  src="/images/hero.jpg"
+                  alt={ro ? "Rodie tăiată, fotografie editorială Diet4Life" : "Cut pomegranate, Diet4Life editorial photograph"}
+                  width={1086}
+                  height={1086}
+                  loading="eager"
+                  className="w-full h-auto max-w-[420px] md:max-w-[480px] lg:max-w-none lg:w-[700px] xl:w-[820px] mx-auto lg:mx-0 lg:ml-auto lg:-mr-10 xl:-mr-20"
+                />
+              </picture>
+            </motion.div>
+
+            <div className="lg:col-start-1 lg:row-start-2">
               <p className="text-[13px] lg:text-sm font-medium text-muted-foreground mb-2.5 lg:mb-[14px]">
                 {ro ? "Câteva întrebări de la care poți porni" : "A few questions to start with"}
               </p>
@@ -103,29 +140,7 @@ export default function Home() {
                   </Link>
                 ))}
               </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-              className="mt-2 lg:mt-0 lg:-mr-6 xl:-mr-14"
-            >
-              {/* No card: no border, no shadow, no radius, no aspect-square
-                  clip -- the image's own feathered edge (baked in against
-                  #FBF6EE) is what integrates it into the section, not a box. */}
-              <picture>
-                <source srcSet="/images/hero.webp" type="image/webp" />
-                <img
-                  src="/images/hero.jpg"
-                  alt={ro ? "Rodie tăiată, fotografie editorială Diet4Life" : "Cut pomegranate, Diet4Life editorial photograph"}
-                  width={1086}
-                  height={1086}
-                  loading="eager"
-                  className="w-full h-auto max-w-[400px] md:max-w-[460px] lg:max-w-none lg:w-[640px] xl:w-[720px] mx-auto lg:mx-0 lg:ml-auto"
-                />
-              </picture>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
