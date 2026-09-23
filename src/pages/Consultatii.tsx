@@ -241,43 +241,12 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   });
   y = (doc as any).lastAutoTable.finalY + 10;
 
-  // ── Portion Guide (hand-based) ────────────────────────────────────────────
-  addPageIfNeeded(55);
-  doc.setFont("DejaVuSans", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(30, 30, 30);
-  doc.text("Ghid vizual: mâna ca unitate de măsură", margin, y);
-  y += 5;
-  doc.setFont("DejaVuSans", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text("Simplu și eficient, fără cântar sau pahar gradat.", margin, y);
-  y += 5;
-
-  autoTable(doc, {
-    startY: y,
-    head: [["Reper", "Grup alimentar", "Exemple"]],
-    body: PORTION_GUIDE.map(p => [p.hand, p.group, p.examples]),
-    theme: "grid",
-    headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 8, fontStyle: "bold" },
-    styles: { fontSize: 8, cellPadding: 3, font: "DejaVuSans" },
-    margin: { left: margin, right: margin },
-    columnStyles: {
-      0: { cellWidth: 38, fontStyle: "bold", cellPadding: { top: 3, right: 3, bottom: 3, left: 10 } },
-      1: { cellWidth: 45, fontStyle: "bold" },
-      2: { cellWidth: pageW - 2 * margin - 83 },
-    },
-    didDrawCell: (data) => {
-      if (data.section === "body" && data.column.index === 0) {
-        const p = PORTION_GUIDE[data.row.index];
-        doc.setFillColor(...p.color);
-        doc.circle(data.cell.x + 4, data.cell.y + data.cell.height / 2, 2, "F");
-      }
-    },
-  });
-  y = (doc as any).lastAutoTable.finalY + 10;
-
   // ── Hunger/fullness scale legend ──────────────────────────────────────────
+  // The hand-based portion guide used to sit here (its own heading + table),
+  // which pushed this section onto its own near-empty page 2. Removed from
+  // the PDF per the patient's feedback -- PORTION_GUIDE itself and its
+  // rendering on the live /consultatii page are untouched, only this PDF
+  // placement was dropped, so the scale now fits on page 1 with everything else.
   addPageIfNeeded(45);
   doc.setFont("DejaVuSans", "bold");
   doc.setFontSize(11);
