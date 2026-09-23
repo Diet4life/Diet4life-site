@@ -123,7 +123,7 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-              className="my-7 lg:my-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-center"
+              className="mt-4 mb-7 lg:my-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-start"
             >
               <picture>
                 <source srcSet="/images/hero.webp" type="image/webp" />
