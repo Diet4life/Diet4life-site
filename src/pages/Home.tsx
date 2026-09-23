@@ -201,16 +201,14 @@ export default function Home() {
       </section>
 
       {/* Din răspunsuri, în practică (was "Aplică în viața reală" -- moved
-          to right after the hero/trust bar, renamed). Visual finalization:
-          real editorial mockup photos (built from the actual journal PDF
-          and the actual calculator UI, see tool-journal.jpg/tool-
-          calculator.jpg -- no invented UI, no stock photography) replace
-          the earlier icon-card design. Image backgrounds are the same
-          #FBF6EE as this page's own --background override above, so each
-          photo blends straight into the section instead of sitting in a
-          boxed card -- deliberately "no heavy SaaS cards" per the brief.
-          Mobile order (Calculator first, then Jurnal) falls out of plain
-          DOM order in the single-column stack, no extra ordering needed. */}
+          to right after the hero/trust bar, renamed). Visual finalization,
+          final round: the 2 final images she supplied directly (tool-
+          journal.png / tool-calculator.png) replace the earlier mockups.
+          Cards use a subtle border + faint card background (not a heavy
+          shadow, not rotated) so the images read as integrated into the
+          section rather than pasted on top of it. Mobile order (Calculator
+          first, then Jurnal) falls out of plain DOM order in the
+          single-column stack, no extra ordering needed. */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4 max-w-5xl">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-3 text-balance">
@@ -221,25 +219,26 @@ export default function Home() {
               ? "Instrumente simple care te ajută să înțelegi mai bine nevoile și obiceiurile tale."
               : "Simple tools to help you better understand your needs and habits."}
           </p>
-          <div className="grid md:grid-cols-2 gap-x-10 gap-y-14">
-            <Link href="/calculator" className="group block" data-testid="link-apply-calculator">
-              <div className="rounded-2xl overflow-hidden mb-6">
-                <picture>
-                  <source srcSet="/images/tool-calculator.webp" type="image/webp" />
-                  <img
-                    src="/images/tool-calculator.jpg"
-                    alt={ro ? "Formularul calculatorului Diet4Life, completat, cu rezultatul caloric afișat" : "The Diet4Life calculator form, filled in, with the calorie result shown"}
-                    className="w-full h-auto transition-transform duration-300 group-hover:scale-[1.02]"
-                    loading="lazy"
-                    width={1440}
-                    height={1080}
-                  />
-                </picture>
+          <div className="grid md:grid-cols-2 gap-8">
+            <Link
+              href="/calculator"
+              className="group flex flex-col h-full rounded-2xl border border-border bg-card/60 p-5 md:p-6 transition-colors hover:border-primary/30"
+              data-testid="link-apply-calculator"
+            >
+              <div className="rounded-xl overflow-hidden mb-6">
+                <img
+                  src="/images/tool-calculator.png"
+                  alt={ro ? "Rezultatul nutrițional calculat de calculatorul Diet4Life" : "The nutritional result calculated by the Diet4Life calculator"}
+                  className="w-full h-auto"
+                  loading="lazy"
+                  width={1448}
+                  height={1086}
+                />
               </div>
               <h3 className="font-serif font-semibold text-foreground text-xl mb-2">
                 {ro ? "Calculator necesar caloric" : "Calorie needs calculator"}
               </h3>
-              <p className="text-sm text-muted-foreground mb-3">
+              <p className="text-sm text-muted-foreground mb-4 flex-1">
                 {ro
                   ? "Află orientativ câte calorii ai nevoie, pornind de la profilul tău."
                   : "Get an estimate of how many calories you need, based on your profile."}
@@ -249,24 +248,25 @@ export default function Home() {
               </span>
             </Link>
 
-            <Link href="/consultatii" className="group block" data-testid="link-apply-journal">
-              <div className="rounded-2xl overflow-hidden mb-6">
-                <picture>
-                  <source srcSet="/images/tool-journal.webp" type="image/webp" />
-                  <img
-                    src="/images/tool-journal.jpg"
-                    alt={ro ? "Pagina 1 a jurnalului alimentar Diet4Life, necompletată" : "Page 1 of the Diet4Life food journal, blank"}
-                    className="w-full h-auto transition-transform duration-300 group-hover:scale-[1.02]"
-                    loading="lazy"
-                    width={1440}
-                    height={1080}
-                  />
-                </picture>
+            <Link
+              href="/consultatii"
+              className="group flex flex-col h-full rounded-2xl border border-border bg-card/60 p-5 md:p-6 transition-colors hover:border-primary/30"
+              data-testid="link-apply-journal"
+            >
+              <div className="rounded-xl overflow-hidden mb-6">
+                <img
+                  src="/images/tool-journal.png"
+                  alt={ro ? "Pagina 1 a jurnalului alimentar Diet4Life" : "Page 1 of the Diet4Life food journal"}
+                  className="w-full h-auto"
+                  loading="lazy"
+                  width={1448}
+                  height={1086}
+                />
               </div>
               <h3 className="font-serif font-semibold text-foreground text-xl mb-2">
                 {ro ? "Jurnal alimentar" : "Food journal"}
               </h3>
-              <p className="text-sm text-muted-foreground mb-3">
+              <p className="text-sm text-muted-foreground mb-4 flex-1">
                 {ro
                   ? "Observă ce mănânci, cum mănânci și ce tipare apar în timp."
                   : "Notice what you eat, how you eat, and the patterns that emerge over time."}
