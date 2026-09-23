@@ -103,19 +103,39 @@ async function arrayBufferToBase64(buf: ArrayBuffer): Promise<string> {
   return btoa(binary);
 }
 
-async function registerFonts(doc: jsPDF) {
-  if (!fontsLoaded) {
-    const [regularRes, boldRes] = await Promise.all([
-      fetch("/fonts/DejaVuSans.ttf"),
-      fetch("/fonts/DejaVuSans-Bold.ttf"),
-    ]);
-    const [regular, bold] = await Promise.all([
-      arrayBufferToBase64(await regularRes.arrayBuffer()),
-      arrayBufferToBase64(await boldRes.arrayBuffer()),
-    ]);
-    (window as any).__diet4lifeFontCache = { regular, bold };
-    fontsLoaded = true;
+// Split out from registerFonts() so the network fetch can be warmed up ahead
+// of time (on page mount), not only inside the click handler. Mobile Chrome
+// revokes a click's "user activation" after an async gap of any real length
+// (font fetch + multi-page render easily exceeds it on a slow connection),
+// which silently blocks doc.save()'s programmatic download with no error --
+// exactly the "I press download and nothing happens" report this fixed.
+// Warming the cache ahead of time means the *first* real click's own async
+// gap is just the (already-cached, synchronous) font lookup instead.
+let fontsLoadPromise: Promise<void> | null = null;
+function preloadFonts(): Promise<void> {
+  if (fontsLoaded) return Promise.resolve();
+  if (!fontsLoadPromise) {
+    fontsLoadPromise = (async () => {
+      const [regularRes, boldRes] = await Promise.all([
+        fetch("/fonts/DejaVuSans.ttf"),
+        fetch("/fonts/DejaVuSans-Bold.ttf"),
+      ]);
+      if (!regularRes.ok || !boldRes.ok) {
+        throw new Error(`Font fetch failed (regular: ${regularRes.status}, bold: ${boldRes.status})`);
+      }
+      const [regular, bold] = await Promise.all([
+        arrayBufferToBase64(await regularRes.arrayBuffer()),
+        arrayBufferToBase64(await boldRes.arrayBuffer()),
+      ]);
+      (window as any).__diet4lifeFontCache = { regular, bold };
+      fontsLoaded = true;
+    })();
   }
+  return fontsLoadPromise;
+}
+
+async function registerFonts(doc: jsPDF) {
+  await preloadFonts();
   const { regular, bold } = (window as any).__diet4lifeFontCache;
   doc.addFileToVFS("DejaVuSans.ttf", regular);
   doc.addFont("DejaVuSans.ttf", "DejaVuSans", "normal");
@@ -413,6 +433,15 @@ export default function Consultatii() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [journalSent, setJournalSent] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // Warm up the PDF fonts as soon as the page mounts (not on click) -- see
+  // the comment on preloadFonts() for why this matters on mobile. Best
+  // effort only: if it fails here, the click handler's own await will just
+  // retry the fetch and surface a real error toast if that fails too.
+  useEffect(() => {
+    preloadFonts().catch(() => {});
+  }, []);
 
   // Auto-save the draft to this browser as the patient fills it in over multiple days
   useEffect(() => {
@@ -481,15 +510,43 @@ export default function Consultatii() {
     : "Your journal is ready. Download the document and send it before your consultation through the communication channel established with your dietitian.";
 
   const handleDownload = async () => {
-    await generatePDF(patient, journal);
-    toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: POST_DOWNLOAD_MESSAGE });
+    if (isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    try {
+      await generatePDF(patient, journal);
+      toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: POST_DOWNLOAD_MESSAGE });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: ro ? "Descărcarea PDF-ului a eșuat" : "PDF download failed",
+        description: ro
+          ? "Te rugăm să încerci din nou. Dacă problema persistă, verifică-ți conexiunea la internet."
+          : "Please try again. If the problem persists, check your internet connection.",
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   // Always generates an empty template, regardless of any saved online-form
   // draft — for the "print and fill by hand" buttons, not the "send my progress" ones.
   const handleDownloadBlank = async () => {
-    await generatePDF(EMPTY_PATIENT, EMPTY_JOURNAL());
-    toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: POST_DOWNLOAD_MESSAGE });
+    if (isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    try {
+      await generatePDF(EMPTY_PATIENT, EMPTY_JOURNAL());
+      toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: POST_DOWNLOAD_MESSAGE });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: ro ? "Descărcarea PDF-ului a eșuat" : "PDF download failed",
+        description: ro
+          ? "Te rugăm să încerci din nou. Dacă problema persistă, verifică-ți conexiunea la internet."
+          : "Please try again. If the problem persists, check your internet connection.",
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   const handleSendEmail = () => {
@@ -745,11 +802,16 @@ export default function Consultatii() {
                   size="lg"
                   className="rounded-xl gap-2 w-full sm:w-auto text-base"
                   onClick={handleDownloadBlank}
+                  disabled={isGeneratingPdf}
                 >
                   <Download className="w-5 h-5" />
-                  <span className="sm:hidden">{ro ? "Descarcă jurnalul" : "Download journal"}</span>
+                  <span className="sm:hidden">
+                    {isGeneratingPdf ? (ro ? "Se generează..." : "Generating...") : ro ? "Descarcă jurnalul" : "Download journal"}
+                  </span>
                   <span className="hidden sm:inline">
-                    {ro ? "Descarcă jurnalul pentru pregătirea consultației" : "Download the journal for your consultation prep"}
+                    {isGeneratingPdf
+                      ? (ro ? "Se generează PDF-ul..." : "Generating PDF...")
+                      : ro ? "Descarcă jurnalul pentru pregătirea consultației" : "Download the journal for your consultation prep"}
                   </span>
                 </Button>
                 <p className="text-xs text-muted-foreground mt-3">
@@ -1126,9 +1188,10 @@ export default function Consultatii() {
                     size="lg"
                     className="rounded-xl gap-2 flex-1"
                     onClick={handleDownload}
+                    disabled={isGeneratingPdf}
                   >
                     <Download className="w-4 h-4" />
-                    {ro ? "Descarcă ca PDF" : "Download as PDF"}
+                    {isGeneratingPdf ? (ro ? "Se generează..." : "Generating...") : ro ? "Descarcă ca PDF" : "Download as PDF"}
                   </Button>
                   <Button
                     size="lg"
@@ -1240,9 +1303,10 @@ export default function Consultatii() {
                     variant="outline"
                     className="rounded-xl gap-2"
                     onClick={handleDownloadBlank}
+                    disabled={isGeneratingPdf}
                   >
                     <Download className="w-4 h-4" />
-                    {ro ? "Descarcă PDF gol" : "Download blank PDF"}
+                    {isGeneratingPdf ? (ro ? "Se generează..." : "Generating...") : ro ? "Descarcă PDF gol" : "Download blank PDF"}
                   </Button>
                 </div>
 
