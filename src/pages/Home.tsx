@@ -9,8 +9,6 @@ import {
   ShieldCheck,
   BadgeCheck,
   BookOpenCheck,
-  Scale,
-  Salad,
   Calculator as CalculatorIcon,
   NotebookPen,
   ArrowRight,
@@ -29,11 +27,6 @@ const heroTopicLinks = [
   { icon: Minus, ro: "Cum arată o masă echilibrată?", en: "What does a balanced meal look like?", slug: "nutritie-echilibrata" },
   { icon: Heart, ro: "Câtă proteină am nevoie?", en: "How much protein do I need?", slug: "cata-proteina-am-nevoie" },
   { icon: Clock, ro: "De ce nu slăbesc deși mănânc puțin?", en: "Why am I not losing weight even though I eat little?", slug: "controlul-greutatii", wide: true },
-];
-
-const nutriHubTopics = [
-  { icon: Scale, ro: "Controlul greutății", en: "Weight control", slug: "controlul-greutatii" },
-  { icon: Salad, ro: "Nutriție echilibrată", en: "Balanced nutrition", slug: "nutritie-echilibrata" },
 ];
 
 export default function Home() {
@@ -209,145 +202,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Explorează pe subiecte (NutriHub) */}
-      <section id="nutrihub" className="py-20 bg-secondary/20 scroll-mt-20">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-12">
-            {ro ? "Explorează pe subiecte" : "Explore by topic"}
-          </h2>
-          <div className="grid sm:grid-cols-2 max-w-2xl mx-auto gap-6">
-            {nutriHubTopics.map((topic, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-              >
-                <Link
-                  href={`/nutrihub/${topic.slug}`}
-                  className="block rounded-2xl bg-card border border-border p-7 text-center hover:border-primary/30 hover:shadow-md transition-all"
-                  data-testid={`card-nutrihub-topic-${i}`}
-                >
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <topic.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="font-serif font-bold text-foreground text-xl">
-                    {ro ? topic.ro : topic.en}
-                  </h3>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Servicii scurt */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4 max-w-2xl text-center">
-          <span className="inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
-            <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
-            {ro ? "Sprijin personalizat" : "Personalized support"}
-            <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
-          </span>
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-5 text-balance">
-            {ro ? "Când informația generală nu este suficientă" : "When general information isn't enough"}
-          </h2>
-          <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-8">
-            {ro
-              ? "Dacă ai nevoie de recomandări adaptate situației tale, putem lucra împreună într-o consultație nutrițională individuală. Camelia Amuza, nutriționist-dietetician autorizat."
-              : "If you need recommendations tailored to your situation, we can work together in an individual nutrition consultation. Camelia Amuza, licensed dietitian-nutritionist."}
-          </p>
-          <Link
-            href="/services"
-            className="inline-flex items-center justify-center gap-2 h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
-            data-testid="button-see-services"
-          >
-            {ro ? "Vezi serviciile" : "See services"}
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </section>
-
-      {/* Nutri pentru copii */}
-      <section className="py-20 bg-secondary/30">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-10 lg:gap-8 items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
-                <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
-                {ro ? "Pentru cei mici" : "For little ones"}
-              </span>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3 text-balance">
-                {ro ? "Descoperă lumea lui Nutri" : "Discover Nutri's world"}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-5">
-                {ro
-                  ? "Nutri este un proiect educațional Diet4Life, creat pentru a-i ajuta pe cei mici să descopere alimentația prin joacă."
-                  : "Nutri is a Diet4Life educational project, created to help little ones discover food through play."}
-              </p>
-              <div className="text-base md:text-lg text-muted-foreground leading-relaxed md:leading-relaxed space-y-5 mb-6">
-                <p>
-                  {ro
-                    ? "Nutri este o mică bufniță curioasă creată pentru a-i ajuta pe copii să descopere alimentele, culorile din farfurie și principiile unei alimentații variate și echilibrate."
-                    : "Nutri is a curious little owl created to help children discover foods, the colors on their plate, and the principles of varied, balanced eating."}
-                </p>
-                <p>
-                  {ro
-                    ? "Prin cărți, jocuri și activități, cei mici învață să exploreze alimente noi, să recunoască grupele alimentare și, treptat, să înțeleagă ce oferă fiecare aliment organismului."
-                    : "Through books, games, and activities, children learn to explore new foods, recognize food groups, and gradually understand what each food gives their body."}
-                </p>
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-5 py-3 text-sm font-semibold text-primary mb-6">
-                <Sparkles className="w-4 h-4 shrink-0" />
-                {ro
-                  ? "Fără presiune. Fără farfurii perfecte. Cu multă curiozitate."
-                  : "No pressure. No perfect plates. Lots of curiosity."}
-              </div>
-              <div>
-                <Link
-                  href="/nutri-pentru-copii"
-                  className="inline-flex items-center justify-center gap-2 h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
-                  data-testid="button-discover-nutri"
-                >
-                  {ro ? "Descoperă lumea lui Nutri" : "Discover Nutri's world"}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <p className="text-xs text-muted-foreground mt-3">
-                  {ro
-                    ? "Cărți • Activități • Jocuri • Resurse pentru părinți"
-                    : "Books • Activities • Games • Resources for parents"}
-                </p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              <img
-                src="/images/nutri-hero.png"
-                alt={ro ? "Nutri, personajul Diet4Life pentru copii" : "Nutri, the Diet4Life character for kids"}
-                className="w-full h-auto rounded-3xl"
-              />
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Aplică în viața reală */}
+      {/* Din răspunsuri, în practică (was "Aplică în viața reală" -- moved
+          to right after the hero/trust bar, renamed) */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-12">
-            {ro ? "Aplică în viața reală" : "Apply it in real life"}
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-3 text-balance">
+            {ro ? "Din răspunsuri, în practică" : "From answers to practice"}
           </h2>
+          <p className="text-base md:text-lg text-muted-foreground text-center max-w-2xl mx-auto mb-12">
+            {ro
+              ? "Instrumente simple care te ajută să înțelegi mai bine nevoile și obiceiurile tale."
+              : "Simple tools to help you better understand your needs and habits."}
+          </p>
           <div className="grid sm:grid-cols-2 gap-6 mb-6">
             <Link
               href="/calculator"
@@ -399,24 +265,93 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-20 bg-background border-t">
+      {/* Nutri pentru copii -- moved to right after "Din răspunsuri, în
+          practică", intro copy replaced per this round's brief. Mascot
+          image untouched. */}
+      <section className="py-20 bg-secondary/30">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-10 lg:gap-8 items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
+                <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
+                {ro ? "Pentru cei mici" : "For little ones"}
+              </span>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3 text-balance">
+                {ro ? "Nutriția poate începe și prin joacă." : "Nutrition can start with play, too."}
+              </h2>
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-6">
+                {ro
+                  ? "Prin povești, jocuri și activități, copiii pot descoperi alimentele într-un mod curios, relaxat și potrivit vârstei lor."
+                  : "Through stories, games, and activities, children can discover food in a curious, relaxed way that fits their age."}
+              </p>
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-5 py-3 text-sm font-semibold text-primary mb-6">
+                <Sparkles className="w-4 h-4 shrink-0" />
+                {ro
+                  ? "Fără presiune. Fără farfurii perfecte. Cu multă curiozitate."
+                  : "No pressure. No perfect plates. Lots of curiosity."}
+              </div>
+              <div>
+                <Link
+                  href="/nutri-pentru-copii"
+                  className="inline-flex items-center justify-center gap-2 h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
+                  data-testid="button-discover-nutri"
+                >
+                  {ro ? "Descoperă lumea lui Nutri" : "Discover Nutri's world"}
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <p className="text-xs text-muted-foreground mt-3">
+                  {ro
+                    ? "Cărți • Activități • Jocuri • Resurse pentru părinți"
+                    : "Books • Activities • Games • Resources for parents"}
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <img
+                src="/images/nutri-hero.png"
+                alt={ro ? "Nutri, personajul Diet4Life pentru copii" : "Nutri, the Diet4Life character for kids"}
+                className="w-full h-auto rounded-3xl"
+              />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Când ai nevoie de ceva adaptat ție (was "Servicii scurt" --
+          renamed, moved to be the last section before the footer) */}
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4 max-w-2xl text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4 text-balance">
-            {ro ? "Ai găsit răspunsurile pe care le căutai?" : "Did you find the answers you were looking for?"}
+          <span className="inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
+            <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
+            {ro ? "Sprijin personalizat" : "Personalized support"}
+            <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
+          </span>
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-5 text-balance">
+            {ro ? "Când ai nevoie de ceva adaptat ție" : "When you need something tailored to you"}
           </h2>
-          <p className="text-base md:text-lg text-muted-foreground mb-8 leading-relaxed">
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-8">
             {ro
-              ? "Dacă încă ai întrebări sau îți dorești recomandări adaptate istoricului, obiectivelor și stilului tău de viață, mi-ar face plăcere să ne cunoaștem și să construim împreună un plan potrivit pentru tine."
-              : "If you still have questions or want recommendations tailored to your history, goals, and lifestyle, I'd love to get to know you and build a plan that fits you together."}
+              ? "Informațiile generale pot fi un punct bun de plecare. Dacă ai nevoie de recomandări adaptate istoricului, obiectivelor și stilului tău de viață, putem lucra împreună într-o consultație nutrițională individuală."
+              : "General information can be a good starting point. If you need recommendations tailored to your history, goals, and lifestyle, we can work together in an individual nutrition consultation."}
           </p>
           <Link
-            href="/contact"
-            className="inline-flex items-center justify-center gap-2 h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white font-semibold text-[15px] lg:text-base transition-all"
-            data-testid="button-lets-meet"
+            href="/services"
+            className="inline-flex items-center justify-center gap-2 h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
+            data-testid="button-see-services"
           >
-            <Heart className="w-4 h-4" />
-            {ro ? "Hai să ne cunoaștem" : "Let's get to know each other"}
+            {ro ? "Vezi serviciile" : "See services"}
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>
