@@ -27,6 +27,15 @@ const heroTopicLinks = [
   { icon: Clock, ro: "De ce nu slăbesc deși mănânc puțin?", en: "Why am I not losing weight even though I eat little?", slug: "controlul-greutatii", wide: true },
 ];
 
+// Same outer column as the hero's own local wrapper (max-w-[1200px] +
+// matching padding), reused on every section below the hero so the page
+// reads as one consistent visual column instead of the hero (custom
+// wrapper) drifting from the rest of the page (Tailwind's default
+// .container breakpoints, which land at a different left edge at large
+// desktop widths). A section's own narrower reading-width wrapper (e.g.
+// max-w-5xl, max-w-2xl) nests inside this one rather than replacing it.
+const PAGE_COLUMN = "max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8";
+
 export default function Home() {
   const { language } = useLanguage();
   const ro = language === "ro";
@@ -60,14 +69,14 @@ export default function Home() {
           restores the original 2-column split via explicit placement: col 1
           gets text-top (row 1) + chips (row 2), col 2 gets the image
           spanning both rows, centered. */}
-      <section className="relative bg-background overflow-hidden pt-7 pb-9 md:pt-14 md:pb-14 lg:pt-20 lg:pb-20">
+      <section className="relative bg-background overflow-hidden pt-7 pb-9 md:pt-14 md:pb-14 lg:pt-14 lg:pb-20">
         <div className="max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8">
           <div className="grid lg:grid-cols-[1fr_0.9fr] lg:grid-rows-[auto_auto] lg:gap-x-[68px] items-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="lg:col-start-1 lg:row-start-1"
+              className="lg:col-start-1 lg:row-start-1 lg:self-start"
             >
               {/* Editorial kicker -- no pill/background/border, a thin rule
                   instead of a badge shape. */}
@@ -81,7 +90,7 @@ export default function Home() {
                 <span className="text-primary">{ro ? "o întrebare." : "a question."}</span>
               </h1>
 
-              <p className="text-base lg:text-[18px] leading-[1.4] lg:leading-[1.55] font-medium lg:font-normal text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-[21px] lg:mb-7">
+              <p className="text-base lg:text-[18px] leading-[1.4] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-[21px] lg:mb-7">
                 {ro
                   ? "Înțelege mai bine ce mănânci, cum îți construiești mesele și ce alegeri se potrivesc nevoilor și obiectivelor tale."
                   : "Understand what you eat, how you build your meals, and what choices fit your needs and goals."}
@@ -182,7 +191,7 @@ export default function Home() {
 
       {/* Trust bar */}
       <section className="py-6 border-y bg-background">
-        <div className="container mx-auto px-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-muted-foreground">
+        <div className={`${PAGE_COLUMN} flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-muted-foreground`}>
           <span className="flex items-center gap-2">
             <BadgeCheck className="w-4 h-4 text-primary" />
             {ro ? "Informații bazate pe dovezi" : "Evidence-based information"}
@@ -210,8 +219,9 @@ export default function Home() {
           first, then Jurnal) falls out of plain DOM order in the
           single-column stack, no extra ordering needed. */}
       <section className="py-20 bg-background">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-3 text-balance">
+        <div className={PAGE_COLUMN}>
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal text-center mb-3 text-balance">
             {ro ? "Din răspunsuri, în practică" : "From answers to practice"}
           </h2>
           <p className="text-base md:text-lg text-muted-foreground text-center max-w-2xl mx-auto mb-14">
@@ -288,6 +298,7 @@ export default function Home() {
               : "These tools are educational and do not provide a medical diagnosis."}
           </p>
         </div>
+        </div>
       </section>
 
       {/* Nutri pentru copii -- moved to right after "Din răspunsuri, în
@@ -303,7 +314,7 @@ export default function Home() {
           dropped) via responsive classes; desktop keeps its original
           spacing/scale untouched per the brief. */}
       <section className="py-14 md:py-20 bg-background">
-        <div className="container mx-auto px-4">
+        <div className={PAGE_COLUMN}>
           <div className="grid lg:grid-cols-[1fr_1.2fr] gap-4 lg:gap-8 items-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -366,7 +377,8 @@ export default function Home() {
           moderate mobile height. Link target (/services), copy, and every
           other section are untouched. */}
       <section className="py-20 bg-background">
-        <div className="container mx-auto px-4 max-w-2xl text-center">
+        <div className={PAGE_COLUMN}>
+        <div className="max-w-2xl mx-auto text-center">
           <span className="inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
             {ro ? "Sprijin personalizat" : "Personalized support"}
           </span>
@@ -386,6 +398,7 @@ export default function Home() {
             {ro ? "Vezi serviciile" : "See services"}
             <ArrowRight className="w-4 h-4" />
           </Link>
+        </div>
         </div>
       </section>
     </div>
