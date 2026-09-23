@@ -226,14 +226,17 @@ export default function Home() {
               data-testid="link-apply-calculator"
             >
               <div className="rounded-xl overflow-hidden mb-6">
-                <img
-                  src="/images/tool-calculator.png"
-                  alt={ro ? "Rezultatul nutrițional calculat de calculatorul Diet4Life" : "The nutritional result calculated by the Diet4Life calculator"}
-                  className="w-full h-auto"
-                  loading="lazy"
-                  width={1448}
-                  height={1086}
-                />
+                <picture>
+                  <source srcSet="/images/tool-calculator.webp" type="image/webp" />
+                  <img
+                    src="/images/tool-calculator.png"
+                    alt={ro ? "Rezultatul nutrițional calculat de calculatorul Diet4Life" : "The nutritional result calculated by the Diet4Life calculator"}
+                    className="w-full h-auto"
+                    loading="lazy"
+                    width={1448}
+                    height={1086}
+                  />
+                </picture>
               </div>
               <h3 className="font-serif font-semibold text-foreground text-xl mb-2">
                 {ro ? "Calculator necesar caloric" : "Calorie needs calculator"}
@@ -254,14 +257,17 @@ export default function Home() {
               data-testid="link-apply-journal"
             >
               <div className="rounded-xl overflow-hidden mb-6">
-                <img
-                  src="/images/tool-journal.png"
-                  alt={ro ? "Pagina 1 a jurnalului alimentar Diet4Life" : "Page 1 of the Diet4Life food journal"}
-                  className="w-full h-auto"
-                  loading="lazy"
-                  width={1448}
-                  height={1086}
-                />
+                <picture>
+                  <source srcSet="/images/tool-journal.webp" type="image/webp" />
+                  <img
+                    src="/images/tool-journal.png"
+                    alt={ro ? "Pagina 1 a jurnalului alimentar Diet4Life" : "Page 1 of the Diet4Life food journal"}
+                    className="w-full h-auto"
+                    loading="lazy"
+                    width={1448}
+                    height={1086}
+                  />
+                </picture>
               </div>
               <h3 className="font-serif font-semibold text-foreground text-xl mb-2">
                 {ro ? "Jurnal alimentar" : "Food journal"}
