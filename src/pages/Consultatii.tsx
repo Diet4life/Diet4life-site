@@ -212,7 +212,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.setDrawColor(...COLOR_GREEN);
   doc.setLineWidth(0.3);
   doc.line(margin, 21, pageW - margin, 21);
-  y = 34;
+  y = 32;
 
   // Title
   doc.setTextColor(...COLOR_TEXT);
@@ -224,7 +224,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.setFontSize(10);
   doc.setTextColor(...COLOR_TEXT_SECONDARY);
   doc.text("Pregătire pentru consultație nutrițională", margin, y);
-  y += 9;
+  y += 8;
 
   // Simple completion message (no more "photograph/scan/email it" wording)
   const introText = "Completează jurnalul timp de 7 zile consecutive și păstrează-l pentru consultația nutrițională.";
@@ -233,7 +233,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.setTextColor(...COLOR_TEXT_SECONDARY);
   const introWrapped = doc.splitTextToSize(introText, pageW - 2 * margin);
   doc.text(introWrapped, margin, y);
-  y += introWrapped.length * 4.3 + 6;
+  y += introWrapped.length * 4.3 + 3;
 
   // Instructions box — two short paragraphs (general instructions + a plain-
   // text hand/spoon reference, no separate table per the patient's request).
@@ -302,17 +302,18 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     margin: { left: margin, right: margin },
     didParseCell: (data) => {
       if (data.section === "body") {
-        data.cell.styles.minCellHeight = tallFieldRows.includes(data.row.index) ? 12 : 9;
+        data.cell.styles.minCellHeight = tallFieldRows.includes(data.row.index) ? 14 : 9;
       }
     },
     didDrawCell: (data) => {
-      // A small, discreet "kg" label anchored to the right edge of the
-      // weight field — never baked into the cell text, never a line.
+      // A small, discreet "kg" label near the start of the writing space
+      // (not stranded at the far right edge) — never baked into the cell
+      // text, never a line.
       if (data.section === "body" && data.row.index === weightRowIndex && data.column.index === 1) {
         doc.setFont("Inter", "normal");
         doc.setFontSize(7.5);
         doc.setTextColor(...COLOR_TEXT_SECONDARY);
-        doc.text("kg", data.cell.x + data.cell.width - 4, data.cell.y + data.cell.height / 2 + 1, { align: "right" });
+        doc.text("kg", data.cell.x + 22, data.cell.y + data.cell.height / 2 + 1);
       }
     },
   });
