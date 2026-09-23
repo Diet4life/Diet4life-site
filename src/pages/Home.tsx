@@ -107,8 +107,8 @@ export default function Home() {
                   <img
                     src="/images/hero.jpg"
                     alt={ro ? "Rodie tăiată, fotografie editorială Diet4Life" : "Cut pomegranate, Diet4Life editorial photograph"}
-                    width={1254}
-                    height={1254}
+                    width={1086}
+                    height={1086}
                     loading="eager"
                     className="w-full h-full object-cover"
                   />
