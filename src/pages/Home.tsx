@@ -96,17 +96,17 @@ export default function Home() {
                   : "Understand what you eat, how you build your meals, and what choices fit your needs and goals."}
               </p>
 
-              <div className="flex flex-col min-[380px]:flex-row gap-3">
+              <div className="flex flex-col min-[380px]:flex-row gap-2 lg:gap-3">
                 <Link
                   href="/nutrihub"
-                  className="inline-flex items-center justify-center min-[380px]:min-w-[200px] lg:min-w-[234px] h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white font-semibold text-[15px] lg:text-base transition-all whitespace-nowrap"
+                  className="inline-flex items-center justify-center min-[380px]:min-w-[200px] lg:min-w-[234px] h-[46px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white font-semibold text-[15px] lg:text-base transition-all whitespace-nowrap"
                   data-testid="button-explore-nutrihub"
                 >
                   {ro ? "Explorează NutriHub" : "Explore NutriHub"}
                 </Link>
                 <Link
                   href="/services"
-                  className="inline-flex items-center justify-center min-[380px]:min-w-[180px] h-[50px] lg:h-[52px] px-6 rounded-[13px] border border-border bg-background hover:border-primary/30 hover:shadow-sm active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-foreground font-semibold text-[15px] lg:text-base transition-all"
+                  className="inline-flex items-center justify-center min-[380px]:min-w-[180px] h-[46px] lg:h-[52px] px-6 rounded-[13px] border border-border bg-background hover:border-primary/30 hover:shadow-sm active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-foreground font-semibold text-[15px] lg:text-base transition-all whitespace-nowrap"
                   data-testid="button-see-services-hero"
                 >
                   {ro ? "Vezi serviciile" : "See services"}
