@@ -33,7 +33,7 @@ interface MealEntry {
 
 type JournalDay = MealEntry[];
 
-const WHY_REASONS = ["Foame", "Obicei", "Plictiseală", "Stres", "Emoție", "Social", "Poftă"];
+const WHY_REASONS = ["Foame", "Obicei", "Plictiseală", "Stres", "Emoții", "Social", "Poftă"];
 const DEFAULT_MEAL_LABELS = ["Mic dejun", "Gustare dimineață", "Prânz", "Gustare după-amiază", "Cină"];
 const QUANTITY_UNITS = ["g", "ml", "cană", "linguriță", "lingură", "bucată", "porție", "felie", "pumn"];
 
@@ -85,13 +85,14 @@ const PORTION_GUIDE = [
 const HUNGER_SCALE = [
   { level: "1", color: [200, 90, 90] as [number, number, number], before: "Foame extremă, amețeală", after: "Încă flămândă" },
   { level: "2", color: [230, 140, 60] as [number, number, number], before: "Foarte flămândă", after: "Aproape sătulă" },
-  { level: "3", color: [92, 138, 103] as [number, number, number], before: "Flămândă, gata de masă", after: "Confortabil sătulă (ideal)" },
+  { level: "3", color: [47, 93, 63] as [number, number, number], before: "Flămândă, gata de masă", after: "Confortabil sătulă (ideal)" },
   { level: "4", color: [230, 140, 60] as [number, number, number], before: "Puțin flămândă", after: "Sătulă, grea" },
   { level: "5", color: [200, 90, 90] as [number, number, number], before: "Neutră, deloc flămândă", after: "Prea plină" },
 ];
 
-// ─── Unicode font loading (DejaVu Sans — full Romanian diacritics support) ───
-// jsPDF's built-in "helvetica" is WinAnsi-only and silently drops ă/â/î/ș/ț,
+// ─── Unicode font loading (Inter + Playfair Display — matches the site's own
+// type system, both verified to carry full Romanian diacritics: ă/â/î/ș/ț).
+// jsPDF's built-in "helvetica" is WinAnsi-only and silently drops those,
 // which also corrupts splitTextToSize's width math (text overflowing its box).
 // Fonts are fetched from /public at generation time so they don't bloat the JS bundle.
 let fontsLoaded = false;
@@ -116,18 +117,22 @@ function preloadFonts(): Promise<void> {
   if (fontsLoaded) return Promise.resolve();
   if (!fontsLoadPromise) {
     fontsLoadPromise = (async () => {
-      const [regularRes, boldRes] = await Promise.all([
-        fetch("/fonts/DejaVuSans.ttf"),
-        fetch("/fonts/DejaVuSans-Bold.ttf"),
+      const [interRegRes, interBoldRes, playfairBoldRes] = await Promise.all([
+        fetch("/fonts/Inter-Regular.ttf"),
+        fetch("/fonts/Inter-Bold.ttf"),
+        fetch("/fonts/PlayfairDisplay-Bold.ttf"),
       ]);
-      if (!regularRes.ok || !boldRes.ok) {
-        throw new Error(`Font fetch failed (regular: ${regularRes.status}, bold: ${boldRes.status})`);
+      if (!interRegRes.ok || !interBoldRes.ok || !playfairBoldRes.ok) {
+        throw new Error(
+          `Font fetch failed (Inter regular: ${interRegRes.status}, Inter bold: ${interBoldRes.status}, Playfair bold: ${playfairBoldRes.status})`
+        );
       }
-      const [regular, bold] = await Promise.all([
-        arrayBufferToBase64(await regularRes.arrayBuffer()),
-        arrayBufferToBase64(await boldRes.arrayBuffer()),
+      const [interRegular, interBold, playfairBold] = await Promise.all([
+        arrayBufferToBase64(await interRegRes.arrayBuffer()),
+        arrayBufferToBase64(await interBoldRes.arrayBuffer()),
+        arrayBufferToBase64(await playfairBoldRes.arrayBuffer()),
       ]);
-      (window as any).__diet4lifeFontCache = { regular, bold };
+      (window as any).__diet4lifeFontCache = { interRegular, interBold, playfairBold };
       fontsLoaded = true;
     })();
   }
@@ -136,13 +141,25 @@ function preloadFonts(): Promise<void> {
 
 async function registerFonts(doc: jsPDF) {
   await preloadFonts();
-  const { regular, bold } = (window as any).__diet4lifeFontCache;
-  doc.addFileToVFS("DejaVuSans.ttf", regular);
-  doc.addFont("DejaVuSans.ttf", "DejaVuSans", "normal");
-  doc.addFileToVFS("DejaVuSans-Bold.ttf", bold);
-  doc.addFont("DejaVuSans-Bold.ttf", "DejaVuSans", "bold");
-  doc.setFont("DejaVuSans", "normal");
+  const { interRegular, interBold, playfairBold } = (window as any).__diet4lifeFontCache;
+  doc.addFileToVFS("Inter-Regular.ttf", interRegular);
+  doc.addFont("Inter-Regular.ttf", "Inter", "normal");
+  doc.addFileToVFS("Inter-Bold.ttf", interBold);
+  doc.addFont("Inter-Bold.ttf", "Inter", "bold");
+  doc.addFileToVFS("PlayfairDisplay-Bold.ttf", playfairBold);
+  doc.addFont("PlayfairDisplay-Bold.ttf", "PlayfairDisplay", "bold");
+  doc.setFont("Inter", "normal");
 }
+
+// ─── Diet4Life palette (matches the approved site-wide hex direction) ────────
+const COLOR_BG: [number, number, number] = [251, 246, 238]; // #FBF6EE
+const COLOR_SURFACE: [number, number, number] = [253, 249, 242]; // #FDF9F2
+const COLOR_TEXT: [number, number, number] = [31, 38, 34]; // #1F2622
+const COLOR_TEXT_SECONDARY: [number, number, number] = [122, 101, 89]; // #7A6559
+const COLOR_GREEN: [number, number, number] = [47, 93, 63]; // #2F5D3F
+const COLOR_GREEN_TINT: [number, number, number] = [234, 239, 236]; // subtle green-tinted fill
+const COLOR_RUBY: [number, number, number] = [156, 43, 62]; // #9C2B3E -- rare editorial accent only
+const COLOR_BORDER: [number, number, number] = [213, 223, 217]; // subtle, warm-neutral table border
 
 // ─── PDF Generator ─────────────────────────────────────────────────────────
 async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
@@ -150,68 +167,99 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   await registerFonts(doc);
   const margin = 15;
   const pageW = 210;
+  const pageH = 297;
   let y = margin;
 
   const addPageIfNeeded = (needed: number) => {
-    if (y + needed > 275) { doc.addPage(); y = margin; }
+    if (y + needed > 275) { doc.addPage(); paintBackground(); y = margin; }
   };
 
-  // Header
-  doc.setFillColor(92, 138, 103);
-  doc.rect(0, 0, pageW, 22, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("DejaVuSans", "bold");
-  doc.setFontSize(14);
-  doc.text("Diet4Life Concept", margin, 10);
-  doc.setFont("DejaVuSans", "normal");
-  doc.setFontSize(9);
-  doc.text("Nutriție medicală personalizată  |  contact@diet4lifeconcept.ro  |  0766 572 968", margin, 17);
-  y = 30;
+  // Every page gets the cream page background (#FBF6EE) -- called once for
+  // page 1 below, and again after every doc.addPage().
+  const paintBackground = () => {
+    doc.setFillColor(...COLOR_BG);
+    doc.rect(0, 0, pageW, pageH, "F");
+  };
+
+  // One-line discreet footer, drawn on every page right after that page's
+  // content is finished.
+  const drawFooter = () => {
+    doc.setFont("Inter", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...COLOR_TEXT_SECONDARY);
+    doc.text("Diet4Life Concept  •  contact@diet4lifeconcept.ro  •  0766 572 968", pageW / 2, 289, { align: "center" });
+  };
+
+  // ── Page 1: header ──────────────────────────────────────────────────────
+  paintBackground();
+  doc.setFont("Inter", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(...COLOR_GREEN);
+  doc.text("Diet4Life Concept", margin, 16);
+  doc.setFont("Inter", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...COLOR_TEXT_SECONDARY);
+  doc.text("contact@diet4lifeconcept.ro  ·  0766 572 968", pageW - margin, 16, { align: "right" });
+  doc.setDrawColor(...COLOR_GREEN);
+  doc.setLineWidth(0.4);
+  doc.line(margin, 21, pageW - margin, 21);
+  y = 33;
 
   // Title
-  doc.setTextColor(30, 30, 30);
-  doc.setFont("DejaVuSans", "bold");
-  doc.setFontSize(16);
+  doc.setTextColor(...COLOR_TEXT);
+  doc.setFont("PlayfairDisplay", "bold");
+  doc.setFontSize(21);
   doc.text("Jurnal Alimentar – 7 Zile", margin, y);
-  y += 6;
-  doc.setFont("DejaVuSans", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
+  y += 7;
+  doc.setFont("Inter", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(...COLOR_TEXT_SECONDARY);
   doc.text("Pregătire pentru consultație nutrițională", margin, y);
-  y += 8;
+  y += 9;
 
-  // Completion options — how the patient can fill in and return this journal
-  const optionsText = "Puteți completa acest jurnal tipărit de mână, sau direct online pe site-ul nostru (diet4lifeconcept.ro). Odată completat, trimiteți-l — fotografiat, scanat sau ca document — pe email la contact@diet4lifeconcept.ro.";
-  doc.setFontSize(8);
-  doc.setFont("DejaVuSans", "normal");
-  doc.setTextColor(100, 100, 100);
-  const optionsWrapped = doc.splitTextToSize(optionsText, pageW - 2 * margin);
-  doc.text(optionsWrapped, margin, y);
-  y += optionsWrapped.length * 4 + 6;
+  // Simple completion message (no more "photograph/scan/email it" wording)
+  const introText = "Completează jurnalul timp de 7 zile consecutive și păstrează-l pentru consultația nutrițională.";
+  doc.setFont("Inter", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...COLOR_TEXT_SECONDARY);
+  const introWrapped = doc.splitTextToSize(introText, pageW - 2 * margin);
+  doc.text(introWrapped, margin, y);
+  y += introWrapped.length * 4.3 + 6;
 
-  // Instruction box — height computed from the wrapped line count so text never overflows it
-  const instrText = "Notați toate mesele și gustările timp de 7 zile consecutive. Includeți orele, cantitățile aproximative, lichidele consumate și orice simptome digestive (foame, balonare, greață etc.).";
-  doc.setFontSize(8);
-  const wrapped = doc.splitTextToSize(instrText, pageW - 2 * margin - 8);
-  const instrBoxHeight = 8 + wrapped.length * 4;
-  doc.setFillColor(240, 248, 242);
-  doc.setDrawColor(92, 138, 103);
-  doc.roundedRect(margin, y, pageW - 2 * margin, instrBoxHeight, 2, 2, "FD");
-  doc.setTextColor(60, 100, 70);
-  doc.setFont("DejaVuSans", "bold");
-  doc.text("Instrucțiuni:", margin + 4, y + 5);
-  doc.setFont("DejaVuSans", "normal");
-  doc.setTextColor(80, 80, 80);
-  doc.text(wrapped, margin + 4, y + 9);
-  y += instrBoxHeight + 6;
+  // Instructions box — two short paragraphs (general instructions + a plain-
+  // text hand/spoon reference, no separate table per the patient's request).
+  // Height computed from wrapped line counts so text never overflows it.
+  const instrText1 = "Notează toate mesele și gustările timp de 7 zile consecutive. Include orele, cantitățile aproximative, lichidele consumate și orice simptome sau observații relevante.";
+  const instrText2 = "Cantitățile pot fi notate aproximativ, folosind repere simple: linguri pentru garnituri sau sosuri, palma pentru dimensiunea unei porții de carne sau pește, iar degetele pentru grosime.";
+  doc.setFontSize(8.5);
+  const instrWrapped1 = doc.splitTextToSize(instrText1, pageW - 2 * margin - 10);
+  const instrWrapped2 = doc.splitTextToSize(instrText2, pageW - 2 * margin - 10);
+  const instrLineH = 4;
+  const instrParaGap = 2.5;
+  const instrBoxHeight = 7 + instrWrapped1.length * instrLineH + instrParaGap + instrWrapped2.length * instrLineH;
+  doc.setFillColor(...COLOR_GREEN_TINT);
+  doc.setDrawColor(...COLOR_BORDER);
+  doc.setLineWidth(0.2);
+  doc.roundedRect(margin, y, pageW - 2 * margin, instrBoxHeight, 1.5, 1.5, "FD");
+  doc.setFont("Inter", "bold");
+  doc.setTextColor(...COLOR_GREEN);
+  doc.text("Instrucțiuni", margin + 5, y + 6);
+  doc.setFont("Inter", "normal");
+  doc.setTextColor(...COLOR_TEXT);
+  doc.text(instrWrapped1, margin + 5, y + 10.5);
+  doc.text(instrWrapped2, margin + 5, y + 10.5 + instrWrapped1.length * instrLineH + instrParaGap);
+  y += instrBoxHeight + 7;
 
-  // ── Patient Info ──────────────────────────────────────────────────────────
-  doc.setFont("DejaVuSans", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(30, 30, 30);
-  doc.text("Date Pacient", margin, y);
+  // ── Date pacient ──────────────────────────────────────────────────────────
+  doc.setFont("Inter", "bold");
+  doc.setFontSize(11.5);
+  doc.setTextColor(...COLOR_TEXT);
+  doc.text("Date pacient", margin, y);
   y += 5;
 
+  // "Obiectivele mele" dropped — duplicated "Obiectiv principal". The field
+  // itself (and the online form asking for it) is untouched; only this PDF
+  // table row was removed, per the patient's request.
   const fields = [
     ["Nume pacient", patient.name || "___________________________________"],
     ["Data completării", patient.date || "___________________________________"],
@@ -223,8 +271,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     ["Alimente preferate", patient.preferredFoods || "___________________________________"],
     ["Alimente pe care nu le consum", patient.avoidedFoods || "___________________________________"],
     ["Alimente care îmi provoacă disconfort", patient.discomfortFoods || "___________________________________"],
-    ["Principala dificultate alimentară", patient.mainDifficulty || "___________________________________"],
-    ["Obiectivele mele", patient.objectives || "___________________________________"],
+    ["Ce îți este cel mai dificil în alimentația de zi cu zi?", patient.mainDifficulty || "___________________________________"],
   ];
 
   autoTable(doc, {
@@ -232,26 +279,24 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     head: [],
     body: fields,
     theme: "grid",
-    styles: { fontSize: 8, cellPadding: 2.5, font: "DejaVuSans" },
+    styles: { fontSize: 7.8, cellPadding: 2.1, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: 0.2 },
     columnStyles: {
-      0: { fontStyle: "bold", cellWidth: 65, fillColor: [248, 251, 249] },
-      1: { cellWidth: pageW - 2 * margin - 65 },
+      0: { fontStyle: "bold", cellWidth: 68, fillColor: COLOR_GREEN_TINT },
+      1: { cellWidth: pageW - 2 * margin - 68 },
     },
     margin: { left: margin, right: margin },
   });
-  y = (doc as any).lastAutoTable.finalY + 10;
+  y = (doc as any).lastAutoTable.finalY + 8;
 
-  // ── Hunger/fullness scale legend ──────────────────────────────────────────
-  // The hand-based portion guide used to sit here (its own heading + table),
-  // which pushed this section onto its own near-empty page 2. Removed from
-  // the PDF per the patient's feedback -- PORTION_GUIDE itself and its
-  // rendering on the live /consultatii page are untouched, only this PDF
-  // placement was dropped, so the scale now fits on page 1 with everything else.
-  addPageIfNeeded(45);
-  doc.setFont("DejaVuSans", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(30, 30, 30);
-  doc.text("Ce înseamnă scala 1-5 (Foame înainte / Sațietate după)", margin, y);
+  // ── Scala foame – sațietate (1-5) ──────────────────────────────────────────
+  // Moved here from its own near-empty page; more compact than before so it
+  // fits page 1 alongside everything else. The hand-based portion guide that
+  // used to precede it is gone from the PDF entirely (still lives on the
+  // /consultatii page itself, untouched).
+  doc.setFont("Inter", "bold");
+  doc.setFontSize(11.5);
+  doc.setTextColor(...COLOR_TEXT);
+  doc.text("Scala foame – sațietate (1–5)", margin, y);
   y += 5;
 
   autoTable(doc, {
@@ -259,42 +304,66 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     head: [["Nivel", "Foame înainte de masă", "Sațietate după masă"]],
     body: HUNGER_SCALE.map(h => [h.level, h.before, h.after]),
     theme: "grid",
-    headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 8, fontStyle: "bold" },
-    styles: { fontSize: 8, cellPadding: 3, font: "DejaVuSans" },
+    headStyles: { fillColor: COLOR_GREEN, textColor: 255, fontSize: 7.5, fontStyle: "bold" },
+    styles: { fontSize: 7.5, cellPadding: 1.8, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: 0.2 },
     margin: { left: margin, right: margin },
     columnStyles: {
-      0: { cellWidth: 18, fontStyle: "bold", halign: "center", cellPadding: { top: 3, right: 3, bottom: 3, left: 8 } },
-      1: { cellWidth: (pageW - 2 * margin - 18) / 2 },
-      2: { cellWidth: (pageW - 2 * margin - 18) / 2 },
+      0: { cellWidth: 16, fontStyle: "bold", halign: "center", cellPadding: { top: 1.8, right: 1.8, bottom: 1.8, left: 7 } },
+      1: { cellWidth: (pageW - 2 * margin - 16) / 2 },
+      2: { cellWidth: (pageW - 2 * margin - 16) / 2 },
     },
     didDrawCell: (data) => {
       if (data.section === "body" && data.column.index === 0) {
         const h = HUNGER_SCALE[data.row.index];
         doc.setFillColor(...h.color);
-        doc.circle(data.cell.x + 4, data.cell.y + data.cell.height / 2, 2, "F");
+        doc.circle(data.cell.x + 3.5, data.cell.y + data.cell.height / 2, 1.6, "F");
       }
     },
   });
-  y = (doc as any).lastAutoTable.finalY + 10;
+  y = (doc as any).lastAutoTable.finalY + 7;
+
+  // ── "De reținut" editorial note ─────────────────────────────────────────
+  // A rare, discreet ruby accent (a thin left rule, no filled card) — not
+  // decorative, just a professional editorial callout.
+  addPageIfNeeded(22);
+  const noteText = "Nu încerca să mănânci «mai bine» doar pentru că notezi. Jurnalul este mai util atunci când reflectă cât mai fidel alimentația ta obișnuită.";
+  doc.setFont("Inter", "normal");
+  doc.setFontSize(8.5);
+  const noteWrapped = doc.splitTextToSize(noteText, pageW - 2 * margin - 8);
+  const noteTextX = margin + 6;
+  const noteBlockHeight = 6 + noteWrapped.length * 4.2 + 2;
+  doc.setFillColor(...COLOR_RUBY);
+  doc.rect(margin, y, 0.9, noteBlockHeight, "F");
+  doc.setFont("Inter", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...COLOR_RUBY);
+  doc.text("DE REȚINUT", noteTextX, y + 4.5);
+  doc.setFont("Inter", "normal");
+  doc.setTextColor(...COLOR_TEXT_SECONDARY);
+  doc.text(noteWrapped, noteTextX, y + 9.3);
+
+  drawFooter();
 
   // ── 7-day Journal ─────────────────────────────────────────────────────────
   const days = ["Ziua 1", "Ziua 2", "Ziua 3", "Ziua 4", "Ziua 5", "Ziua 6", "Ziua 7"];
 
   days.forEach((day, di) => {
     doc.addPage();
+    paintBackground();
     y = margin;
 
-    // Day header
-    doc.setFillColor(92, 138, 103);
-    doc.rect(margin, y, pageW - 2 * margin, 10, "F");
+    // Day header — a thin, clean green band (not a heavy block)
+    const bandHeight = 8;
+    doc.setFillColor(...COLOR_GREEN);
+    doc.rect(margin, y, pageW - 2 * margin, bandHeight, "F");
     doc.setTextColor(255, 255, 255);
-    doc.setFont("DejaVuSans", "bold");
-    doc.setFontSize(11);
-    doc.text(day, margin + 4, y + 7);
-    doc.setFont("DejaVuSans", "normal");
-    doc.setFontSize(8);
-    doc.text("Data: ____________________", pageW - margin - 55, y + 7);
-    y += 16;
+    doc.setFont("Inter", "bold");
+    doc.setFontSize(10);
+    doc.text(day, margin + 4, y + 5.5);
+    doc.setFont("Inter", "normal");
+    doc.setFontSize(7.5);
+    doc.text("Data: ____________________", pageW - margin - 4, y + 5.5, { align: "right" });
+    y += bandHeight + 6;
 
     const dayData = journal[di] ?? EMPTY_DAY();
     const rows = dayData.map((entry, mi) => {
@@ -312,13 +381,13 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
       head: [["Masă", "Ora", "Ce am mâncat / băut", "Cantitate", "Foame înainte /\ndupă masă (1-5)", "De ce ai mâncat?"]],
       body: rows,
       theme: "grid",
-      headStyles: { fillColor: [92, 138, 103], textColor: 255, fontSize: 7, fontStyle: "bold", halign: "center" },
-      styles: { fontSize: 7.5, cellPadding: 2.5, minCellHeight: 26, font: "DejaVuSans" },
+      headStyles: { fillColor: COLOR_GREEN, textColor: 255, fontSize: 7, fontStyle: "bold", halign: "center" },
+      styles: { fontSize: 7.5, cellPadding: 2.5, minCellHeight: 26, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: 0.2 },
       columnStyles: {
-        0: { cellWidth: 22, fontStyle: "bold", fillColor: [248, 251, 249] },
-        1: { cellWidth: 12, halign: "center" },
+        0: { cellWidth: 22, fontStyle: "bold", fillColor: COLOR_SURFACE },
+        1: { cellWidth: 16, halign: "center" },
         2: { cellWidth: 44 },
-        3: { cellWidth: 38, overflow: "ellipsize" },
+        3: { cellWidth: 34, overflow: "ellipsize" },
         4: { cellWidth: 22, halign: "center" },
         5: { cellWidth: pageW - 2 * margin - 138 },
       },
@@ -329,30 +398,36 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
 
     // Legend for the Î/D abbreviations used in the table above
     doc.setFontSize(7);
-    doc.setTextColor(120, 120, 120);
-    doc.setFont("DejaVuSans", "normal");
+    doc.setTextColor(...COLOR_TEXT_SECONDARY);
+    doc.setFont("Inter", "normal");
     doc.text("Î = Înainte de masă   ·   D = După masă", margin, y);
     y += 6;
 
-    // Extra notes box
-    doc.setFont("DejaVuSans", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(60, 60, 60);
-    doc.text("Note suplimentare:", margin, y);
+    // Notes box — renamed to also cover symptoms, with a small example line
+    doc.setFont("Inter", "bold");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...COLOR_TEXT);
+    doc.text("Note suplimentare / simptome", margin, y);
     y += 4;
-    doc.setDrawColor(180, 180, 180);
-    doc.setFillColor(252, 252, 252);
+    doc.setFont("Inter", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...COLOR_TEXT_SECONDARY);
+    const notesHintWrapped = doc.splitTextToSize(
+      "Ex.: balonare, greață, reflux, disconfort abdominal, energie, somn sau alte observații.",
+      pageW - 2 * margin
+    );
+    doc.text(notesHintWrapped, margin, y);
+    y += notesHintWrapped.length * 3.6 + 3;
+
+    doc.setDrawColor(...COLOR_BORDER);
+    doc.setLineWidth(0.2);
+    doc.setFillColor(...COLOR_SURFACE);
     const dayPageBottom = 273;
     const notesBoxHeight = Math.max(18, dayPageBottom - y);
     doc.roundedRect(margin, y, pageW - 2 * margin, notesBoxHeight, 2, 2, "FD");
-  });
 
-  // Footer on last page
-  doc.setFont("DejaVuSans", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(140, 140, 140);
-  doc.text("Diet4Life Concept  •  contact@diet4lifeconcept.ro  •  0766 572 968", margin, 285);
-  doc.text("Acest document este confidențial și destinat exclusiv evaluării nutriționale.", margin, 289);
+    drawFooter();
+  });
 
   doc.save("Jurnal_Alimentar_7Zile_Diet4Life.pdf");
 }
@@ -902,7 +977,7 @@ export default function Consultatii() {
                     { key: "preferredFoods", label: ro ? "Alimente preferate" : "Preferred foods", placeholder: "" },
                     { key: "avoidedFoods", label: ro ? "Alimente pe care nu le consum" : "Foods I don't eat", placeholder: "" },
                     { key: "discomfortFoods", label: ro ? "Alimente care îmi provoacă disconfort" : "Foods that cause discomfort", placeholder: "" },
-                    { key: "mainDifficulty", label: ro ? "Principala dificultate alimentară" : "Main dietary difficulty", placeholder: "" },
+                    { key: "mainDifficulty", label: ro ? "Ce îți este cel mai dificil în alimentația de zi cu zi?" : "What's hardest for you day-to-day with food?", placeholder: "" },
                     { key: "objectives", label: ro ? "Obiectivele mele" : "My objectives", placeholder: "" },
                   ].map(({ key, label, placeholder }) => (
                     <div key={key} className="flex flex-col gap-1.5">
