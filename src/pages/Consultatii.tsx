@@ -168,6 +168,7 @@ const COLOR_BORDER: [number, number, number] = [213, 223, 217]; // subtle, warm-
 const COLOR_INSTR_BG: [number, number, number] = [243, 245, 241]; // #F3F5F1 -- instructions box only
 const COLOR_RUBY_TINT: [number, number, number] = [251, 245, 246]; // extremely subtle ruby wash behind "De reținut"
 const LINE_WIDTH_THIN = 0.15; // one consistent, very light border weight, used everywhere in the document
+const COLOR_FORM_BORDER: [number, number, number] = [217, 221, 215]; // #D9DDD7 -- Date pacient table only
 
 // ─── PDF Generator ─────────────────────────────────────────────────────────
 async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
@@ -263,38 +264,59 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.setFontSize(11.5);
   doc.setTextColor(...COLOR_TEXT);
   doc.text("Date pacient", margin, y);
-  y += 5;
+  y += 3;
 
   // "Obiectivele mele" dropped — duplicated "Obiectiv principal". The field
   // itself (and the online form asking for it) is untouched; only this PDF
   // table row was removed, per the patient's request.
+  // No underscore placeholders — the value column is a genuinely blank,
+  // bordered writing space instead (see didParseCell/didDrawCell below).
   const fields = [
-    ["Nume pacient", patient.name || "___________________________________"],
-    ["Data completării", patient.date || "___________________________________"],
-    ["Greutate actuală", patient.weight ? `${patient.weight} kg` : "_____ kg"],
-    ["Obiectiv principal", patient.goal || "___________________________________"],
-    ["Afecțiuni medicale relevante", patient.medicalConditions || "___________________________________"],
-    ["Alergii / intoleranțe", patient.allergies || "___________________________________"],
-    ["Medicamente / suplimente", patient.medications || "___________________________________"],
-    ["Alimente preferate", patient.preferredFoods || "___________________________________"],
-    ["Alimente pe care nu le consum", patient.avoidedFoods || "___________________________________"],
-    ["Alimente care îmi provoacă disconfort", patient.discomfortFoods || "___________________________________"],
-    ["Cea mai mare dificultate alimentară", patient.mainDifficulty || "___________________________________"],
+    ["Nume pacient", patient.name || ""],
+    ["Data completării", patient.date || ""],
+    ["Greutate actuală", patient.weight || ""],
+    ["Obiectiv principal", patient.goal || ""],
+    ["Afecțiuni medicale relevante", patient.medicalConditions || ""],
+    ["Alergii / intoleranțe", patient.allergies || ""],
+    ["Medicamente / suplimente", patient.medications || ""],
+    ["Alimente preferate", patient.preferredFoods || ""],
+    ["Alimente pe care nu le consum", patient.avoidedFoods || ""],
+    ["Alimente care îmi provoacă disconfort", patient.discomfortFoods || ""],
+    ["Cea mai mare dificultate alimentară", patient.mainDifficulty || ""],
   ];
+  // Rows needing more room to write: Obiectiv principal (3), Alimente care
+  // îmi provoacă disconfort (9), Cea mai mare dificultate alimentară (10).
+  const tallFieldRows = [3, 9, 10];
+  const weightRowIndex = 2;
 
   autoTable(doc, {
     startY: y,
     head: [],
     body: fields,
     theme: "grid",
-    styles: { cellPadding: 2.1, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: LINE_WIDTH_THIN },
+    styles: { cellPadding: 2.5, valign: "middle", font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_FORM_BORDER, lineWidth: LINE_WIDTH_THIN },
     columnStyles: {
       0: { fontStyle: "bold", fontSize: 8.3, cellWidth: 68, fillColor: COLOR_GREEN_TINT },
-      1: { fontSize: 8.75, cellWidth: pageW - 2 * margin - 68 },
+      1: { fontSize: 8.75, cellWidth: pageW - 2 * margin - 68, fillColor: COLOR_SURFACE },
     },
     margin: { left: margin, right: margin },
+    didParseCell: (data) => {
+      if (data.section === "body") {
+        data.cell.styles.minCellHeight = tallFieldRows.includes(data.row.index) ? 12 : 9;
+      }
+    },
+    didDrawCell: (data) => {
+      // A small, discreet "kg" label anchored to the right edge of the
+      // weight field — never baked into the cell text, never a line.
+      if (data.section === "body" && data.row.index === weightRowIndex && data.column.index === 1) {
+        doc.setFont("Inter", "normal");
+        doc.setFontSize(7.5);
+        doc.setTextColor(...COLOR_TEXT_SECONDARY);
+        doc.text("kg", data.cell.x + data.cell.width - 4, data.cell.y + data.cell.height / 2 + 1, { align: "right" });
+      }
+    },
   });
-  y = (doc as any).lastAutoTable.finalY + 8;
+  y = (doc as any).lastAutoTable.finalY + 5;
 
   // ── Scala foame – sațietate (1-5) ──────────────────────────────────────────
   // Moved here from its own near-empty page; more compact than before so it
@@ -328,18 +350,18 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
       }
     },
   });
-  y = (doc as any).lastAutoTable.finalY + 7;
+  y = (doc as any).lastAutoTable.finalY + 4;
 
   // ── "De reținut" editorial note ─────────────────────────────────────────
   // A rare, discreet ruby accent — a left rule plus an extremely subtle ruby
   // wash behind it (no stroke, no shadow), kept editorial rather than a card.
-  addPageIfNeeded(22);
   const noteText = "Nu încerca să mănânci «mai bine» doar pentru că notezi. Jurnalul este mai util atunci când reflectă cât mai fidel alimentația ta obișnuită.";
   doc.setFont("Inter", "normal");
   doc.setFontSize(8.8);
   const noteWrapped = doc.splitTextToSize(noteText, pageW - 2 * margin - 8);
   const noteTextX = margin + 6;
-  const noteBlockHeight = 6 + noteWrapped.length * 4.2 + 3;
+  const noteBlockHeight = 5 + noteWrapped.length * 4.2 + 3;
+  addPageIfNeeded(noteBlockHeight);
   doc.setFillColor(...COLOR_RUBY_TINT);
   doc.rect(margin, y, pageW - 2 * margin, noteBlockHeight, "F");
   doc.setFillColor(...COLOR_RUBY);
