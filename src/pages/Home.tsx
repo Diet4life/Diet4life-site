@@ -358,15 +358,19 @@ export default function Home() {
       </section>
 
       {/* Când ai nevoie de ceva adaptat ție (was "Servicii scurt" --
-          renamed, moved to be the last section before the footer) */}
+          renamed, moved to be the last section before the footer). Final
+          round: calmer close -- the flanking decorative dash lines around
+          the eyebrow were removed (plain uppercase text only), the H2 is
+          slightly smaller on mobile so it doesn't read oversized, and the
+          CTA is full-width on mobile (auto-width from sm: up) with a more
+          moderate mobile height. Link target (/services), copy, and every
+          other section are untouched. */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4 max-w-2xl text-center">
           <span className="inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
-            <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
             {ro ? "Sprijin personalizat" : "Personalized support"}
-            <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
           </span>
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-5 text-balance">
+          <h2 className="text-2xl md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-5 text-balance">
             {ro ? "Când ai nevoie de ceva adaptat ție" : "When you need something tailored to you"}
           </h2>
           <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-8">
@@ -376,7 +380,7 @@ export default function Home() {
           </p>
           <Link
             href="/services"
-            className="inline-flex items-center justify-center gap-2 h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
             data-testid="button-see-services"
           >
             {ro ? "Vezi serviciile" : "See services"}
