@@ -80,17 +80,17 @@ export default function Home() {
             >
               {/* Editorial kicker -- no pill/background/border, a thin rule
                   instead of a badge shape. */}
-              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-[hsl(var(--rodie))] mb-4">
+              <span className="inline-flex items-center gap-2 text-[11px] lg:text-xs font-semibold tracking-[0.13em] lg:tracking-[0.16em] uppercase text-[hsl(var(--rodie))] mb-4">
                 <span className="inline-block w-4 h-px bg-[hsl(var(--rodie))]" aria-hidden="true" />
                 {ro ? "Nutriție. Fără mituri." : "Nutrition. No myths."}
               </span>
 
-              <h1 className="font-serif font-bold text-foreground text-[36px] min-[390px]:text-[38px] lg:text-[57px] leading-[1.08] lg:leading-[1.06] tracking-[-0.01em] max-w-[340px] lg:max-w-[560px] mb-3 lg:mb-4">
+              <h1 className="font-serif font-bold text-foreground text-[32px] min-[390px]:text-[34px] lg:text-[57px] leading-[1.03] lg:leading-[1.06] tracking-[-0.01em] max-w-[340px] lg:max-w-[560px] mb-2 lg:mb-4">
                 {ro ? "În spatele fiecărui aliment există " : "Behind every food, there's "}
                 <span className="text-primary">{ro ? "o întrebare." : "a question."}</span>
               </h1>
 
-              <p className="text-base lg:text-[18px] leading-[1.5] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-[21px] lg:mb-7">
+              <p className="text-base lg:text-[18px] leading-[1.4] lg:leading-[1.55] font-medium lg:font-normal text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-[21px] lg:mb-7">
                 {ro
                   ? "Înțelege mai bine ce mănânci, cum îți construiești mesele și ce alegeri se potrivesc nevoilor și obiectivelor tale."
                   : "Understand what you eat, how you build your meals, and what choices fit your needs and goals."}
