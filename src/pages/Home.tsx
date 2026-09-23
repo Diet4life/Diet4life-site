@@ -36,8 +36,12 @@ export default function Home() {
 
   return (
     <div className="flex flex-col">
-      {/* Hero */}
-      <section className="relative bg-secondary/40 overflow-hidden pt-7 pb-9 md:pt-14 md:pb-14 lg:pt-20 lg:pb-20">
+      {/* Hero -- background pinned to the exact hex from the finalized hero-image
+          decision (#FBF6EE) so the photo's own feathered edges (baked into
+          hero.jpg/hero.webp, see the composite script) dissolve into it with
+          no visible seam. Scoped to this section only, not the shared
+          --background token. */}
+      <section className="relative bg-[#FBF6EE] overflow-hidden pt-7 pb-9 md:pt-14 md:pb-14 lg:pt-20 lg:pb-20">
         <div className="max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8">
           <div className="grid lg:grid-cols-[1fr_0.9fr] gap-2 lg:gap-[68px] items-center">
             <motion.div
@@ -54,10 +58,16 @@ export default function Home() {
                 <span className="text-primary">{ro ? "întrebarea potrivită." : "the right question."}</span>
               </h1>
 
-              <p className="text-base lg:text-[18px] leading-[1.5] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-[21px] lg:mb-7">
+              <p className="text-base lg:text-[18px] leading-[1.5] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-2 lg:mb-2.5">
                 {ro
                   ? "Răspunsuri clare, bazate pe dovezi, la întrebările reale despre alimentație, greutate și sănătate."
                   : "Clear, evidence-based answers to real questions about food, weight, and health."}
+              </p>
+
+              <p className="text-sm lg:text-[15px] leading-[1.5] text-muted-foreground/80 italic max-w-[360px] lg:max-w-[480px] mb-[21px] lg:mb-7">
+                {ro
+                  ? "Nu e vorba doar despre cifre, ci despre calitate, varietate și alegeri potrivite pentru tine."
+                  : "It's not just about numbers -- it's about quality, variety, and choices that fit you."}
               </p>
 
               <div className="flex flex-col min-[380px]:flex-row gap-3 mb-[21px] lg:mb-7">
@@ -99,21 +109,22 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-              className="mt-[18px] lg:mt-0"
+              className="mt-2 lg:mt-0 lg:-mr-6 xl:-mr-14"
             >
-              <div className="rounded-[20px] lg:rounded-3xl overflow-hidden shadow-sm aspect-square w-full max-w-[380px] md:max-w-[420px] lg:max-w-[520px] mx-auto lg:mx-0">
-                <picture>
-                  <source srcSet="/images/hero.webp" type="image/webp" />
-                  <img
-                    src="/images/hero.jpg"
-                    alt={ro ? "Rodie tăiată, fotografie editorială Diet4Life" : "Cut pomegranate, Diet4Life editorial photograph"}
-                    width={1086}
-                    height={1086}
-                    loading="eager"
-                    className="w-full h-full object-cover"
-                  />
-                </picture>
-              </div>
+              {/* No card: no border, no shadow, no radius, no aspect-square
+                  clip -- the image's own feathered edge (baked in against
+                  #FBF6EE) is what integrates it into the section, not a box. */}
+              <picture>
+                <source srcSet="/images/hero.webp" type="image/webp" />
+                <img
+                  src="/images/hero.jpg"
+                  alt={ro ? "Rodie tăiată, fotografie editorială Diet4Life" : "Cut pomegranate, Diet4Life editorial photograph"}
+                  width={1086}
+                  height={1086}
+                  loading="eager"
+                  className="w-full h-auto max-w-[400px] md:max-w-[460px] lg:max-w-none lg:w-[640px] xl:w-[720px] mx-auto lg:mx-0 lg:ml-auto"
+                />
+              </picture>
             </motion.div>
           </div>
         </div>
