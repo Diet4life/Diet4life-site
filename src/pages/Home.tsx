@@ -228,7 +228,7 @@ export default function Home() {
                   <source srcSet="/images/tool-calculator.webp" type="image/webp" />
                   <img
                     src="/images/tool-calculator.jpg"
-                    alt={ro ? "Formularul calculatorului Diet4Life, cu datele personale completate" : "The Diet4Life calculator form, filled in with personal data"}
+                    alt={ro ? "Formularul calculatorului Diet4Life, completat, cu rezultatul caloric afișat" : "The Diet4Life calculator form, filled in, with the calorie result shown"}
                     className="w-full h-auto transition-transform duration-300 group-hover:scale-[1.02]"
                     loading="lazy"
                     width={1440}
