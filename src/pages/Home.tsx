@@ -84,7 +84,7 @@ export default function Home() {
               <div className="flex flex-col min-[380px]:flex-row gap-3">
                 <Link
                   href="/nutrihub"
-                  className="inline-flex items-center justify-center min-[380px]:min-w-[200px] h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white font-semibold text-[15px] lg:text-base transition-all"
+                  className="inline-flex items-center justify-center min-[380px]:min-w-[200px] lg:min-w-[234px] h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white font-semibold text-[15px] lg:text-base transition-all whitespace-nowrap"
                   data-testid="button-explore-nutrihub"
                 >
                   {ro ? "Explorează NutriHub" : "Explore NutriHub"}
@@ -118,7 +118,7 @@ export default function Home() {
                   width={1086}
                   height={1086}
                   loading="eager"
-                  className="w-full h-auto max-w-[420px] md:max-w-[480px] lg:max-w-none lg:w-[700px] xl:w-[820px] mx-auto lg:mx-0 lg:ml-auto lg:-mr-10 xl:-mr-20"
+                  className="w-full h-auto max-w-[360px] md:max-w-[480px] lg:max-w-none lg:w-[700px] xl:w-[820px] mx-auto lg:mx-0 lg:ml-auto lg:-mr-10 xl:-mr-20"
                 />
               </picture>
             </motion.div>
