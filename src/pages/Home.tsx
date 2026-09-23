@@ -139,11 +139,11 @@ export default function Home() {
 
               {/* Editorial caption, not a card -- no background/border/shadow,
                   small and airy so it doesn't compete with the hero copy. */}
-              <div className="mt-4 lg:mt-3 max-w-[360px] md:max-w-[480px] lg:max-w-[380px] mx-auto lg:mx-0 lg:ml-auto lg:mr-9 xl:mr-16">
+              <div className="w-full md:max-w-[480px] md:mx-auto lg:max-w-[380px] lg:mx-0 lg:ml-auto lg:mr-9 xl:mr-16 mt-3 lg:mt-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--rodie))] mb-1.5">
                   {ro ? "De ce rodia?" : "Why pomegranate?"}
                 </p>
-                <p className="text-sm leading-relaxed text-muted-foreground">
+                <p className="text-sm leading-[1.5] text-muted-foreground">
                   {ro
                     ? "Pentru că este un exemplu bun că un aliment poate fi interesant fără să fie „magic”. Conține polifenoli și antocianine, dar ceea ce contează pentru sănătatea ta este alimentația în ansamblu, nu un singur „superaliment”."
                     : "Because it's a good example that a food can be interesting without being \"magic\". It contains polyphenols and anthocyanins, but what matters for your health is your diet as a whole, not a single \"superfood\"."}
