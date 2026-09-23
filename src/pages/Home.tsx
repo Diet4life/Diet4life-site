@@ -5,6 +5,7 @@ import {
   Clock,
   Minus,
   Heart,
+  Apple,
   ShieldCheck,
   BadgeCheck,
   BookOpenCheck,
@@ -19,10 +20,15 @@ import {
 // Real article links, not a search -- the hero's fake search box was
 // removed per the finalized hero decision (it looked functional but
 // executed no real search, which the audit flagged as a trust issue).
+// "wide" (col-span-2 on the mobile 2-col grid) is used both for the
+// question that wraps to 3 lines otherwise, and for the last, slug-less
+// "coming soon" item so it reads as its own full-width row rather than
+// leaving an awkward single-cell gap next to it.
 const heroTopicLinks = [
-  { icon: Clock, ro: "De ce nu slăbesc deși mănânc puțin?", en: "Why am I not losing weight even though I eat little?", slug: "controlul-greutatii" },
+  { icon: Clock, ro: "De ce nu slăbesc deși mănânc puțin?", en: "Why am I not losing weight even though I eat little?", slug: "controlul-greutatii", wide: true },
   { icon: Minus, ro: "Cum arată o masă echilibrată?", en: "What does a balanced meal look like?", slug: "nutritie-echilibrata" },
   { icon: Heart, ro: "Câtă proteină am nevoie?", en: "How much protein do I need?", slug: "cata-proteina-am-nevoie" },
+  { icon: Apple, ro: "Ce alimente ar trebui să aleg?", en: "What foods should I choose?", slug: null as string | null, wide: true },
 ];
 
 const nutriHubTopics = [
@@ -65,14 +71,14 @@ export default function Home() {
               </span>
 
               <h1 className="font-serif font-bold text-foreground text-[32px] min-[390px]:text-[35px] lg:text-[57px] leading-[1.08] lg:leading-[1.06] tracking-[-0.01em] max-w-[340px] lg:max-w-[560px] mb-3 lg:mb-4">
-                {ro ? "Nutriția începe cu " : "Nutrition starts with "}
-                <span className="text-primary">{ro ? "întrebarea potrivită." : "the right question."}</span>
+                {ro ? "În spatele fiecărui aliment există " : "Behind every food, there's "}
+                <span className="text-primary">{ro ? "o întrebare." : "a question."}</span>
               </h1>
 
               <p className="text-base lg:text-[18px] leading-[1.5] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-2 lg:mb-2.5">
                 {ro
-                  ? "Răspunsuri clare, bazate pe dovezi, la întrebările reale despre alimentație, greutate și sănătate."
-                  : "Clear, evidence-based answers to real questions about food, weight, and health."}
+                  ? "Ce alimente ar trebui să aleg? Cum arată o masă echilibrată? De câtă proteină am nevoie? Ce contează atunci când vreau să slăbesc sau să-mi mențin greutatea?"
+                  : "What foods should I choose? What does a balanced meal look like? How much protein do I need? What matters when I want to lose weight or maintain it?"}
               </p>
 
               <p className="text-sm lg:text-[15px] leading-[1.5] text-muted-foreground/80 italic max-w-[360px] lg:max-w-[480px] mb-[21px] lg:mb-7">
@@ -121,6 +127,19 @@ export default function Home() {
                   className="w-full h-auto max-w-[360px] md:max-w-[480px] lg:max-w-none lg:w-[700px] xl:w-[820px] mx-auto lg:mx-0 lg:ml-auto lg:-mr-10 xl:-mr-20"
                 />
               </picture>
+
+              {/* Editorial caption, not a card -- no background/border/shadow,
+                  small and airy so it doesn't compete with the hero copy. */}
+              <div className="mt-4 lg:mt-5 max-w-[360px] md:max-w-[480px] lg:max-w-[380px] mx-auto lg:mx-0 lg:ml-auto lg:mr-9 xl:mr-16">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--rodie))] mb-1.5">
+                  {ro ? "De ce rodia?" : "Why pomegranate?"}
+                </p>
+                <p className="text-xs lg:text-[13px] leading-relaxed text-muted-foreground/80">
+                  {ro
+                    ? "Pentru că este un exemplu bun că un aliment poate fi interesant fără să fie „magic”. Conține polifenoli și antocianine, dar ceea ce contează pentru sănătatea ta este alimentația în ansamblu, nu un singur „superaliment”."
+                    : "Because it's a good example that a food can be interesting without being \"magic\". It contains polyphenols and anthocyanins, but what matters for your health is your diet as a whole, not a single \"superfood\"."}
+                </p>
+              </div>
             </motion.div>
 
             <div className="lg:col-start-1 lg:row-start-2">
@@ -128,17 +147,33 @@ export default function Home() {
                 {ro ? "Câteva întrebări de la care poți porni" : "A few questions to start with"}
               </p>
               <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-2 lg:gap-2.5">
-                {heroTopicLinks.map((q, i) => (
-                  <Link
-                    key={i}
-                    href={`/nutrihub/${q.slug}`}
-                    className={`${i === 0 ? "col-span-2" : ""} min-h-11 lg:min-h-[42px] flex items-center gap-2 px-3 py-2.5 lg:px-[14px] rounded-xl border border-border bg-background hover:border-primary/30 hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-all text-left`}
-                    data-testid={`link-hero-topic-${i}`}
-                  >
-                    <q.icon className="w-4 h-4 text-primary shrink-0" />
-                    <span className="text-sm lg:text-[15px] font-medium text-foreground">{ro ? q.ro : q.en}</span>
-                  </Link>
-                ))}
+                {heroTopicLinks.map((q, i) => {
+                  const itemClassName = `${q.wide ? "col-span-2" : ""} min-h-11 lg:min-h-[42px] flex items-center gap-2 px-3 py-2.5 lg:px-[14px] rounded-xl border border-border transition-all text-left ${
+                    q.slug
+                      ? "bg-background hover:border-primary/30 hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                      : "bg-background/60 cursor-default"
+                  }`;
+                  const content = (
+                    <>
+                      <q.icon className="w-4 h-4 text-primary shrink-0" />
+                      <span className="text-sm lg:text-[15px] font-medium text-foreground">{ro ? q.ro : q.en}</span>
+                      {!q.slug && (
+                        <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">
+                          {ro ? "În curând" : "Soon"}
+                        </span>
+                      )}
+                    </>
+                  );
+                  return q.slug ? (
+                    <Link key={i} href={`/nutrihub/${q.slug}`} className={itemClassName} data-testid={`link-hero-topic-${i}`}>
+                      {content}
+                    </Link>
+                  ) : (
+                    <div key={i} className={itemClassName} data-testid={`link-hero-topic-${i}`} aria-disabled="true">
+                      {content}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
