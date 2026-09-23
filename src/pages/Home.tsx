@@ -291,30 +291,39 @@ export default function Home() {
       </section>
 
       {/* Nutri pentru copii -- moved to right after "Din răspunsuri, în
-          practică", intro copy replaced per this round's brief. Mascot
-          image untouched. */}
-      <section className="py-20 bg-secondary/30">
+          practică", intro copy replaced per this round's brief. Final round:
+          new mascot-only image (no plate/props), section background switched
+          from bg-secondary/30 to bg-background so it matches this page's own
+          --background override exactly (#FBF6EE, near-identical to the new
+          image's own cream background) and the image's edges dissolve into
+          the section instead of sitting in a visible box -- rounded-3xl and
+          any card/border/shadow treatment removed for the same reason.
+          Mobile-only compacting (smaller heading, lighter highlight pill,
+          shorter CTA, tighter gaps, the "Cărți • Activități..." line
+          dropped) via responsive classes; desktop keeps its original
+          spacing/scale untouched per the brief. */}
+      <section className="py-14 md:py-20 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-10 lg:gap-8 items-center">
+          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-4 lg:gap-8 items-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-3 md:mb-4">
                 <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
                 {ro ? "Pentru cei mici" : "For little ones"}
               </span>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3 text-balance">
+              <h2 className="text-2xl md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-2 md:mb-3 text-balance">
                 {ro ? "Nutriția poate începe și prin joacă." : "Nutrition can start with play, too."}
               </h2>
-              <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-6">
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-4 md:mb-6">
                 {ro
                   ? "Prin povești, jocuri și activități, copiii pot descoperi alimentele într-un mod curios, relaxat și potrivit vârstei lor."
                   : "Through stories, games, and activities, children can discover food in a curious, relaxed way that fits their age."}
               </p>
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-5 py-3 text-sm font-semibold text-primary mb-6">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3.5 py-2 md:px-5 md:py-3 text-xs md:text-sm font-semibold text-primary mb-4 md:mb-6">
                 <Sparkles className="w-4 h-4 shrink-0" />
                 {ro
                   ? "Fără presiune. Fără farfurii perfecte. Cu multă curiozitate."
@@ -323,17 +332,12 @@ export default function Home() {
               <div>
                 <Link
                   href="/nutri-pentru-copii"
-                  className="inline-flex items-center justify-center gap-2 h-[50px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
+                  className="inline-flex items-center justify-center gap-2 h-11 lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
                   data-testid="button-discover-nutri"
                 >
                   {ro ? "Descoperă lumea lui Nutri" : "Discover Nutri's world"}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                <p className="text-xs text-muted-foreground mt-3">
-                  {ro
-                    ? "Cărți • Activități • Jocuri • Resurse pentru părinți"
-                    : "Books • Activities • Games • Resources for parents"}
-                </p>
               </div>
             </motion.div>
 
@@ -346,7 +350,7 @@ export default function Home() {
               <img
                 src="/images/nutri-hero.png"
                 alt={ro ? "Nutri, personajul Diet4Life pentru copii" : "Nutri, the Diet4Life character for kids"}
-                className="w-full h-auto rounded-3xl"
+                className="w-full h-auto"
               />
             </motion.div>
           </div>
