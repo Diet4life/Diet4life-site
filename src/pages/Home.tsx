@@ -9,8 +9,6 @@ import {
   ShieldCheck,
   BadgeCheck,
   BookOpenCheck,
-  Calculator as CalculatorIcon,
-  NotebookPen,
   ArrowRight,
   Sparkles,
 } from "lucide-react";
@@ -203,30 +201,45 @@ export default function Home() {
       </section>
 
       {/* Din răspunsuri, în practică (was "Aplică în viața reală" -- moved
-          to right after the hero/trust bar, renamed) */}
+          to right after the hero/trust bar, renamed). Visual finalization:
+          real editorial mockup photos (built from the actual journal PDF
+          and the actual calculator UI, see tool-journal.jpg/tool-
+          calculator.jpg -- no invented UI, no stock photography) replace
+          the earlier icon-card design. Image backgrounds are the same
+          #FBF6EE as this page's own --background override above, so each
+          photo blends straight into the section instead of sitting in a
+          boxed card -- deliberately "no heavy SaaS cards" per the brief.
+          Mobile order (Calculator first, then Jurnal) falls out of plain
+          DOM order in the single-column stack, no extra ordering needed. */}
       <section className="py-20 bg-background">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <div className="container mx-auto px-4 max-w-5xl">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-3 text-balance">
             {ro ? "Din răspunsuri, în practică" : "From answers to practice"}
           </h2>
-          <p className="text-base md:text-lg text-muted-foreground text-center max-w-2xl mx-auto mb-12">
+          <p className="text-base md:text-lg text-muted-foreground text-center max-w-2xl mx-auto mb-14">
             {ro
               ? "Instrumente simple care te ajută să înțelegi mai bine nevoile și obiceiurile tale."
               : "Simple tools to help you better understand your needs and habits."}
           </p>
-          <div className="grid sm:grid-cols-2 gap-6 mb-6">
-            <Link
-              href="/calculator"
-              className="group rounded-2xl border border-border bg-card p-7 hover:shadow-md hover:border-primary/30 transition-all"
-              data-testid="link-apply-calculator"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                <CalculatorIcon className="w-6 h-6 text-primary" />
+          <div className="grid md:grid-cols-2 gap-x-10 gap-y-14">
+            <Link href="/calculator" className="group block" data-testid="link-apply-calculator">
+              <div className="rounded-2xl overflow-hidden mb-6">
+                <picture>
+                  <source srcSet="/images/tool-calculator.webp" type="image/webp" />
+                  <img
+                    src="/images/tool-calculator.jpg"
+                    alt={ro ? "Formularul calculatorului Diet4Life, cu datele personale completate" : "The Diet4Life calculator form, filled in with personal data"}
+                    className="w-full h-auto transition-transform duration-300 group-hover:scale-[1.02]"
+                    loading="lazy"
+                    width={1440}
+                    height={1080}
+                  />
+                </picture>
               </div>
-              <h3 className="font-serif font-bold text-foreground text-xl mb-2">
+              <h3 className="font-serif font-semibold text-foreground text-xl mb-2">
                 {ro ? "Calculator necesar caloric" : "Calorie needs calculator"}
               </h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-3">
                 {ro
                   ? "Află orientativ câte calorii ai nevoie, pornind de la profilul tău."
                   : "Get an estimate of how many calories you need, based on your profile."}
@@ -236,28 +249,34 @@ export default function Home() {
               </span>
             </Link>
 
-            <Link
-              href="/consultatii"
-              className="group rounded-2xl border border-border bg-card p-7 hover:shadow-md hover:border-primary/30 transition-all"
-              data-testid="link-apply-journal"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                <NotebookPen className="w-6 h-6 text-primary" />
+            <Link href="/consultatii" className="group block" data-testid="link-apply-journal">
+              <div className="rounded-2xl overflow-hidden mb-6">
+                <picture>
+                  <source srcSet="/images/tool-journal.webp" type="image/webp" />
+                  <img
+                    src="/images/tool-journal.jpg"
+                    alt={ro ? "Pagina 1 a jurnalului alimentar Diet4Life, necompletată" : "Page 1 of the Diet4Life food journal, blank"}
+                    className="w-full h-auto transition-transform duration-300 group-hover:scale-[1.02]"
+                    loading="lazy"
+                    width={1440}
+                    height={1080}
+                  />
+                </picture>
               </div>
-              <h3 className="font-serif font-bold text-foreground text-xl mb-2">
+              <h3 className="font-serif font-semibold text-foreground text-xl mb-2">
                 {ro ? "Jurnal alimentar" : "Food journal"}
               </h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-3">
                 {ro
-                  ? "Înțelege-ți obiceiurile alimentare, notând ce mănânci zi de zi."
-                  : "Understand your eating habits by tracking what you eat day to day."}
+                  ? "Observă ce mănânci, cum mănânci și ce tipare apar în timp."
+                  : "Notice what you eat, how you eat, and the patterns that emerge over time."}
               </p>
               <span className="text-primary text-sm font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
                 {ro ? "Deschide jurnalul" : "Open the journal"} <ArrowRight className="w-4 h-4" />
               </span>
             </Link>
           </div>
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="text-xs text-muted-foreground text-center mt-12">
             {ro
               ? "Instrumentele au rol educațional și nu oferă diagnostic medical."
               : "These tools are educational and do not provide a medical diagnosis."}
