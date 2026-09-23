@@ -92,8 +92,8 @@ export default function Home() {
 
               <p className="text-base lg:text-[18px] leading-[1.5] lg:leading-[1.55] text-muted-foreground max-w-[360px] lg:max-w-[520px] mb-[21px] lg:mb-7">
                 {ro
-                  ? "Ce alimente ar trebui să aleg? Cum arată o masă echilibrată? De câtă proteină am nevoie? Ce contează atunci când vreau să slăbesc sau să-mi mențin greutatea?"
-                  : "What foods should I choose? What does a balanced meal look like? How much protein do I need? What matters when I want to lose weight or maintain it?"}
+                  ? "Înțelege mai bine ce mănânci, cum îți construiești mesele și ce alegeri se potrivesc nevoilor și obiectivelor tale."
+                  : "Understand what you eat, how you build your meals, and what choices fit your needs and goals."}
               </p>
 
               <div className="flex flex-col min-[380px]:flex-row gap-3">
