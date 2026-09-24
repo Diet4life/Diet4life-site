@@ -73,7 +73,7 @@ export default function About() {
                 {ro ? "Nutriționist-dietetician autorizat" : "Licensed Dietitian-Nutritionist"}
               </p>
 
-              <div className="text-muted-foreground text-[17px] leading-[1.55] md:text-lg md:leading-relaxed max-w-[560px]">
+              <div className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed lg:max-w-[560px]">
                 <p>
                   {ro
                     ? "Lucrez în principal cu persoane care se confruntă cu obezitatea — o zonă a nutriției care presupune mai mult decât o listă de alimente permise și interzise. Pentru mine, nutriția înseamnă să înțeleg contextul fiecărei persoane și să găsim soluții care pot fi aplicate în viața de zi cu zi."
@@ -100,7 +100,7 @@ export default function About() {
             <h2 className="text-[30px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
               {ro ? "Ce am învățat din practică" : "What I've learned in practice"}
             </h2>
-            <div className="text-muted-foreground leading-relaxed text-base md:text-lg space-y-4">
+            <div className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed space-y-4">
               <p>
                 {ro
                   ? "Oamenii nu au nevoie doar să știe ce au voie să mănânce. Au nevoie să înțeleagă de ce fac anumite alegeri, cum își pot organiza mesele și, mai ales, cum pot adapta recomandările la viața lor reală — nu la una ideală, care există doar în teorie."
@@ -128,37 +128,46 @@ export default function About() {
                 <h3 className="font-serif font-semibold text-xl text-foreground mb-4">
                   {ro ? "Studii și formare" : "Education & training"}
                 </h3>
-                <ul className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-                  <li>
-                    {ro ? (
-                      <>
-                        <span className="text-foreground font-medium">Master, Nutriție Clinică</span> —
-                        Universitatea de Medicină și Farmacie „Victor Babeș" Timișoara (2019–2021)
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-foreground font-medium">Master's, Clinical Nutrition</span> —
-                        "Victor Babeș" University of Medicine and Pharmacy, Timișoara (2019–2021)
-                      </>
-                    )}
+                <ul className="space-y-3 max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed text-muted-foreground">
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" aria-hidden="true" />
+                    <span>
+                      {ro ? (
+                        <>
+                          <span className="text-foreground font-medium">Master, Nutriție Clinică</span> —
+                          Universitatea de Medicină și Farmacie „Victor Babeș" Timișoara (2019–2021)
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-foreground font-medium">Master's, Clinical Nutrition</span> —
+                          "Victor Babeș" University of Medicine and Pharmacy, Timișoara (2019–2021)
+                        </>
+                      )}
+                    </span>
                   </li>
-                  <li>
-                    {ro ? (
-                      <>
-                        <span className="text-foreground font-medium">Licență, Nutriție și Dietetică</span> —
-                        Universitatea de Medicină și Farmacie „Victor Babeș" Timișoara (2016–2019)
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-foreground font-medium">Bachelor's, Nutrition and Dietetics</span> —
-                        "Victor Babeș" University of Medicine and Pharmacy, Timișoara (2016–2019)
-                      </>
-                    )}
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" aria-hidden="true" />
+                    <span>
+                      {ro ? (
+                        <>
+                          <span className="text-foreground font-medium">Licență, Nutriție și Dietetică</span> —
+                          Universitatea de Medicină și Farmacie „Victor Babeș" Timișoara (2016–2019)
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-foreground font-medium">Bachelor's, Nutrition and Dietetics</span> —
+                          "Victor Babeș" University of Medicine and Pharmacy, Timișoara (2016–2019)
+                        </>
+                      )}
+                    </span>
                   </li>
-                  <li>
-                    {ro
-                      ? "Formare continuă în psiho-nutriție, nutriție clinică oncologică și nutriția pacientului critic"
-                      : "Ongoing training in psycho-nutrition, clinical oncology nutrition, and critical care nutrition"}
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" aria-hidden="true" />
+                    <span>
+                      {ro
+                        ? "Formare continuă în psiho-nutriție, nutriție clinică oncologică și nutriția pacientului critic"
+                        : "Ongoing training in psycho-nutrition, clinical oncology nutrition, and critical care nutrition"}
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -167,24 +176,33 @@ export default function About() {
                 <h3 className="font-serif font-semibold text-xl text-foreground mb-4">
                   {ro ? "Implicare profesională" : "Professional involvement"}
                 </h3>
-                <ul className="space-y-2.5 text-sm text-muted-foreground leading-relaxed mb-4">
-                  <li>
-                    {ro
-                      ? "Membru ESPEN (European Society for Clinical Nutrition and Metabolism)"
-                      : "Member, ESPEN (European Society for Clinical Nutrition and Metabolism)"}
+                <ul className="space-y-2.5 max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed text-muted-foreground mb-4">
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" aria-hidden="true" />
+                    <span>
+                      {ro
+                        ? "Membru ESPEN (European Society for Clinical Nutrition and Metabolism)"
+                        : "Member, ESPEN (European Society for Clinical Nutrition and Metabolism)"}
+                    </span>
                   </li>
-                  <li>
-                    {ro
-                      ? "Membru în Consiliul Teritorial Timiș al Colegiului Dieteticienilor din România"
-                      : "Member of the Timiș Territorial Council of the Romanian College of Dietitians"}
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" aria-hidden="true" />
+                    <span>
+                      {ro
+                        ? "Membru în Consiliul Teritorial Timiș al Colegiului Dieteticienilor din România"
+                        : "Member of the Timiș Territorial Council of the Romanian College of Dietitians"}
+                    </span>
                   </li>
-                  <li>
-                    {ro
-                      ? "Membru în Comisia de creditare a cursurilor EMCD"
-                      : "Member of the EMCD Course Accreditation Committee"}
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" aria-hidden="true" />
+                    <span>
+                      {ro
+                        ? "Membru în Comisia de creditare a cursurilor EMCD"
+                        : "Member of the EMCD Course Accreditation Committee"}
+                    </span>
                   </li>
                 </ul>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed">
                   {ro
                     ? "Fac parte din ESPEN pentru că recomandările pe care le găsești pe acest site pornesc chiar de la ghidurile acestei societăți — nu sunt doar opinii personale, ci informații verificate la nivel european."
                     : "I'm part of ESPEN because the recommendations you find on this site start from that society's own guidelines — not just personal opinions, but information verified at a European level."}
@@ -199,7 +217,7 @@ export default function About() {
               <h3 className="font-serif font-semibold text-xl text-foreground mb-2">
                 {ro ? "Experiență clinică" : "Clinical experience"}
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed">
                 {ro
                   ? "Experiență în managementul nutrițional al pacienților bariatrici din 2021, cu monitorizarea și adaptarea alimentației în diferitele etape postoperatorii."
                   : "Experience in the nutritional management of bariatric patients since 2021, monitoring and adjusting their diet across the different postoperative stages."}
@@ -218,7 +236,7 @@ export default function About() {
             <h2 className="text-[30px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
               {ro ? "Filozofia mea" : "My philosophy"}
             </h2>
-            <p className="text-muted-foreground leading-relaxed text-base md:text-lg">
+            <p className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed">
               {ro
                 ? "Nu urmăresc alimentația perfectă. Mă interesează mult mai mult ca persoana din fața mea să ajungă la o variantă bună pentru sănătatea ei — una pe care o poate menține pe termen lung, nu doar câteva săptămâni."
                 : "I'm not chasing perfect eating. What matters far more to me is that the person in front of me reaches a version that's good for their health — one they can maintain long-term, not just for a few weeks."}
