@@ -235,14 +235,14 @@ const HOW_TO_CHOOSE = [
 
 const AFTER_PAYMENT_STEPS = [
   { ro: "Plata este confirmată.", en: "Your payment is confirmed." },
-  { ro: "Completezi jurnalul alimentar.", en: "You fill in your food journal." },
+  { ro: "Primești indicațiile pentru pregătirea serviciului ales.", en: "You receive instructions for preparing your chosen service." },
   {
-    ro: "Pregătești analizele medicale pe care le ai deja pentru consultație.",
-    en: "You prepare any medical test results you already have for the consultation.",
+    ro: "Dacă este cazul, completezi jurnalul alimentar și pregătești analizele medicale pe care le ai deja.",
+    en: "If applicable, you fill in your food journal and prepare any medical test results you already have.",
   },
   {
-    ro: "Te contactăm pentru stabilirea datei și orei consultației.",
-    en: "We contact you to schedule the date and time of your consultation.",
+    ro: "Te contactăm pentru stabilirea următorului pas.",
+    en: "We contact you to arrange the next step.",
   },
 ];
 
@@ -487,7 +487,7 @@ export default function Services() {
           <h2 className="font-serif font-bold text-xl md:text-2xl text-foreground mb-5 text-balance">
             {ro ? "Ce se întâmplă după plată?" : "What happens after you pay?"}
           </h2>
-          <ol className="space-y-3">
+          <ol className="max-lg:space-y-2 lg:space-y-3">
             {AFTER_PAYMENT_STEPS.map((step, i) => (
               <li key={i} className="flex items-start gap-3 max-lg:text-[17px] max-lg:leading-[1.55] lg:text-base lg:leading-relaxed text-muted-foreground">
                 <span className="font-semibold text-primary shrink-0">{i + 1}.</span>
@@ -500,7 +500,7 @@ export default function Services() {
         {/* Bottom CTA -- restyled to match Home/Despre mine's calm final
             section (no bordered/tinted box, plain centered text). */}
         <motion.div
-          className="max-w-2xl mx-auto text-center mt-16 md:mt-20"
+          className="max-w-2xl mx-auto text-center mt-10 md:mt-20"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
