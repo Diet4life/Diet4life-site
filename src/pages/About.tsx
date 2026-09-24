@@ -28,15 +28,23 @@ export default function About() {
         "--muted-foreground": "22 16% 41%", // #7A6559
       } as any}
     >
-      {/* A. Hero -- cine sunt */}
-      <section className="pt-14 pb-14 md:pt-20 md:pb-20 bg-background">
+      {/* A. Hero -- cine sunt. Mobile order is now text-block then photo
+          (DOM order below), reversed back to photo-left/text-right on
+          desktop via order-1/order-2 -- desktop's rendered result is
+          unchanged, only the mechanism needed touching both children.
+          Mobile-only tightened: less top/bottom section padding, smaller
+          gap between the two blocks, a single consolidated hero paragraph
+          (the bariatric-experience sentence now lives only in "Experiență
+          clinică" below), and mobile-specific type sizes per this round's
+          spec (desktop sizes untouched). */}
+      <section className="pt-8 pb-8 md:pt-20 md:pb-20 bg-background">
         <div className={PAGE_COLUMN}>
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8 lg:gap-16">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-16">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="w-full lg:w-5/12"
+              className="order-2 lg:order-1 w-full lg:w-5/12"
             >
               <div className="relative aspect-[900/1040] max-w-[320px] mx-auto lg:max-w-none lg:mx-0 rounded-2xl overflow-hidden border border-border">
                 <img
@@ -51,30 +59,25 @@ export default function About() {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.15 }}
-              className="w-full lg:w-7/12"
+              className="order-1 lg:order-2 w-full lg:w-7/12"
             >
-              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-3 md:mb-4">
                 <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
                 {ro ? "Despre mine" : "About me"}
               </span>
 
-              <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-2 text-balance">
+              <h1 className="text-[36px] leading-[1.1] md:text-5xl md:leading-normal font-serif font-bold text-foreground mb-2 text-balance">
                 Camelia Amuza
               </h1>
-              <p className="text-lg md:text-xl font-semibold text-primary mb-5">
+              <p className="text-lg md:text-xl font-semibold text-primary mb-3 md:mb-5">
                 {ro ? "Nutriționist-dietetician autorizat" : "Licensed Dietitian-Nutritionist"}
               </p>
 
-              <div className="text-muted-foreground leading-relaxed text-base md:text-lg space-y-4 max-w-[560px]">
+              <div className="text-muted-foreground text-[17px] leading-[1.55] md:text-lg md:leading-relaxed max-w-[560px]">
                 <p>
                   {ro
-                    ? "Lucrez în principal cu persoane care se confruntă cu obezitatea — o zonă a nutriției care cere mult mai mult decât o listă de alimente permise și interzise."
-                    : "I work primarily with people facing obesity — an area of nutrition that requires much more than a list of allowed and forbidden foods."}
-                </p>
-                <p>
-                  {ro
-                    ? "Am experiență în managementul nutrițional al pacienților bariatrici din 2021, cu monitorizarea și adaptarea alimentației în diferitele etape postoperatorii."
-                    : "I have experience in the nutritional management of bariatric patients since 2021, monitoring and adjusting their diet across the different postoperative stages."}
+                    ? "Lucrez în principal cu persoane care se confruntă cu obezitatea — o zonă a nutriției care presupune mai mult decât o listă de alimente permise și interzise. Pentru mine, nutriția înseamnă să înțeleg contextul fiecărei persoane și să găsim soluții care pot fi aplicate în viața de zi cu zi."
+                    : "I work primarily with people facing obesity — an area of nutrition that takes much more than a list of allowed and forbidden foods. To me, nutrition means understanding each person's context and finding solutions that can actually be applied in everyday life."}
                 </p>
               </div>
             </motion.div>
@@ -83,7 +86,7 @@ export default function About() {
       </section>
 
       <div className={PAGE_COLUMN}>
-        <div className="max-w-3xl mx-auto space-y-14 md:space-y-16 pb-16 md:pb-20">
+        <div className="max-w-3xl mx-auto space-y-10 md:space-y-16 pb-16 md:pb-20">
           {/* B. Ce am învățat din practică / cum lucrez -- consolidated,
               the old separate "De ce Diet4Life Concept" section is folded
               in here since it restated the same "understand why, not just
@@ -94,7 +97,7 @@ export default function About() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-2xl md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-5 text-balance">
+            <h2 className="text-[30px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
               {ro ? "Ce am învățat din practică" : "What I've learned in practice"}
             </h2>
             <div className="text-muted-foreground leading-relaxed text-base md:text-lg space-y-4">
@@ -212,7 +215,7 @@ export default function About() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-2xl md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-5 text-balance">
+            <h2 className="text-[30px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
               {ro ? "Filozofia mea" : "My philosophy"}
             </h2>
             <p className="text-muted-foreground leading-relaxed text-base md:text-lg">
