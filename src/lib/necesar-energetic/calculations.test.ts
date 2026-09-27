@@ -54,37 +54,88 @@ describe("TEE and kcal display rule", () => {
   });
 });
 
-describe("protein — 18–64y (single reper, 0.83 g/kg)", () => {
-  it("rounds to the nearest gram, not truncated", () => {
-    const r = calculateProtein(70, 40);
+describe("protein — normoponderal (\"reference\" direction branch), 18–64y (single reper, 0.83 g/kg)", () => {
+  it("adult <65y normoponderal returns the existing numeric value", () => {
+    const r = calculateProtein(70, 40, "reference");
     // 70 * 0.83 = 58.1 -> 58
-    expect(r.min).toBe(58);
-    expect(r.max).toBeNull();
+    expect(r.kind).toBe("standard");
+    if (r.kind === "standard") {
+      expect(r.min).toBe(58);
+      expect(r.max).toBeNull();
+    }
   });
 
   it("rounds .5-and-up fractions upward (58.7 -> 59)", () => {
     // 70.7 * 0.83 = 58.681 -> 59
-    const r = calculateProtein(70.7, 30);
-    expect(r.min).toBe(59);
+    const r = calculateProtein(70.7, 30, "reference");
+    expect(r.kind).toBe("standard");
+    if (r.kind === "standard") expect(r.min).toBe(59);
   });
 
-  it("does not apply at age 64 boundary (still adult reper)", () => {
-    const r = calculateProtein(70, 64);
-    expect(r.max).toBeNull();
+  it("does not apply the senior range at age 64 boundary (still adult reper)", () => {
+    const r = calculateProtein(70, 64, "reference");
+    expect(r.kind).toBe("standard");
+    if (r.kind === "standard") expect(r.max).toBeNull();
   });
 });
 
-describe("protein — ≥65y (senior range, 1.0–1.2 g/kg)", () => {
-  it("returns a min/max range", () => {
-    const r = calculateProtein(70, 70);
-    expect(r.min).toBe(70);
-    expect(r.max).toBe(84);
+describe("protein — normoponderal (\"reference\" direction branch), ≥65y (senior range, 1.0–1.2 g/kg)", () => {
+  it("adult ≥65y normoponderal returns the existing numeric range", () => {
+    const r = calculateProtein(70, 70, "reference");
+    expect(r.kind).toBe("standard");
+    if (r.kind === "standard") {
+      expect(r.min).toBe(70);
+      expect(r.max).toBe(84);
+    }
   });
 
   it("applies starting exactly at age 65", () => {
-    const r = calculateProtein(70, 65);
-    expect(r.min).toBe(70);
-    expect(r.max).toBe(84);
+    const r = calculateProtein(70, 65, "reference");
+    expect(r.kind).toBe("standard");
+    if (r.kind === "standard") {
+      expect(r.min).toBe(70);
+      expect(r.max).toBe(84);
+    }
+  });
+});
+
+describe("protein — overweight/obese direction branches never get a numeric value", () => {
+  it("overweight <65y returns needs_individual_evaluation, not 0.83 × current weight", () => {
+    const r = calculateProtein(90, 40, "overweight");
+    expect(r).toEqual({ kind: "needs_individual_evaluation" });
+  });
+
+  it("obese grade I <65y returns needs_individual_evaluation (collapses to the \"obese\" branch)", () => {
+    const r = calculateProtein(100, 40, "obese");
+    expect(r).toEqual({ kind: "needs_individual_evaluation" });
+  });
+
+  it("obese grade II ≥65y returns needs_individual_evaluation, not the 1.0–1.2 senior range", () => {
+    const r = calculateProtein(110, 70, "obese");
+    expect(r).toEqual({ kind: "needs_individual_evaluation" });
+  });
+
+  it("obese grade III ≥65y returns needs_individual_evaluation, not the 1.0–1.2 senior range", () => {
+    const r = calculateProtein(130, 70, "obese");
+    expect(r).toEqual({ kind: "needs_individual_evaluation" });
+  });
+
+  it("the overweight/obese branch takes priority over the senior (≥65y) branch", () => {
+    // Same weight/age as a senior case above that would otherwise return {min:70, max:84} —
+    // confirms direction branch is checked first, before age.
+    const r = calculateProtein(70, 70, "overweight");
+    expect(r).toEqual({ kind: "needs_individual_evaluation" });
+  });
+});
+
+describe("protein — underweight direction branch still gets the standard numeric reper", () => {
+  it("underweight <65y is unaffected by the overweight/obese exclusion", () => {
+    const r = calculateProtein(45, 30, "underweight");
+    expect(r.kind).toBe("standard");
+    if (r.kind === "standard") {
+      expect(r.min).toBe(37); // 45 * 0.83 = 37.35 -> 37
+      expect(r.max).toBeNull();
+    }
   });
 });
 

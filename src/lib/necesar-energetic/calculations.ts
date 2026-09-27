@@ -14,6 +14,7 @@ import {
   FAT_PCT_MAX,
   KCAL_PER_G_FAT,
 } from "./constants";
+import type { DirectionBranch } from "./bmi";
 
 export type Sex = "M" | "F";
 
@@ -39,27 +40,40 @@ export function truncateKcal(teeRaw: number): number {
   return Math.trunc(teeRaw);
 }
 
-export interface ProteinResult {
-  /** 18–64y: the single reper value. ≥65y: the low end of the range. */
-  min: number;
-  /** 18–64y: null (single value, not a range). ≥65y: the high end of the range. */
-  max: number | null;
-}
+export type ProteinResult =
+  | {
+      kind: "standard";
+      /** 18–64y: the single reper value. ≥65y: the low end of the range. */
+      min: number;
+      /** 18–64y: null (single value, not a range). ≥65y: the high end of the range. */
+      max: number | null;
+    }
+  | { kind: "needs_individual_evaluation" };
 
 /**
- * Protein reper. 18–64y uses a single adult value; ≥65y uses the healthy
- * older-adult range. Do not apply the senior range to anyone with a
- * condition requiring individual evaluation — this function assumes the
- * safety filter has already cleared the person.
+ * Protein reper. For `overweight`/`obese` direction branches, no numeric
+ * value is computed at all — the 0.83 g/kg and 1.0–1.2 g/kg coefficients are
+ * only ever applied to the "reference"/"underweight" branches, regardless of
+ * age. Otherwise: 18–64y uses a single adult value; ≥65y uses the healthy
+ * older-adult range. This function assumes the safety filter has already
+ * cleared the person.
  */
-export function calculateProtein(weightKg: number, age: number): ProteinResult {
+export function calculateProtein(
+  weightKg: number,
+  age: number,
+  directionBranch: DirectionBranch,
+): ProteinResult {
+  if (directionBranch === "overweight" || directionBranch === "obese") {
+    return { kind: "needs_individual_evaluation" };
+  }
   if (age >= SENIOR_AGE_THRESHOLD) {
     return {
+      kind: "standard",
       min: Math.round(weightKg * PROTEIN_G_PER_KG_SENIOR_MIN),
       max: Math.round(weightKg * PROTEIN_G_PER_KG_SENIOR_MAX),
     };
   }
-  return { min: Math.round(weightKg * PROTEIN_G_PER_KG_ADULT), max: null };
+  return { kind: "standard", min: Math.round(weightKg * PROTEIN_G_PER_KG_ADULT), max: null };
 }
 
 export interface GramRange {

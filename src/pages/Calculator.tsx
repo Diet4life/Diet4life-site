@@ -308,7 +308,7 @@ export default function Calculator() {
       }
     }
 
-    const protein = calculateProtein(parsed.weight, parsed.age);
+    const protein = calculateProtein(parsed.weight, parsed.age, directionBranch);
 
     setShowCarbGrams(false);
     setShowFatGrams(false);
@@ -755,28 +755,44 @@ export default function Calculator() {
                 )}
 
                 {/* Proteină */}
-                <div className="rounded-2xl bg-card border border-border p-5">
+                <div
+                  className={
+                    result.protein.kind === "needs_individual_evaluation"
+                      ? "rounded-2xl border border-amber-200 bg-amber-50 p-5"
+                      : "rounded-2xl bg-card border border-border p-5"
+                  }
+                >
                   <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                     <Dumbbell className="w-4 h-4 text-primary" />
                     <p className="text-sm font-medium">{ro ? "Proteină" : "Protein"}</p>
                   </div>
-                  <p className="text-xl font-bold font-serif text-foreground" data-testid="text-protein-value">
-                    {result.protein.max === null
-                      ? `≈ ${result.protein.min} g/zi`
-                      : `≈ ${result.protein.min}–${result.protein.max} g/zi`}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {result.protein.max === null
-                      ? (ro ? "Reper de bază pentru adultul sănătos." : "Basic reference point for a healthy adult.")
-                      : (ro
-                          ? "Pentru adulții vârstnici sănătoși, aportul proteic recomandat este în general mai mare decât reperul pentru adultul tânăr."
-                          : "For healthy older adults, the recommended protein intake is generally higher than the young-adult reference.")}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1.5">
-                    {ro
-                      ? "Nevoile pot fi diferite în funcție de activitate, obiective, vârstă și stare de sănătate."
-                      : "Needs can differ based on activity, goals, age, and health status."}
-                  </p>
+                  {result.protein.kind === "needs_individual_evaluation" ? (
+                    <p className="text-sm text-amber-900/80 leading-relaxed" data-testid="text-protein-needs-evaluation">
+                      {ro
+                        ? "La persoanele cu suprapondere sau obezitate, necesarul de proteină nu este estimat automat doar pe baza greutății corporale actuale. Pentru stabilirea unui aport individual este necesară o evaluare nutrițională."
+                        : "For people who are overweight or living with obesity, protein needs aren't automatically estimated from current body weight alone. Establishing an individual intake requires a nutritional evaluation."}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-xl font-bold font-serif text-foreground" data-testid="text-protein-value">
+                        {result.protein.max === null
+                          ? `≈ ${result.protein.min} g/zi`
+                          : `≈ ${result.protein.min}–${result.protein.max} g/zi`}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {result.protein.max === null
+                          ? (ro ? "Reper de bază pentru adultul sănătos." : "Basic reference point for a healthy adult.")
+                          : (ro
+                              ? "Pentru adulții vârstnici sănătoși, aportul proteic recomandat este în general mai mare decât reperul pentru adultul tânăr."
+                              : "For healthy older adults, the recommended protein intake is generally higher than the young-adult reference.")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1.5">
+                        {ro
+                          ? "Nevoile pot fi diferite în funcție de activitate, obiective, vârstă și stare de sănătate."
+                          : "Needs can differ based on activity, goals, age, and health status."}
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {/* Carbohidrați */}
