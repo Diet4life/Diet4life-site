@@ -10,7 +10,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import {
   Flame,
@@ -219,6 +218,62 @@ const DIRECTION_COPY: Record<
   },
 };
 
+// ─── "What this result means" — a short, generic interpretation layer shown
+// once after the daily reference numbers, keyed off the same directionBranch
+// already used by DIRECTION_COPY above. Deliberately not a repeat of that
+// card's text: DIRECTION_COPY frames the health direction before the
+// numbers; this frames how to read the energy figure itself, after it.
+const RESULT_MEANING: Record<DirectionBranch, { ro: string; en: string }> = {
+  underweight: {
+    ro: "Rezultatul indică o direcție orientativă spre creștere ponderală. Pentru stabilirea aportului potrivit, o evaluare individuală este recomandată.",
+    en: "The result points toward an orientative weight-gain direction. An individual assessment is recommended to determine the right intake.",
+  },
+  reference: {
+    ro: "Aportul estimat este orientat spre menținerea greutății tale actuale.",
+    en: "The estimated intake is oriented toward maintaining your current weight.",
+  },
+  overweight: {
+    ro: "Intervalul afișat este o orientare pentru scădere ponderală și nu trebuie interpretat ca o prescripție fixă.",
+    en: "The displayed range is an orientation for weight loss and should not be interpreted as a fixed prescription.",
+  },
+  obese: {
+    ro: "Intervalul afișat este o orientare pentru scădere ponderală și nu trebuie interpretat ca o prescripție fixă.",
+    en: "The displayed range is an orientation for weight loss and should not be interpreted as a fixed prescription.",
+  },
+};
+
+// ─── Contextual NutriHub recommendation — one article per directionBranch,
+// replacing the old fixed 2-card + 4-chip grid. The protein article is
+// offered separately (see PROTEIN_ARTICLE below) only when a real protein
+// number is actually shown, never alongside the "needs evaluation" panel.
+const NUTRIHUB_RECOMMENDATION: Record<DirectionBranch, { titleRo: string; titleEn: string; href: string }> = {
+  reference: {
+    titleRo: "Sunt toate caloriile la fel?",
+    titleEn: "Are all calories equal?",
+    href: "/nutrihub/sunt-toate-caloriile-la-fel",
+  },
+  overweight: {
+    titleRo: "Controlul greutății: de ce nu se reduce la „mănâncă mai puțin”",
+    titleEn: "Weight control: why it's not just about eating less",
+    href: "/nutrihub/controlul-greutatii",
+  },
+  obese: {
+    titleRo: "Controlul greutății: de ce nu se reduce la „mănâncă mai puțin”",
+    titleEn: "Weight control: why it's not just about eating less",
+    href: "/nutrihub/controlul-greutatii",
+  },
+  underweight: {
+    titleRo: "Câte calorii am nevoie, de fapt?",
+    titleEn: "How many calories do I actually need?",
+    href: "/nutrihub/cate-calorii-am-nevoie",
+  },
+};
+const PROTEIN_ARTICLE = {
+  titleRo: "De ce este importantă proteina și de câtă avem nevoie?",
+  titleEn: "Why protein matters and how much you actually need",
+  href: "/nutrihub/cata-proteina-am-nevoie",
+};
+
 // ─── Results shape ────────────────────────────────────────────────────────────
 type EnergyResult =
   | { kind: "maintenance"; kcal: number }
@@ -317,8 +372,24 @@ export default function Calculator() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-16 md:py-20">
-      <div className="container mx-auto px-4 max-w-3xl">
+    <div
+      className="min-h-screen bg-background py-16 md:py-20"
+      style={{
+        // Same page-scoped palette override as Home/About/Services (kept in
+        // sync by hand -- see those files' own comments for why this isn't
+        // imported). Brings /calculator into the same warm-cream visual
+        // family instead of the raw global :root tokens it used before.
+        "--background": "37 62% 96%", // #FBF6EE
+        "--card": "38 73% 97%", // #FDF9F2
+        "--primary": "141 33% 27%", // #2F5D3F
+        "--muted-foreground": "22 16% 41%", // #7A6559
+      } as any}
+    >
+      {/* Narrower than Home's PAGE_COLUMN on purpose -- this is a form page,
+          not an editorial one, so it keeps its own max-w-3xl width. Only the
+          mobile padding convention (18px/20px, not Tailwind's default
+          px-4/16px) is adopted from the sitewide system. */}
+      <div className="max-w-3xl mx-auto px-[18px] min-[380px]:px-5">
 
         {/* ── 1. Intro ────────────────────────────────────────────────────── */}
         <motion.div
@@ -351,10 +422,13 @@ export default function Calculator() {
 
         {/* ── 2–4. Form: personal data, activity, safety filter ─────────────── */}
         <div id="formular" className="scroll-mt-24">
-          <Card className="shadow-md">
-            <CardContent className="p-6 md:p-8">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {/* Plain flat surface instead of shadcn's Card (border + shadow) --
+              a thin border is kept so the form reads as a distinct input
+              area, but the heavy shadow is dropped per the "less SaaS-card"
+              visual direction. */}
+          <div className="rounded-2xl border border-border bg-card/60 p-6 md:p-8">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
                   {/* Date personale */}
                   <div>
@@ -475,13 +549,17 @@ export default function Calculator() {
                       )}
                     />
 
+                    {/* Pill-button treatment (was a plain text link) so this
+                        easy-to-miss helper is easier to notice without
+                        becoming a second CTA -- same bg-primary/10 pattern
+                        used for highlight pills elsewhere on the site. */}
                     <button
                       type="button"
                       onClick={() => setShowActivityHelp((v) => !v)}
-                      className="flex items-center gap-1.5 text-sm text-primary font-medium mt-3 hover:underline"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-2 text-sm font-semibold text-primary mt-3 hover:bg-primary/15 transition-colors"
                       data-testid="button-activity-help"
                     >
-                      <HelpCircle className="w-4 h-4" />
+                      <HelpCircle className="w-4 h-4 shrink-0" />
                       {ro ? "Nu știu ce să aleg → Ajută-mă" : "I'm not sure which to pick → Help me"}
                     </button>
 
@@ -526,8 +604,13 @@ export default function Calculator() {
                     )}
                   </div>
 
-                  {/* Filtru de siguranță */}
-                  <div>
+                  {/* Filtru de siguranță -- wrapped in its own subdued
+                      surface (was bare labels directly in the form flow) so
+                      it visually reads as a distinct screening step, not as
+                      just more ordinary lifestyle options alongside age/
+                      weight/activity. Logic/options/blocking behavior
+                      unchanged -- visual grouping only. */}
+                  <div className="rounded-2xl bg-secondary/30 p-4 md:p-5">
                     <h2 className="text-lg font-serif font-bold text-foreground mb-1.5">
                       {ro ? "Se aplică ceva dintre următoarele?" : "Does any of the following apply to you?"}
                     </h2>
@@ -541,7 +624,7 @@ export default function Calculator() {
                         <label
                           key={item.key}
                           htmlFor={`safety-${item.key}`}
-                          className="flex items-start gap-3 rounded-xl border border-border p-3.5 min-h-[44px] cursor-pointer hover:border-primary/30 transition-colors"
+                          className="flex items-start gap-3 rounded-xl border border-border bg-background p-3.5 min-h-[44px] cursor-pointer hover:border-primary/30 transition-colors"
                         >
                           <Checkbox
                             id={`safety-${item.key}`}
@@ -561,10 +644,9 @@ export default function Calculator() {
                   <Button type="submit" size="lg" className="w-full rounded-xl" data-testid="button-calculate">
                     {ro ? "Calculează" : "Calculate"}
                   </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+              </form>
+            </Form>
+          </div>
         </div>
 
         {/* ── 5–6. Rezultate ─────────────────────────────────────────────── */}
@@ -593,7 +675,7 @@ export default function Calculator() {
           {result.status === "ok" && (
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="mt-10">
               {/* ── 8. IMC ─────────────────────────────────────────────────── */}
-              <div className="rounded-2xl bg-card border border-border p-6 mb-4">
+              <div className="rounded-2xl bg-card/60 p-6 mb-4">
                 <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                   <Scale className="w-4 h-4 text-primary" />
                   <p className="text-sm font-medium">{ro ? "IMC-ul tău" : "Your BMI"}</p>
@@ -614,7 +696,7 @@ export default function Calculator() {
               </div>
 
               {/* ── 9. Status actual + direcție orientativă ──────────────────── */}
-              <div className="rounded-2xl bg-card border border-border p-6 mb-4">
+              <div className="rounded-2xl bg-card/60 p-6 mb-4">
                 <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                   <Compass className="w-4 h-4 text-primary" />
                   <p className="text-sm font-medium">
@@ -637,7 +719,13 @@ export default function Calculator() {
               </div>
 
               {/* ── 10. Interval orientativ de greutate ──────────────────────── */}
-              <div className="rounded-2xl bg-card border border-border p-6 mb-4">
+              {/* This card's own caveat text (below) is kept verbatim and
+                  NOT folded into the new consolidated interpretation block
+                  -- it specifically distinguishes this range from a
+                  personalized/"ideal" target weight, which is a distinct,
+                  deliberate safeguard (see the standing "never expose an
+                  ideal-weight formula" rule), not generic repetition. */}
+              <div className="rounded-2xl bg-card/60 p-6 mb-4">
                 <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                   <Scale className="w-4 h-4 text-primary" />
                   <p className="text-sm font-medium">
@@ -659,6 +747,27 @@ export default function Calculator() {
                 </p>
               </div>
 
+              {/* ── Consolidated interpretation block ─────────────────────────
+                  Replaces the generic "this is an estimate / needs vary"
+                  caveats that used to be repeated under the maintenance and
+                  weight-loss energy cards below (trimmed in place). Shown
+                  once, here, before the numbers -- not a card, just a plain
+                  flat surface so it doesn't compete visually with the
+                  actual results. */}
+              <div className="rounded-2xl bg-secondary/30 p-5 md:p-6 mb-8 flex items-start gap-3">
+                <Info className="w-4 h-4 text-primary shrink-0 mt-1" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground mb-1">
+                    {ro ? "Cum să interpretezi rezultatul" : "How to read your result"}
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {ro
+                      ? "Cifrele de mai jos sunt estimări, nu măsurători exacte. Necesarul real poate diferi de la o persoană la alta, chiar și la aceeași greutate și înălțime — contează nivelul real de activitate, compoziția corporală, acuratețea datelor introduse și contextul individual de sănătate."
+                      : "The figures below are estimates, not exact measurements. Actual needs can differ from person to person, even at the same weight and height — real activity level, body composition, the accuracy of the data you entered, and individual health context all play a role."}
+                  </p>
+                </div>
+              </div>
+
               <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-6 mt-10">
                 {ro ? "Reperele tale zilnice" : "Your daily reference points"}
               </h2>
@@ -676,11 +785,6 @@ export default function Calculator() {
                     </p>
                     <p className="text-sm opacity-90 mt-2">
                       {ro ? "Estimare pentru menținerea greutății actuale." : "Estimate for maintaining your current weight."}
-                    </p>
-                    <p className="text-xs opacity-75 mt-1">
-                      {ro
-                        ? "Rezultatul provine dintr-o ecuație predictivă și necesarul real poate varia."
-                        : "This comes from a predictive equation, and your actual need may vary."}
                     </p>
                   </div>
                 )}
@@ -700,12 +804,17 @@ export default function Calculator() {
                         ? "Interval calculat pornind de la necesarul energetic estimat și un deficit moderat."
                         : "Range calculated from your estimated energy needs and a moderate deficit."}
                     </p>
-                    <p className="text-xs opacity-75 mt-1">
+                    {/* Was a generic "this is guidance, not a prescription,
+                        depends on X/Y/Z" caveat (now consolidated above) --
+                        replaced with a short, contextual lead-in straight
+                        into the CTA, so the button reads as a natural next
+                        step rather than a repeated disclaimer. */}
+                    <p className="text-xs opacity-75 mt-3">
                       {ro
-                        ? "Este o orientare, nu o prescripție individuală. Aportul potrivit depinde de istoricul ponderal, compoziția corporală, activitate, starea de sănătate și evoluția în timp."
-                        : "This is guidance, not an individual prescription. The right intake depends on weight history, body composition, activity, health status, and how things evolve over time."}
+                        ? "Dacă vrei un plan adaptat situației tale, nu doar o estimare generală:"
+                        : "If you'd like a plan adapted to your situation, not just a general estimate:"}
                     </p>
-                    <Button asChild variant="secondary" size="sm" className="rounded-full mt-4">
+                    <Button asChild variant="secondary" size="sm" className="rounded-full mt-2">
                       <Link href="/contact">{ro ? "Hai să discutăm" : "Let's talk"}</Link>
                     </Button>
                   </div>
@@ -723,6 +832,17 @@ export default function Calculator() {
                           ? "Pentru datele introduse, o recomandare automată de reducere calorică nu este potrivită."
                           : "For the data entered, an automatic caloric-reduction recommendation isn't appropriate."}
                       </h3>
+                      {/* New: explains *why* the calculator stops here,
+                          phrased so the threshold doesn't read as a
+                          universal physiological floor -- it's a safety
+                          margin for an unsupervised automatic calculation,
+                          not a claim that this exact number is where risk
+                          begins for every body. */}
+                      <p className="text-sm text-amber-900/80 leading-relaxed mb-2">
+                        {ro
+                          ? "Sub un anumit nivel, calculul automat al unui deficit caloric nu mai este sigur fără supraveghere — nu pentru că acest prag ar fi o limită fixă, valabilă la fel pentru toată lumea, ci pentru că la aporturi foarte reduse crește riscul de a nu acoperi nevoile nutriționale de bază."
+                          : "Below a certain level, automatically calculating a caloric deficit is no longer safe without supervision — not because this threshold is a fixed limit that applies the same way to everyone, but because very low intakes raise the risk of not covering basic nutritional needs."}
+                      </p>
                       <p className="text-sm text-amber-900/80 leading-relaxed mb-3">
                         {ro
                           ? "Un aport atât de redus necesită evaluare individuală și monitorizare adecvată."
@@ -759,7 +879,7 @@ export default function Calculator() {
                   className={
                     result.protein.kind === "needs_individual_evaluation"
                       ? "rounded-2xl border border-amber-200 bg-amber-50 p-5"
-                      : "rounded-2xl bg-card border border-border p-5"
+                      : "rounded-2xl bg-card/60 p-5"
                   }
                 >
                   <div className="flex items-center gap-2 mb-2 text-muted-foreground">
@@ -796,7 +916,7 @@ export default function Calculator() {
                 </div>
 
                 {/* Carbohidrați */}
-                <div className="rounded-2xl bg-card border border-border p-5">
+                <div className="rounded-2xl bg-card/60 p-5">
                   <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                     <Wheat className="w-4 h-4 text-amber-600" />
                     <p className="text-sm font-medium">{ro ? "Carbohidrați" : "Carbohydrates"}</p>
@@ -837,7 +957,7 @@ export default function Calculator() {
                 </div>
 
                 {/* Grăsimi */}
-                <div className="rounded-2xl bg-card border border-border p-5">
+                <div className="rounded-2xl bg-card/60 p-5">
                   <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                     <Droplet className="w-4 h-4 text-accent" />
                     <p className="text-sm font-medium">{ro ? "Grăsimi" : "Fat"}</p>
@@ -875,7 +995,7 @@ export default function Calculator() {
                 </div>
 
                 {/* Fibre */}
-                <div className="rounded-2xl bg-card border border-border p-5">
+                <div className="rounded-2xl bg-card/60 p-5">
                   <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                     <Leaf className="w-4 h-4 text-primary" />
                     <p className="text-sm font-medium">{ro ? "Fibre" : "Fiber"}</p>
@@ -902,7 +1022,7 @@ export default function Calculator() {
               </div>
 
               {/* Apă — full width */}
-              <div className="rounded-2xl bg-card border border-border p-5 mt-4">
+              <div className="rounded-2xl bg-card/60 p-5 mt-4">
                 <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                   <GlassWater className="w-4 h-4 text-accent" />
                   <p className="text-sm font-medium">{ro ? "Apă" : "Water"}</p>
@@ -930,6 +1050,19 @@ export default function Calculator() {
                       : "A tracking app or a few simple reminders throughout the day can help build the habit."}
                   </p>
                 </div>
+              </div>
+
+              {/* ── "Ce înseamnă acest rezultat" ── short, generic, branch-
+                  specific interpretation of the energy figure itself (not a
+                  card -- plain text, per the "don't add another large
+                  result card" instruction). */}
+              <div className="mt-6 text-center">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">
+                  {ro ? "Ce înseamnă acest rezultat" : "What this result means"}
+                </p>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  {ro ? RESULT_MEANING[result.directionBranch].ro : RESULT_MEANING[result.directionBranch].en}
+                </p>
               </div>
 
               {/* ── 16. Mesaj important ── */}
@@ -971,7 +1104,7 @@ export default function Calculator() {
                   { title: ro ? "Fibre" : "Fiber", icon: Leaf, items: ro ? FIBER_FOODS : FIBER_FOODS_EN },
                   { title: ro ? "Carbohidrați" : "Carbohydrates", icon: Wheat, items: ro ? CARB_FOODS : CARB_FOODS_EN },
                 ].map((group) => (
-                  <div key={group.title} className="rounded-2xl bg-card border border-border p-5">
+                  <div key={group.title} className="rounded-2xl bg-card/60 p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <group.icon className="w-4 h-4 text-primary" />
                       <p className="text-sm font-semibold text-foreground">{group.title}</p>
@@ -993,19 +1126,17 @@ export default function Calculator() {
               <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-2">
                 {ro ? "Construiește o masă, nu o ecuație" : "Build a meal, not an equation"}
               </h2>
-              <Card className="mt-6">
-                <CardContent className="p-6 md:p-8">
-                  <PlateDiagram />
-                  <div className="mt-5 pt-5 border-t border-border text-center">
-                    <p className="font-serif font-bold text-foreground mb-1.5">{ro ? "Reper, nu regulă." : "A reference, not a rule."}</p>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      {ro
-                        ? "Proporțiile se adaptează mesei, nivelului de activitate, obiectivului și nevoilor individuale."
-                        : "The proportions adapt to the meal, activity level, goal, and individual needs."}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="rounded-2xl bg-card/60 p-6 md:p-8 mt-6">
+                <PlateDiagram />
+                <div className="mt-5 pt-5 border-t border-border text-center">
+                  <p className="font-serif font-bold text-foreground mb-1.5">{ro ? "Reper, nu regulă." : "A reference, not a rule."}</p>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    {ro
+                      ? "Proporțiile se adaptează mesei, nivelului de activitate, obiectivului și nevoilor individuale."
+                      : "The proportions adapt to the meal, activity level, goal, and individual needs."}
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Exemple de mese reale */}
@@ -1015,7 +1146,7 @@ export default function Calculator() {
               </h2>
               <div className="grid sm:grid-cols-2 gap-3">
                 {(ro ? MEAL_EXAMPLES_RO : MEAL_EXAMPLES_EN).map((meal) => (
-                  <div key={meal} className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground">
+                  <div key={meal} className="rounded-xl bg-card/60 px-4 py-3 text-sm text-foreground">
                     {meal}
                   </div>
                 ))}
@@ -1027,66 +1158,45 @@ export default function Calculator() {
               </p>
             </div>
 
-            {/* Ce faci cu rezultatul */}
+            {/* Ce faci cu rezultatul -- was a fixed 2-card + 4-chip grid
+                (risking a "mini NutriHub homepage" feel); now one article
+                chosen from NUTRIHUB_RECOMMENDATION by the same
+                directionBranch already driving the rest of the results,
+                plus a single optional secondary link to the protein
+                article -- only when a real protein number was actually
+                shown, never next to the "needs evaluation" panel. */}
             <div id="ce-faci-cu-rezultatul" className="scroll-mt-24 mt-16">
               <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-6">
                 {ro ? "Ce faci cu rezultatul?" : "What do you do with the result?"}
               </h2>
-              <div className="grid sm:grid-cols-2 gap-4 mb-4">
-                <Link
-                  href="/nutrihub/nutritie-echilibrata"
-                  className="group rounded-2xl border border-border bg-card p-6 hover:border-primary/40 hover:shadow-md transition-all"
-                  data-testid="link-nutrihub-echilibrata"
-                >
-                  <p className="font-semibold text-foreground mb-1">
-                    {ro ? "Vreau să mănânc mai echilibrat" : "I want to eat in a more balanced way"}
-                  </p>
-                  <p className="text-sm text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
-                    {ro ? "Nutriție echilibrată: cum arată în viața reală?" : "Balanced nutrition: what it looks like in real life"}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </p>
-                </Link>
-                <Link
-                  href="/nutrihub/controlul-greutatii"
-                  className="group rounded-2xl border border-border bg-card p-6 hover:border-primary/40 hover:shadow-md transition-all"
-                  data-testid="link-nutrihub-greutate"
-                >
-                  <p className="font-semibold text-foreground mb-1">
-                    {ro ? "Vreau să înțeleg mai bine greutatea mea" : "I want to better understand my weight"}
-                  </p>
-                  <p className="text-sm text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
-                    {ro ? "Controlul greutății: de ce nu este doar despre a mânca mai puțin" : "Weight control: why it's not just about eating less"}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </p>
-                </Link>
-              </div>
-              <div className="rounded-2xl border border-dashed border-border p-6">
-                <p className="font-semibold text-foreground mb-3">
-                  {ro ? "Vreau să aflu mai multe despre nutrienți" : "I want to learn more about nutrients"}
+              <Link
+                href={NUTRIHUB_RECOMMENDATION[result.directionBranch].href}
+                className="group block rounded-2xl bg-card/60 p-6 hover:bg-card transition-colors"
+                data-testid="link-nutrihub-contextual"
+              >
+                <p className="text-xs font-semibold tracking-wide uppercase text-primary mb-2">
+                  {ro ? "Recomandat pentru tine" : "Recommended for you"}
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { ro: "Câtă proteină am nevoie?", en: "How much protein do I need?", href: "/nutrihub/cata-proteina-am-nevoie" },
-                    { ro: "Fibrele alimentare", en: "Dietary fiber", href: "/nutrihub/fibrele-alimentare" },
-                    { ro: "Câte calorii am nevoie, de fapt?", en: "How many calories do I actually need?", href: "/nutrihub/cate-calorii-am-nevoie" },
-                    { ro: "Sunt toate caloriile la fel?", en: "Are all calories the same?", href: undefined },
-                  ].map((item) =>
-                    item.href ? (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                      >
-                        {ro ? item.ro : item.en}
-                      </Link>
-                    ) : (
-                      <span key={item.ro} className="text-xs px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
-                        {ro ? item.ro : item.en} · {ro ? "în curând" : "coming soon"}
-                      </span>
-                    )
-                  )}
-                </div>
-              </div>
+                <p className="font-serif font-bold text-lg text-foreground mb-2">
+                  {ro
+                    ? NUTRIHUB_RECOMMENDATION[result.directionBranch].titleRo
+                    : NUTRIHUB_RECOMMENDATION[result.directionBranch].titleEn}
+                </p>
+                <span className="text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                  {ro ? "Citește articolul" : "Read the article"}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </Link>
+              {result.protein.kind !== "needs_individual_evaluation" && (
+                <Link
+                  href={PROTEIN_ARTICLE.href}
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-4"
+                  data-testid="link-nutrihub-protein"
+                >
+                  {ro ? PROTEIN_ARTICLE.titleRo : PROTEIN_ARTICLE.titleEn}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              )}
             </div>
           </>
         )}
