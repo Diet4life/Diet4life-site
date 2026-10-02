@@ -1,8 +1,7 @@
 import { ReactNode } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowLeft, Clock, CheckCircle2, Info } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Info } from "lucide-react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -24,11 +23,6 @@ const ARTICLE_PAGE_STYLE = {
   "--muted-foreground": "22 16% 41%", // #7A6559
 } as any;
 
-export interface FaqItem {
-  q: string;
-  a: string;
-}
-
 export interface RelatedItem {
   label: string;
   href?: string;
@@ -37,33 +31,17 @@ export interface RelatedItem {
 interface ArticleShellProps {
   category: string;
   title: string;
-  subtitle: string;
-  readTime: string;
-  updated: string;
-  tldr: string;
-  keyTakeaways: string[];
-  faq: FaqItem[];
+  /** Full bibliography entries from the approved source document, one per reference. */
+  sources: string[];
   related: RelatedItem[];
-  sources: string;
   children: ReactNode;
 }
 
-// Shared reader shell for every NutriHub pillar article: hero, "Pe scurt", the
-// article's own sections (passed as children), key takeaways, FAQ, related
-// articles and a collapsed sources block — so each article only supplies content.
-export function ArticleShell({
-  category,
-  title,
-  subtitle,
-  readTime,
-  updated,
-  tldr,
-  keyTakeaways,
-  faq,
-  related,
-  sources,
-  children,
-}: ArticleShellProps) {
+// Shared reader shell for every NutriHub article: back link, header (category +
+// title only -- no subtitle/byline/date/read-time, per the approved-content
+// sync), the article's own sections (passed as children), related articles,
+// a collapsed bibliography, and the fixed educational disclaimer.
+export function ArticleShell({ category, title, sources, related, children }: ArticleShellProps) {
   const { language } = useLanguage();
   const ro = language === "ro";
 
@@ -88,57 +66,12 @@ export function ArticleShell({
           <span className="inline-block text-xs font-semibold tracking-wide uppercase text-primary mb-3">
             {category}
           </span>
-          <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground leading-tight mb-4 text-balance">
+          <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground leading-tight text-balance">
             {title}
           </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed mb-5">
-            {subtitle}
-          </p>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Clock className="w-3.5 h-3.5" />
-            {readTime}
-          </div>
         </motion.header>
 
-        <div className="space-y-10">{children}</div>
-
-        {keyTakeaways.length > 0 && (
-          <Card className="mt-12 border-primary/20">
-            <CardContent className="p-7">
-              <h2 className="font-serif font-bold text-lg text-foreground mb-4">
-                {ro ? "Ce să reții" : "Key takeaways"}
-              </h2>
-              <ul className="space-y-2.5">
-                {keyTakeaways.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-
-        {faq.length > 0 && (
-          <div className="mt-12">
-            <h2 className="font-serif font-bold text-xl text-foreground mb-4">
-              {ro ? "Întrebări frecvente" : "Frequently asked questions"}
-            </h2>
-            <Accordion type="single" collapsible className="border border-border rounded-xl px-4">
-              {faq.map((item, i) => (
-                <AccordionItem key={i} value={`faq-${i}`} className={i === faq.length - 1 ? "border-b-0" : ""}>
-                  <AccordionTrigger className="text-sm font-medium text-foreground text-left hover:no-underline">
-                    {item.q}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-sm text-muted-foreground leading-relaxed">
-                    {item.a}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        )}
+        <div className="space-y-8">{children}</div>
 
         {related.length > 0 && (
           <div className="mt-12">
@@ -170,21 +103,27 @@ export function ArticleShell({
           </div>
         )}
 
-        <div className="mt-12">
-          <Accordion type="single" collapsible className="border border-border rounded-xl px-4">
-            <AccordionItem value="sources" className="border-b-0">
-              <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline">
-                <span className="flex items-center gap-2">
-                  <Info className="w-4 h-4 text-primary" />
-                  {ro ? "Vezi sursele medicale" : "See the medical sources"}
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="text-sm text-muted-foreground leading-relaxed">
-                {sources}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
+        {sources.length > 0 && (
+          <div className="mt-12">
+            <Accordion type="single" collapsible className="border border-border rounded-xl px-4">
+              <AccordionItem value="sources" className="border-b-0">
+                <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline">
+                  <span className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-primary" />
+                    {ro ? "Referințe" : "References"}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ol className="space-y-2 text-sm text-muted-foreground leading-relaxed list-decimal pl-5">
+                    {sources.map((src, i) => (
+                      <li key={i}>{src}</li>
+                    ))}
+                  </ol>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        )}
 
         <p className="mt-6 pt-6 border-t border-border text-xs text-muted-foreground leading-relaxed">
           {ro
@@ -206,6 +145,29 @@ export function ArticleH2({ children }: { children: ReactNode }) {
 
 export function ArticleP({ children }: { children: ReactNode }) {
   return <p className="text-[17px] md:text-lg text-foreground leading-[1.7] mb-3 last:mb-0">{children}</p>;
+}
+
+// A short bold lead-in line used by the approved source documents as a
+// lighter-weight in-flow sub-heading (styled as bold body text in the
+// Word doc, not a full Heading 2) -- kept visually distinct from ArticleH2
+// so the article's own two-tier heading structure is preserved as approved.
+export function ArticleLead({ children }: { children: ReactNode }) {
+  return (
+    <p className="font-serif font-semibold text-foreground text-lg md:text-xl leading-snug mb-3">
+      {children}
+    </p>
+  );
+}
+
+// A short pull-quote / rhetorical-question line, used where the approved
+// source document sets the text apart visually (as a one-cell table in the
+// Word doc) rather than as a plain paragraph.
+export function ArticleQuote({ children }: { children: ReactNode }) {
+  return (
+    <p className="pl-4 border-l-2 border-primary/30 italic text-foreground/90 text-lg md:text-xl leading-snug mb-3">
+      {children}
+    </p>
+  );
 }
 
 export function ArticleCallout({ children }: { children: ReactNode }) {

@@ -21,6 +21,7 @@ import ControlulGreutatii from "@/pages/nutrihub/ControlulGreutatii";
 import CataProteinaAmNevoie from "@/pages/nutrihub/CataProteinaAmNevoie";
 import CateCaloriiAmNevoie from "@/pages/nutrihub/CateCaloriiAmNevoie";
 import FibreleAlimentare from "@/pages/nutrihub/FibreleAlimentare";
+import SuntToateCaloriileLaFel from "@/pages/nutrihub/SuntToateCaloriileLaFel";
 import NutriPentruCopii from "@/pages/NutriPentruCopii";
 import Checkout from "@/pages/Checkout";
 import CheckoutReturn from "@/pages/CheckoutReturn";
@@ -47,6 +48,7 @@ function Router() {
         <Route path="/nutrihub/cata-proteina-am-nevoie" component={CataProteinaAmNevoie} />
         <Route path="/nutrihub/cate-calorii-am-nevoie" component={CateCaloriiAmNevoie} />
         <Route path="/nutrihub/fibrele-alimentare" component={FibreleAlimentare} />
+        <Route path="/nutrihub/sunt-toate-caloriile-la-fel" component={SuntToateCaloriileLaFel} />
         <Route path="/nutri-pentru-copii" component={NutriPentruCopii} />
         <Route path="/checkout/retur" component={CheckoutReturn} />
         <Route path="/checkout/:slug" component={Checkout} />

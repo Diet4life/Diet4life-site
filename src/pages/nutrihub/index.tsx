@@ -1,6 +1,13 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { motion, useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// Supplied separately by the user -- this path is wired up and ready, but
+// the file itself does not exist in public/images/nutrihub/ yet. The <img>
+// below fails silently (onError) and falls back to a text-only card until
+// the real asset is placed here, rather than showing a broken-image icon.
+const FEATURED_IMAGE_SRC = "/images/nutrihub/calorii-comparatie.webp";
 
 // Same outer column as Home/Despre mine/Servicii's own PAGE_COLUMN (kept in
 // sync by hand -- importing would require exporting it from one of those
@@ -29,7 +36,7 @@ const NUTRIHUB_PAGE_STYLE = {
 const ARTICLES = [
   {
     slug: "nutritie-echilibrata",
-    categoryRo: "Nutriție echilibrată",
+    categoryRo: "NUTRIȚIE ECHILIBRATĂ",
     categoryEn: "Balanced nutrition",
     titleRo: "Nutriție echilibrată: cum arată în viața reală?",
     titleEn: "Balanced nutrition: what it actually looks like",
@@ -38,7 +45,7 @@ const ARTICLES = [
   },
   {
     slug: "controlul-greutatii",
-    categoryRo: "Controlul greutății",
+    categoryRo: "CONTROLUL GREUTĂȚII",
     categoryEn: "Weight control",
     titleRo: "Controlul greutății: de ce nu se reduce la „mănâncă mai puțin”",
     titleEn: "Weight control: why it's not just \"eat less\"",
@@ -47,7 +54,7 @@ const ARTICLES = [
   },
   {
     slug: "cata-proteina-am-nevoie",
-    categoryRo: "Macronutrienți",
+    categoryRo: "MACRONUTRIENȚI",
     categoryEn: "Macronutrients",
     titleRo: "De ce este importantă proteina și de câtă avem nevoie?",
     titleEn: "Why protein matters and how much you actually need",
@@ -56,7 +63,7 @@ const ARTICLES = [
   },
   {
     slug: "cate-calorii-am-nevoie",
-    categoryRo: "Energie și necesar caloric",
+    categoryRo: "ENERGIE ȘI NECESAR CALORIC",
     categoryEn: "Energy & caloric needs",
     titleRo: "Câte calorii am nevoie, de fapt?",
     titleEn: "How many calories do I actually need?",
@@ -65,7 +72,7 @@ const ARTICLES = [
   },
   {
     slug: "fibrele-alimentare",
-    categoryRo: "Fibre alimentare",
+    categoryRo: "FIBRE ALIMENTARE",
     categoryEn: "Dietary fiber",
     titleRo: "Fibrele alimentare: de ce sunt importante",
     titleEn: "Dietary fiber: why it matters",
@@ -78,6 +85,7 @@ export default function NutriHub() {
   const { language } = useLanguage();
   const ro = language === "ro";
   const prefersReducedMotion = useReducedMotion();
+  const [featuredImageFailed, setFeaturedImageFailed] = useState(false);
 
   const reveal = (delay = 0) =>
     prefersReducedMotion
@@ -111,37 +119,49 @@ export default function NutriHub() {
       </section>
 
       {/* Featured article -- editorial, visually distinct from the regular grid.
-          No image: the "comparație calorii" image this card would need does not
-          exist anywhere in the project, and the article it would link to
-          ("Sunt toate caloriile la fel?") hasn't been written yet (still a
-          "coming soon" chip on the pillar articles) -- so the CTA is shown as
-          an inert "în curând" state rather than a dead link, and the card is
-          text-only rather than inventing a stock/placeholder image. See the
-          audit note in the chat for what's needed to make this fully live. */}
+          Image is wired to FEATURED_IMAGE_SRC but the file doesn't exist in
+          public/images/nutrihub/ yet (supplied separately); onError hides it
+          and the card falls back to a text-only layout rather than showing a
+          broken-image icon. Swap nothing else once the file is added. */}
       <section className="pb-10 md:pb-14">
         <div className={PAGE_COLUMN}>
-          <motion.div
-            {...reveal(0.05)}
-            className="rounded-2xl border border-border px-6 py-8 md:px-12 md:py-14"
-            style={{ backgroundColor: "#FDF9F2" }}
-          >
-            <span className="text-xs font-semibold tracking-wide uppercase text-primary mb-3 block">
-              {ro ? "Energie și alegeri alimentare" : "Energy & food choices"}
-            </span>
-            <h2 className="text-2xl md:text-[32px] font-serif font-bold text-foreground leading-tight mb-3 max-w-2xl text-balance">
-              {ro ? "Sunt toate caloriile la fel?" : "Are all calories equal?"}
-            </h2>
-            <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-5 max-w-xl">
-              {ro
-                ? "Aceeași energie poate arăta foarte diferit în farfurie. Contează și din ce alimente provin caloriile."
-                : "The same amount of energy can look very different on a plate. Where your calories come from matters too."}
-            </p>
-            <span className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              {ro ? "Citește articolul" : "Read the article"}
-              <span className="text-xs font-semibold uppercase tracking-wide">
-                {ro ? "— în curând" : "— coming soon"}
-              </span>
-            </span>
+          <motion.div {...reveal(0.05)}>
+            <Link
+              href="/nutrihub/sunt-toate-caloriile-la-fel"
+              className="group grid md:grid-cols-[0.45fr_0.55fr] gap-0 rounded-2xl border border-border overflow-hidden hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 ease-out"
+              style={{ backgroundColor: "#FDF9F2" }}
+              data-testid="link-featured-article"
+            >
+              {!featuredImageFailed && (
+                <div className="order-1 md:order-2 aspect-[16/10] md:aspect-auto">
+                  <img
+                    src={FEATURED_IMAGE_SRC}
+                    alt={ro ? "Comparație vizuală: aceeași energie, farfurii diferite" : "Visual comparison: the same energy, different plates"}
+                    className="w-full h-full object-cover"
+                    onError={() => setFeaturedImageFailed(true)}
+                  />
+                </div>
+              )}
+              <div className={`order-2 md:order-1 px-6 py-8 md:px-12 md:py-14 flex flex-col justify-center ${featuredImageFailed ? "md:col-span-2" : ""}`}>
+                <span className="text-xs font-semibold tracking-wide uppercase text-primary mb-3 block">
+                  {ro ? "Energie și alegeri alimentare" : "Energy & food choices"}
+                </span>
+                <h2 className="text-2xl md:text-[32px] font-serif font-bold text-foreground leading-tight mb-3 max-w-2xl text-balance">
+                  {ro ? "Sunt toate caloriile la fel?" : "Are all calories equal?"}
+                </h2>
+                <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-5 max-w-xl">
+                  {ro
+                    ? "Aceeași energie poate arăta foarte diferit în farfurie. Contează și din ce alimente provin caloriile."
+                    : "The same amount of energy can look very different on a plate. Where your calories come from matters too."}
+                </p>
+                <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+                  {ro ? "Citește articolul" : "Read the article"}
+                  <span className="inline-block transition-transform duration-200 ease-out group-hover:translate-x-[3px]">
+                    →
+                  </span>
+                </span>
+              </div>
+            </Link>
           </motion.div>
         </div>
       </section>

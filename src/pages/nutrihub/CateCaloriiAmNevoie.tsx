@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleShell, ArticleH2, ArticleP, ArticleCallout, ArticleList } from "@/components/nutrihub/ArticleShell";
+import { ArticleShell, ArticleH2, ArticleP, ArticleLead } from "@/components/nutrihub/ArticleShell";
 
 export default function CateCaloriiAmNevoie() {
   const { language } = useLanguage();
@@ -22,113 +22,171 @@ export default function CateCaloriiAmNevoie() {
 
   return (
     <ArticleShell
-      category="Controlul greutății"
+      category="ENERGIE ȘI NECESAR CALORIC"
       title="Câte calorii am nevoie, de fapt?"
-      subtitle="Nu există un singur număr «magic» valabil pentru toată lumea. Necesarul caloric este o estimare, construită din mai mulți factori, nu o cifră exactă și fixă pe viață."
-      readTime="4 min citire"
-      updated="Actualizat: septembrie 2026"
-      tldr="Necesarul caloric zilnic este suma dintre energia de care organismul are nevoie în repaus (REE) și energia consumată prin activitate. Formulele și calculatoarele oferă o estimare bună, nu o cifră exactă — și necesarul se modifică odată cu greutatea, vârsta și nivelul de activitate. De aceea rezultatul unui calculator este un punct de plecare, nu un verdict."
-      keyTakeaways={[
-        "Necesarul caloric = energia de repaus (REE) × un factor de activitate (PAL).",
-        "Formulele (ex. Mifflin–St Jeor) oferă o estimare, nu o măsurătoare exactă.",
-        "Necesarul diferă de la persoană la persoană, chiar la aceeași vârstă, greutate și înălțime.",
-        "Necesarul se modifică în timp — odată cu greutatea, vârsta, activitatea și alți factori.",
-        "Un calculator online este un punct de plecare util, nu o cifră fixă de urmat rigid.",
-      ]}
-      faq={[
-        {
-          q: "De ce îmi dau două calculatoare diferite rezultate diferite?",
-          a: "Pentru că folosesc formule sau constante ușor diferite (Mifflin–St Jeor, Harris-Benedict, factori de activitate diferiți). Diferențele de câteva sute de kcal între calculatoare sunt normale — niciunul nu îți măsoară direct metabolismul.",
-        },
-        {
-          q: "Ce este PAL?",
-          a: "Physical Activity Level — un factor prin care se înmulțește energia de repaus (REE) pentru a estima consumul zilnic total (TEE), în funcție de cât de activă este persoana pe parcursul zilei, nu doar la sport.",
-        },
-        {
-          q: "Dacă mănânc exact necesarul calculat, rămân la aceeași greutate?",
-          a: "Aproximativ, dar cifra este o estimare. Greutatea poate fluctua din alte motive (apă, digestie, ciclu menstrual) și necesarul real poate diferi ușor de estimarea formulei. Tendința pe termen lung contează mai mult decât o singură cifră.",
-        },
-        {
-          q: "Necesarul caloric scade dacă slăbesc?",
-          a: "Da — o masă corporală mai mică are, de regulă, nevoie de mai puțină energie pentru a fi susținută. De aceea necesarul recalculat periodic este mai util decât o cifră fixă calculată o singură dată.",
-        },
-        {
-          q: "Este necesarul caloric același lucru cu «cât ar trebui să mănânc ca să slăbesc»?",
-          a: "Nu. Necesarul caloric estimează cât consumă organismul într-o zi obișnuită. Un obiectiv de slăbit presupune, în plus, o discuție despre un deficit sustenabil — nu doar cifra de întreținere.",
-        },
-      ]}
       related={[
-        { label: "Controlul greutății: de ce nu este doar despre a mânca mai puțin", href: "/nutrihub/controlul-greutatii" },
-        { label: "Câtă proteină am nevoie?", href: "/nutrihub/cata-proteina-am-nevoie" },
         { label: "Nutriție echilibrată: cum arată în viața reală?", href: "/nutrihub/nutritie-echilibrata" },
-        { label: "Sunt toate caloriile la fel?" },
-        { label: "De ce nu slăbesc deși mănânc puțin?" },
-        { label: "Ce este platoul ponderal?" },
+        { label: "Controlul greutății: de ce nu se reduce la „mănâncă mai puțin”", href: "/nutrihub/controlul-greutatii" },
+        { label: "De ce este importantă proteina și de câtă avem nevoie?", href: "/nutrihub/cata-proteina-am-nevoie" },
+        { label: "Fibrele alimentare: de ce sunt importante", href: "/nutrihub/fibrele-alimentare" },
+        { label: "Sunt toate caloriile la fel?", href: "/nutrihub/sunt-toate-caloriile-la-fel" },
       ]}
-      sources="Articol documentat pe baza formulei Mifflin–St Jeor pentru estimarea energiei de repaus (REE) și a factorilor de activitate fizică (PAL) definiți de EFSA — aceleași formule și constante folosite de calculatorul „De cât am nevoie?” de pe acest site."
+      sources={[
+        "EFSA Panel on Dietetic Products, Nutrition and Allergies (NDA). Scientific Opinion on Dietary Reference Values for energy. EFSA Journal. 2013;11(1):3005. DOI: 10.2903/j.efsa.2013.3005.",
+        "Mifflin MD, St Jeor ST, Hill LA, Scott BJ, Daugherty SA, Koh YO. A new predictive equation for resting energy expenditure in healthy individuals. American Journal of Clinical Nutrition. 1990;51(2):241-247. DOI: 10.1093/ajcn/51.2.241.",
+        "Madden AM, Mulrooney HM, Shah S. Estimation of energy expenditure using prediction equations in overweight and obese adults: a systematic review. Journal of Human Nutrition and Dietetics. 2016;29(4):458-476. DOI: 10.1111/jhn.12355.",
+        "National Institute for Health and Care Excellence (NICE). Overweight and obesity management (NG246): Physical activity and diet. 2025.",
+        "Obesity Canada. Canadian Adult Obesity Clinical Practice Guidelines - Medical Nutrition Therapy in Obesity Management.",
+        "Liddle RA, Goldstein RB, Saxton J. Gallstone formation during weight-reduction dieting. Archives of Internal Medicine. 1989;149(8):1750-1753.",
+      ]}
     >
       <section>
-        <ArticleH2>Din ce este format necesarul caloric?</ArticleH2>
         <ArticleP>
-          Necesarul caloric zilinic (TEE — total energy expenditure) este format din energia pe care organismul o consumă în repaus (REE — resting energy expenditure, adică energia necesară pentru funcțiile de bază: respirație, circulație, menținerea temperaturii corpului) și energia consumată prin activitate fizică și mișcarea zilnică.
+          Poate ai căutat măcar o dată pe internet „câte calorii trebuie să mănânc ca să slăbesc?” și ai primit un
+          număr foarte precis.
         </ArticleP>
         <ArticleP>
-          REE se estimează, de obicei, printr-o formulă precum Mifflin–St Jeor, pornind de la greutate, înălțime, vârstă și sex. Rezultatul se înmulțește apoi cu un factor de activitate (PAL — Physical Activity Level), care variază de la sedentar la foarte activ.
-        </ArticleP>
-      </section>
-
-      <section>
-        <ArticleH2>De ce nu este o cifră exactă</ArticleH2>
-        <ArticleP>
-          Formulele precum Mifflin–St Jeor sunt construite pe baza unor medii statistice, nu pe o măsurătoare directă a metabolismului tău. Două persoane cu aceeași vârstă, greutate, înălțime și nivel de activitate pot avea, în realitate, necesaruri ușor diferite.
-        </ArticleP>
-        <ArticleP>De aceea rezultatul unui calculator (inclusiv al celui de pe acest site) este cel mai bine folosit ca:</ArticleP>
-        <ArticleList
-          items={[
-            "un punct de plecare rezonabil, nu o cifră absolută;",
-            "un reper care se recalculează periodic, nu o valoare fixă pe termen nelimitat;",
-            "un instrument de orientare, nu un înlocuitor al unei evaluări individuale atunci când există un obiectiv medical specific.",
-          ]}
-        />
-      </section>
-
-      <section>
-        <ArticleH2>Ce înseamnă, în practică, factorul de activitate (PAL)?</ArticleH2>
-        <ArticleP>PAL nu se referă doar la sport — include mișcarea din întreaga zi:</ArticleP>
-        <ArticleList
-          items={[
-            "Sedentar — muncă predominant așezată, mișcare puțină în timpul liber.",
-            "Activitate moderată — muncă cu mișcare ocazională sau exerciții regulate, de câteva ori pe săptămână.",
-            "Activ — muncă fizică sau exerciții frecvente, intense.",
-            "Foarte activ — muncă fizică solicitantă combinată cu antrenamente frecvente.",
-          ]}
-        />
-        <ArticleCallout>
-          Multe persoane își supraestimează nivelul de activitate. Dacă nu ești sigur unde te încadrezi, calculatorul „De cât am nevoie?” de pe acest site include un ghid scurt pentru alegerea nivelului potrivit.
-        </ArticleCallout>
-      </section>
-
-      <section>
-        <ArticleH2>De ce se schimbă necesarul în timp</ArticleH2>
-        <ArticleP>
-          Necesarul caloric nu este o cifră fixă pe viață. Se modifică odată cu greutatea corporală (o masă corporală mai mică necesită, de regulă, mai puțină energie pentru a fi susținută), cu vârsta, cu nivelul de activitate și cu alte schimbări de sănătate sau stil de viață.
-        </ArticleP>
-        <ArticleP>
-          De aceea, mai degrabă decât să te bazezi pe o singură cifră calculată cu ani în urmă, este util să recalculezi periodic necesarul, mai ales dacă greutatea sau nivelul de activitate s-au schimbat semnificativ.
+          Problema este că organismul nu funcționează după o formulă perfectă. Necesarul energetic poate fi estimat,
+          dar un calculator online nu poate măsura exact câte calorii consumă corpul tău într-o zi. Vârsta, sexul,
+          greutatea, înălțimea și nivelul de activitate pot fi introduse într-o ecuație, însă rezultatul rămâne un
+          punct de plecare, nu o prescripție exactă.
         </ArticleP>
       </section>
 
       <section>
-        <ArticleH2>Cum aflu necesarul meu?</ArticleH2>
+        <ArticleH2>Pentru ce folosim energia?</ArticleH2>
+        <ArticleP>Organismul consumă energie permanent, inclusiv atunci când dormim sau stăm nemișcați.</ArticleP>
         <ArticleP>
-          Poți folosi{" "}
-          <Link href="/calculator" className="text-primary underline underline-offset-2">
-            calculatorul „De cât am nevoie?”
-          </Link>{" "}
-          de pe acest site, care estimează, pe lângă necesarul caloric, și proteina, carbohidrații, grăsimile, fibrele și apa recomandate — fără scor de tip „bine/rău” și fără o țintă unică impusă.
+          O parte importantă din energia zilnică este folosită pentru funcțiile de bază ale organismului:
+          respirație, circulație, menținerea temperaturii corpului și funcționarea organelor. Aceasta este ceea ce
+          numim cheltuială energetică de repaus.
         </ArticleP>
         <ArticleP>
-          Dacă ai o afecțiune medicală, ești însărcinată, alăptezi sau te afli într-o situație care necesită prudență, cea mai sigură cale este o evaluare individuală, nu doar un calculator online.
+          La aceasta se adaugă energia utilizată pentru activitatea fizică și activitățile obișnuite ale zilei.
+          Împreună formează cheltuiala energetică totală zilnică. De aceea, două persoane cu aceeași greutate nu au
+          automat același necesar caloric.
+        </ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>Cum estimează un calculator necesarul caloric?</ArticleH2>
+        <ArticleP>
+          Calculatorul estimează mai întâi energia de care organismul are nevoie în repaus, folosind date precum
+          vârsta, sexul, greutatea și înălțimea. Apoi ajustează această valoare în funcție de nivelul de activitate
+          fizică pentru a aproxima necesarul energetic total.
+        </ArticleP>
+        <ArticleP>
+          Rezultatul este o estimare, nu o măsurătoare exactă. Chiar și formulele bine studiate pot avea o marjă de
+          eroare importantă atunci când sunt aplicate unei persoane individuale.
+        </ArticleP>
+        <ArticleP>
+          De aceea, dacă un calculator afișează o anumită valoare, nu înseamnă că organismul consumă exact acel
+          număr de calorii în fiecare zi.
+        </ArticleP>
+        <ArticleLead>Ce rol are activitatea fizică?</ArticleLead>
+        <ArticleP>
+          Necesarul energetic total depinde și de cât ne mișcăm. Ghidurile folosesc niveluri de activitate fizică
+          pentru a aproxima diferența dintre un stil de viață mai sedentar și unul mai activ.
+        </ArticleP>
+        <ArticleP>
+          Totuși, și această parte rămâne o aproximare. Două persoane care aleg aceeași categorie de activitate pot
+          avea zile foarte diferite: una poate lucra la birou și să facă câteva antrenamente pe săptămână, iar alta
+          poate avea un loc de muncă foarte activ și să meargă mult pe jos.
+        </ArticleP>
+        <ArticleP>
+          De aceea, nivelul de activitate introdus într-un calculator trebuie privit ca o estimare, nu ca o
+          măsurătoare exactă a consumului energetic.
+        </ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>Menținere, slăbire sau creștere în greutate?</ArticleH2>
+        <ArticleP>
+          În principiu, dacă aportul energetic este apropiat de energia pe care organismul o consumă, greutatea
+          tinde să se mențină.
+        </ArticleP>
+        <ArticleP>
+          Pentru scădere ponderală este necesar, în timp, un deficit energetic. Pentru creștere ponderală este
+          necesar, în general, ca aportul energetic să fie mai mare decât consumul.
+        </ArticleP>
+        <ArticleP>
+          Dar asta nu înseamnă că tuturor trebuie să li se scadă automat aceeași cantitate de calorii din valoarea
+          estimată de calculator. Ghidurile actuale recomandă individualizarea intervenției în funcție de persoană,
+          starea de sănătate, preferințe și posibilitatea de a menține strategia pe termen lung.
+        </ArticleP>
+        <ArticleP>De aceea, rezultatul unui calculator trebuie privit ca un aport orientativ, nu ca o prescripție exactă.</ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>De ce nu înseamnă „mai puține calorii = rezultate mai bune”?</ArticleH2>
+        <ArticleP>
+          Este tentant să credem că, dacă un deficit energetic poate duce la scădere în greutate, atunci un aport
+          caloric foarte mic va produce automat rezultate mai bune. Dar nu aceasta este logica unei intervenții
+          nutriționale bine construite.
+        </ArticleP>
+        <ArticleP>
+          Cu cât aportul alimentar devine mai restrictiv, cu atât poate fi mai dificil să fie asigurate suficiente
+          proteine, vitamine, minerale, acizi grași esențiali și ceilalți nutrienți de care organismul are nevoie.
+        </ArticleP>
+        <ArticleP>
+          În timpul unei scăderi rapide în greutate nu se pierde exclusiv țesut adipos; poate fi pierdută și masă
+          slabă. De aceea, calitatea alimentației și aportul adecvat de nutrienți devin cu atât mai importante cu cât
+          restricția energetică este mai mare.
+        </ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>Dar dietele de 800–1.200 kcal?</ArticleH2>
+        <ArticleP>
+          NICE clasifică aporturile de 800–1.200 kcal/zi drept low-energy diets, iar pe cele sub 800 kcal/zi drept
+          very-low-energy diets.
+        </ArticleP>
+        <ArticleP>
+          Aceste intervenții sunt rezervate unor contexte bine stabilite și ar trebui realizate în cadrul unor
+          programe cu evaluare, suport și monitorizare. Ghidurile recomandă ca ele să fie complete nutrițional și să
+          nu fie utilizate ca strategie obișnuită pe termen lung.
+        </ArticleP>
+        <ArticleP>
+          Cu cât aportul energetic este mai redus, cu atât devine mai dificil să fie asigurate suficiente proteine,
+          vitamine, minerale, acizi grași esențiali și ceilalți nutrienți necesari. În timpul unei scăderi rapide în
+          greutate poate fi pierdută și masă slabă, nu doar țesut adipos.
+        </ArticleP>
+        <ArticleP>Scăderea rapidă în greutate poate fi asociată și cu un risc mai mare de formare a calculilor biliari.</ArticleP>
+        <ArticleP>
+          În cazul unor rezultate foarte reduse, calculatorul nu ar trebui să ofere automat o recomandare fără
+          evaluarea contextului individual. Un prag folosit de un instrument digital este o măsură de siguranță, nu
+          o limită fiziologică universală.
+        </ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>De ce trebuie uneori recalculat necesarul?</ArticleH2>
+        <ArticleP>
+          Necesarul energetic nu rămâne neapărat identic în timp. Dacă greutatea corporală se modifică semnificativ,
+          se poate modifica și cheltuiala energetică. Același lucru este valabil dacă nivelul de activitate se
+          schimbă.
+        </ArticleP>
+        <ArticleP>
+          De aceea, un aport calculat la începutul unui proces nu trebuie privit ca o cifră fixă pentru următoarele
+          luni sau ani. Valoarea estimată se compară cu ceea ce se întâmplă în realitate: evoluția greutății,
+          aportul alimentar, senzația de foame și sațietate, activitatea și posibilitatea de a menține intervenția.
+        </ArticleP>
+        <ArticleLead>Atunci la ce este bun un calculator de calorii?</ArticleLead>
+        <ArticleP>
+          Un calculator este util pentru orientare. Te poate ajuta să înțelegi ordinul de mărime al necesarului tău
+          energetic și diferența dintre menținere și un aport orientativ pentru un anumit obiectiv.
+        </ArticleP>
+        <ArticleP>
+          Dar nu poate vedea tot ceea ce se întâmplă în viața ta și nu poate măsura direct metabolismul. De aceea,
+          rezultatul ar trebui privit ca un punct de plecare care poate necesita ajustare, nu ca un număr pe care
+          trebuie să îl respecți cu precizie în fiecare zi.
+        </ArticleP>
+        <ArticleP>Necesarul caloric nu este un număr perfect ascuns într-o formulă.</ArticleP>
+        <ArticleLead>Îl putem estima, îl putem folosi ca punct de pornire și apoi îl putem adapta în funcție de evoluția reală.</ArticleLead>
+        <ArticleP>
+          Pentru scădere în greutate este necesar un deficit energetic, dar un deficit mai mare nu este automat mai
+          bun. Obiectivul este să găsim un aport care susține obiectivul urmărit, oferă nutrienții necesari și poate
+          fi menținut în viața reală.
         </ArticleP>
       </section>
     </ArticleShell>

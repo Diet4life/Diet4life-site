@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleShell, ArticleH2, ArticleP, ArticleCallout, ArticleList } from "@/components/nutrihub/ArticleShell";
-import { PlateDiagram } from "@/components/nutrihub/PlateDiagram";
+import { ArticleShell, ArticleH2, ArticleP } from "@/components/nutrihub/ArticleShell";
 
 export default function NutritieEchilibrata() {
   const { language } = useLanguage();
@@ -23,154 +22,293 @@ export default function NutritieEchilibrata() {
 
   return (
     <ArticleShell
-      category="NutriHub"
+      category="NUTRIȚIE ECHILIBRATĂ"
       title="Nutriție echilibrată: cum arată în viața reală?"
-      subtitle="O alimentație echilibrată nu înseamnă să mănânci perfect, să cântărești fiecare aliment sau să renunți la pâine, paste ori desert. Înseamnă să îi oferi organismului, în mod constant, energia și nutrienții de care are nevoie, într-un mod suficient de flexibil încât să poată funcționa și în viața reală."
-      readTime="4 min citire"
-      updated="Actualizat: septembrie 2026"
-      tldr="O alimentație echilibrată se construiește în timp, nu la o singură masă. Contează varietatea alimentelor, porțiile potrivite, prezența regulată a legumelor, proteinelor, surselor bune de carbohidrați și grăsimi, dar și libertatea de a include uneori un desert, o pizza sau mâncarea preferată fără sentimentul că ai «stricat dieta»."
-      keyTakeaways={[
-        "Nu trebuie ca fiecare masă să fie perfectă.",
-        "Nu trebuie să elimini carbohidrații pentru a mânca sănătos.",
-        "Calitatea alimentelor contează, dar contează și cantitatea.",
-        "Varietatea este mai importantă decât obsesia pentru câteva „superalimente”.",
-        "O alimentație pe care nu o poți susține în viața reală nu este, în practică, o soluție bună pe termen lung.",
-      ]}
-      faq={[
-        {
-          q: "Trebuie să mănânc trei mese și două gustări pe zi?",
-          a: "Nu există o structură universală. Unele persoane se simt bine cu trei mese, altele au nevoie și de una sau două gustări. Programul trebuie adaptat foamei, stilului de viață și nevoilor individuale.",
-        },
-        {
-          q: "Trebuie să elimin complet zahărul?",
-          a: "Nu. Este mai util să limitezi consumul frecvent de produse foarte bogate în zaharuri libere decât să urmărești eliminarea absolută a zahărului din alimentație.",
-        },
-        {
-          q: "Fructele se pot mânca seara?",
-          a: "Da. Nu există o regulă generală conform căreia fructele consumate seara ar favoriza automat creșterea în greutate.",
-        },
-        {
-          q: "Trebuie să cântăresc alimentele?",
-          a: "Nu neapărat. Pentru multe persoane, structura farfuriei și reperele vizuale sunt suficiente. Cântărirea poate fi utilă temporar în anumite situații, dar nu este obligatorie pentru o alimentație echilibrată.",
-        },
-        {
-          q: "Am nevoie de suplimente dacă mănânc echilibrat?",
-          a: "Nu automat. Suplimentele au indicații specifice și nu înlocuiesc o alimentație variată. Necesitatea lor depinde de alimentație, vârstă, anumite perioade fiziologice, analize și starea de sănătate.",
-        },
-      ]}
       related={[
-        { label: "Controlul greutății: de ce nu este doar despre a mânca mai puțin", href: "/nutrihub/controlul-greutatii" },
-        { label: "Câtă proteină am nevoie?", href: "/nutrihub/cata-proteina-am-nevoie" },
-        { label: "Fibrele alimentare: cât ai nevoie și de ce nu trebuie să exagerezi", href: "/nutrihub/fibrele-alimentare" },
+        { label: "Controlul greutății: de ce nu se reduce la „mănâncă mai puțin”", href: "/nutrihub/controlul-greutatii" },
+        { label: "De ce este importantă proteina și de câtă avem nevoie?", href: "/nutrihub/cata-proteina-am-nevoie" },
         { label: "Câte calorii am nevoie, de fapt?", href: "/nutrihub/cate-calorii-am-nevoie" },
-        { label: "Sunt toate caloriile la fel?" },
+        { label: "Fibrele alimentare: de ce sunt importante", href: "/nutrihub/fibrele-alimentare" },
+        { label: "Sunt toate caloriile la fel?", href: "/nutrihub/sunt-toate-caloriile-la-fel" },
       ]}
-      sources="Articol bazat pe recomandări și principii actuale privind alimentația sănătoasă formulate de Organizația Mondială a Sănătății și pe modele internaționale de educație nutrițională. Sursele științifice complete pot fi consultate în secțiunea dedicată referințelor."
+      sources={[
+        "World Health Organization & Food and Agriculture Organization of the United Nations. What are healthy diets? Joint statement by FAO and WHO. 2024.",
+        "World Health Organization. Healthy diet. Fact sheet, actualizat periodic.",
+        "World Health Organization. Carbohydrate intake for adults and children. WHO guideline. 2023.",
+        "European Food Safety Authority. Dietary Reference Values for nutrients.",
+        "Academy of Nutrition and Dietetics. Vegetarian Dietary Patterns for Adults: Position Paper.",
+        "Obesity Canada. Canadian Adult Obesity Clinical Practice Guidelines - Medical Nutrition Therapy.",
+        "Mavadiya HB, Roh D, Ly A, Lu Y. Whole Fruits Versus 100% Fruit Juice: Revisiting the Evidence and Its Implications for Healthy Dietary Recommendations. Nutrition Bulletin. 2025.",
+      ]}
     >
       <section>
-        <ArticleH2>Ce înseamnă, de fapt, „echilibrat”?</ArticleH2>
+        <ArticleP>„Trebuie să mănânci echilibrat” este unul dintre cele mai frecvente sfaturi pe care le auzim.</ArticleP>
+        <ArticleP>Dar ce înseamnă, de fapt?</ArticleP>
         <ArticleP>
-          Organizația Mondială a Sănătății descrie alimentația sănătoasă prin patru principii importante.
+          Înseamnă să renunți la pâine? Să mănânci numai salate? Să nu mai atingi niciodată ceva dulce? Să cântărești tot
+          ce pui în farfurie?
         </ArticleP>
-        <div className="grid sm:grid-cols-2 gap-3 mb-3">
-          <ArticleCallout>
-            <strong className="text-foreground">Adecvare</strong> — să primești suficientă energie și suficienți nutrienți pentru nevoile organismului.
-          </ArticleCallout>
-          <ArticleCallout>
-            <strong className="text-foreground">Echilibru</strong> — cantitatea de energie consumată și structura alimentației trebuie să fie potrivite nevoilor tale.
-          </ArticleCallout>
-          <ArticleCallout>
-            <strong className="text-foreground">Moderație</strong> — unele alimente sunt mai potrivite în cantități mai mici și mai rar, fără să fie nevoie să le transformăm în alimente „interzise”.
-          </ArticleCallout>
-          <ArticleCallout>
-            <strong className="text-foreground">Diversitate</strong> — niciun aliment nu oferă tot ce are nevoie organismul. Varietatea contează.
-          </ArticleCallout>
-        </div>
+        <ArticleP>Nu.</ArticleP>
         <ArticleP>
-          Cu alte cuvinte, alimentația sănătoasă nu este construită în jurul unei liste de interdicții.
+          O alimentație echilibrată înseamnă ca, în majoritatea timpului, să îi oferi organismului energia și nutrienții
+          de care are nevoie, din alimente variate și în cantități potrivite pentru tine.
+        </ArticleP>
+        <ArticleP>Iar „potrivite pentru tine” contează.</ArticleP>
+        <ArticleP>
+          Necesitățile nu sunt identice pentru toată lumea. Ele diferă în funcție de vârstă, sex, activitate fizică,
+          obiective, sarcină, anumite afecțiuni și alte particularități individuale.
         </ArticleP>
       </section>
 
       <section>
-        <ArticleH2>Cum arată o masă echilibrată?</ArticleH2>
+        <ArticleH2>Nu un singur aliment face alimentația sănătoasă</ArticleH2>
         <ArticleP>
-          Un reper vizual simplu poate fi mai util decât calculele complicate — Farfuria Diet4Life, pentru multe mese principale:
+          Poate ai avut zile în care ai mâncat o salată și ai simțit că „ai mâncat sănătos”. Sau, dimpotrivă, ai mâncat
+          ceva diferit de plan și ai avut impresia că ai stricat totul.
         </ArticleP>
-        <PlateDiagram />
+        <ArticleP>În realitate, alimentația nu se judecă după o singură masă.</ArticleP>
         <ArticleP>
-          <strong className="text-foreground">Este un reper, nu o formulă.</strong> Nu trebuie ca fiecare masă să arate identic și nu este nevoie să măsori farfuria cu rigla. Cantitățile se adaptează vârstei, nivelului de activitate, obiectivului, preferințelor și stării de sănătate. Pentru copii, sarcină sau anumite afecțiuni, recomandările pot necesita adaptare individuală.
+          Contează mai mult ceea ce repeți în majoritatea zilelor: dacă ai varietate, dacă ai suficiente legume și
+          fructe, dacă incluzi surse potrivite de proteină, dacă ai fibre suficiente și dacă produsele foarte bogate în
+          zahăr, sare sau grăsimi nu ajung să ocupe cea mai mare parte din alimentație.
+        </ArticleP>
+        <ArticleP>Asta este mult mai util decât să împărțim toate alimentele în „bune” și „rele”.</ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>Legumele: nu doar ceva pus lângă mâncare</ArticleH2>
+        <ArticleP>Pentru mulți oameni, legumele sunt încă văzute ca o garnitură mică lângă felul principal.</ArticleP>
+        <ArticleP>Într-o alimentație echilibrată, ar trebui să le privim altfel.</ArticleP>
+        <ArticleP>
+          Legumele aduc fibre, vitamine, minerale și o varietate de compuși bioactivi, iar diversitatea contează.
+        </ArticleP>
+        <ArticleP>
+          Nu este nevoie să mănânci permanent aceeași salată. Poți alterna roșii, ardei, dovlecel, vinete, broccoli,
+          conopidă, morcov, fasole verde, varză, ciuperci, legume cu frunze și multe altele.
+        </ArticleP>
+        <ArticleP>Pot fi crude, coapte, fierte, sotate, în supe sau integrate în diferite preparate.</ArticleP>
+        <ArticleP>
+          Pentru persoanele peste 10 ani, recomandările internaționale folosesc ca reper cel puțin 400 g de fructe și
+          legume pe zi.
+        </ArticleP>
+        <ArticleP>
+          Nu trebuie însă să transformi cifra într-o obsesie. Ideea practică este să existe constant și suficient de
+          variat în alimentația ta.
         </ArticleP>
       </section>
 
       <section>
-        <ArticleH2>Cum știu dacă alimentația mea este suficient de echilibrată?</ArticleH2>
-        <ArticleP>În loc să urmărești perfecțiunea, poți verifica câteva lucruri simple:</ArticleP>
-        <ArticleList
-          items={[
-            "Apar legume în mod regulat la mesele principale?",
-            "Consumi fructe și alimente bogate în fibre?",
-            "Ai surse variate de proteină?",
-            "Incluzi și leguminoase sau cereale integrale?",
-            "Bei apă în mod regulat?",
-            "Alimentele tale diferă de la o zi la alta și de la o săptămână la alta?",
-            "Poți mânca uneori ceva doar pentru plăcere fără să simți că trebuie să „compensezi” ulterior?",
-          ]}
-        />
+        <ArticleH2>Fructele întregi sau fresh-ul?</ArticleH2>
         <ArticleP>
-          Dacă răspunsul este în general „da”, ești probabil mai aproape de o alimentație echilibrată decât crezi.
+          Poate ți se pare că un fresh este una dintre cele mai sănătoase alegeri, tocmai pentru că este făcut direct
+          din fructe.
+        </ArticleP>
+        <ArticleP>Totuși, un pahar de fresh nu este același lucru cu fructul întreg.</ArticleP>
+        <ArticleP>
+          Când mănânci fructul întreg, consumi și pulpa și fibrele, iar faptul că trebuie să îl mesteci încetinește
+          consumul și contribuie la sațietate.
+        </ArticleP>
+        <ArticleP>
+          Când fructul este stors, o parte dintre fibre se pierde și devine mult mai ușor să consumi rapid cantitatea
+          provenită din mai multe fructe într-un singur pahar.
+        </ArticleP>
+        <ArticleP>
+          De aceea, pentru consumul de zi cu zi, fructele sunt recomandate în primul rând întregi, nu sub formă de
+          fresh.
+        </ArticleP>
+        <ArticleP>
+          Un alt motiv important este că zaharurile din sucurile de fructe sunt incluse în categoria zaharurilor
+          libere, chiar dacă în suc nu a fost adăugat zahăr.
         </ArticleP>
       </section>
 
       <section>
-        <ArticleH2>Trebuie să renunț la carbohidrați?</ArticleH2>
+        <ArticleH2>Carbohidrații sunt mult mai mult decât pâine, orez și cartofi</ArticleH2>
+        <ArticleP>Când auzi „carbohidrați”, este posibil să te gândești imediat la pâine, paste, orez sau cartofi.</ArticleP>
+        <ArticleP>Dar carbohidrații se găsesc într-o gamă mult mai largă de alimente.</ArticleP>
         <ArticleP>
-          Nu. Carbohidrații fac parte dintr-o alimentație normală și reprezintă o sursă importantă de energie. Importantă este mai ales calitatea surselor și cantitatea.
-        </ArticleP>
-        <ArticleP>În mod obișnuit, merită să alegem mai des:</ArticleP>
-        <ArticleList items={["Ovăz și alte cereale integrale", "Pâine integrală", "Orez", "Cartofi", "Fasole", "Linte", "Năut", "Fructe", "Legume"]} />
-        <ArticleP>
-          Asta nu înseamnă că o porție de pâine albă, paste obișnuite sau un desert transformă automat masa într-una „nesănătoasă”. Alimentația trebuie privită în ansamblu.
-        </ArticleP>
-      </section>
-
-      <section>
-        <ArticleH2>Dar pizza, desertul sau mâncarea tradițională?</ArticleH2>
-        <ArticleP>
-          Au loc într-o alimentație echilibrată. Mâncarea nu are doar rol nutritiv — face parte și din viața socială, tradiții, familie și plăcerea de a mânca.
+          Îi găsim și în legume, fructe, năut, linte, fasole uscată, mazăre boabe, porumb, ovăz, orz, hrișcă și alte
+          cereale.
         </ArticleP>
         <ArticleP>
-          O pizza într-o seară nu anulează toate mesele echilibrate din restul săptămânii. La fel, un desert nu trebuie urmat de post, antrenamente suplimentare sau vinovăție.
+          Și aici apare partea importantă: nu toate alimentele care conțin carbohidrați vin cu același profil
+          nutrițional.
         </ArticleP>
         <ArticleP>
-          Contează mai ales frecvența, cantitatea și ceea ce faci în mod obișnuit. O alimentație bună trebuie să fie suficient de flexibilă încât să poată exista și în concediu, la restaurant, la o masă în familie sau într-o zi foarte aglomerată.
+          Năutul, lintea, fasolea uscată și mazărea boabe aduc, pe lângă carbohidrați, și fibre, proteină vegetală,
+          vitamine și minerale.
         </ArticleP>
-      </section>
-
-      <section>
-        <ArticleH2>Cum arată în viața reală?</ArticleH2>
-        <ArticleP>O masă echilibrată nu trebuie să fie sofisticată. Poate însemna:</ArticleP>
-        <ArticleList
-          items={[
-            "Omletă + roșii și ardei + pâine",
-            "Pește + cartof copt + salată",
-            "Tocăniță de pui + mămăligă + salată de varză",
-            "Fasole scăzută + salată + o felie de pâine",
-            "Paste cu ton și legume",
-            "Ciorbă cu carne și legume + pâine",
-          ]}
-        />
         <ArticleP>
-          Ingredientele nu trebuie să fie întotdeauna separate pe farfurie. Ciorbele, tocănițele, pastele sau mâncărurile la cuptor pot conține aceleași componente într-un singur preparat.
+          Legumele aduc carbohidrați în cantități diferite, dar contribuie și cu fibre, vitamine, minerale și alți
+          compuși vegetali.
+        </ArticleP>
+        <ArticleP>
+          Cerealele integrale păstrează mai multe componente ale bobului și, în general, aduc mai multe fibre decât
+          variantele foarte rafinate.
+        </ArticleP>
+        <ArticleP>
+          Recomandările actuale încurajează ca sursele principale de carbohidrați să provină în principal din cereale
+          integrale, legume, fructe și leguminoase.
+        </ArticleP>
+        <ArticleP>
+          Așa că întrebarea utilă nu este doar „Câți carbohidrați mănânc?”, ci și „Din ce alimente vin carbohidrații
+          mei?”
+        </ArticleP>
+        <ArticleP>
+          O alimentație echilibrată nu înseamnă să repeți zilnic pâine, orez și cartofi. Înseamnă să variezi sursele
+          și să lași loc pentru legume, leguminoase, fructe și cereale integrale.
         </ArticleP>
       </section>
 
       <section>
-        <ArticleH2>„Sănătos” nu înseamnă „în orice cantitate”</ArticleH2>
+        <ArticleH2>Proteina: nu toate sursele sunt identice</ArticleH2>
+        <ArticleP>Proteina poate proveni atât din alimente de origine animală, cât și vegetală.</ArticleP>
+        <ArticleP>Dar sursele nu sunt identice.</ArticleP>
         <ArticleP>
-          Este o diferență importantă. Uleiul de măsline, nucile, semințele, avocado sau untul de arahide pot fi alegeri nutritive, dar sunt și alimente cu densitate energetică mare.
+          Proteinele de origine animală au, în general, o digestibilitate mai ridicată și un profil favorabil de
+          aminoacizi esențiali.
         </ArticleP>
         <ArticleP>
-          Asta nu înseamnă să le eviți, ci doar să îți amintești că valoarea nutrițională și cantitatea sunt două lucruri diferite — un aspect cu atât mai important atunci când obiectivul este și controlul greutății.
+          Sursele vegetale diferă între ele prin cantitatea de proteină, digestibilitate și profilul aminoacizilor
+          esențiali.
+        </ArticleP>
+        <ArticleP>Asta nu înseamnă că proteinele vegetale nu pot face parte dintr-o alimentație echilibrată. Pot.</ArticleP>
+        <ArticleP>
+          Dar dacă alimentația ta este predominant vegetală, este important să existe varietate între surse și un
+          aport total suficient, pentru ca necesarul de aminoacizi esențiali să fie acoperit.
+        </ArticleP>
+        <ArticleP>
+          Nu este însă necesar să combini obligatoriu anumite proteine vegetale la aceeași masă. Contează alimentația
+          în ansamblu.
+        </ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>Grăsimile nu trebuie eliminate</ArticleH2>
+        <ArticleP>Poate ai trecut și tu prin perioade în care ai încercat să alegi totul „fără grăsimi”.</ArticleP>
+        <ArticleP>Dar grăsimile sunt nutrienți necesari.</ArticleP>
+        <ArticleP>Contează însă ce tip de grăsimi consumi și în ce cantitate.</ArticleP>
+        <ArticleP>
+          Într-o alimentație echilibrată pot exista surse de grăsimi nesaturate, precum uleiurile vegetale, nucile,
+          semințele sau peștele.
+        </ArticleP>
+        <ArticleP>
+          Recomandările internaționale încurajează preferarea grăsimilor nesaturate și limitarea aportului de grăsimi
+          saturate și trans.
+        </ArticleP>
+        <ArticleP>
+          Și aici contează cantitatea. Faptul că un aliment are o compoziție bună nu înseamnă că trebuie consumat
+          fără limită.
+        </ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>Dar zahărul și dulciurile?</ArticleH2>
+        <ArticleP>O alimentație echilibrată presupune și limitarea zaharurilor libere.</ArticleP>
+        <ArticleP>
+          Recomandările internaționale folosesc ca reper un aport sub 10% din energia zilnică, iar reducerea sub 5%
+          poate aduce beneficii suplimentare.
+        </ArticleP>
+        <ArticleP>
+          Aici intră zahărul adăugat în produse și băuturi, dar și zaharurile din miere, siropuri și sucurile de
+          fructe.
+        </ArticleP>
+        <ArticleP>Pentru tine, ca pacient, nu este nevoie să transformi asta într-un calcul zilnic de procente.</ArticleP>
+        <ArticleP>
+          Mai simplu este să te uiți la cât de des apar în alimentația ta băuturile îndulcite, biscuiții, produsele de
+          patiserie, deserturile și alte produse cu mult zahăr adăugat.
+        </ArticleP>
+        <ArticleP>
+          Dacă obiectivul tău este scăderea în greutate, aceste produse vor fi, de regulă, reduse sau limitate,
+          pentru că pot crește ușor aportul energetic fără să aducă aceeași cantitate de fibre, proteină, vitamine și
+          minerale ca alimentele pe care vrem să construim alimentația.
+        </ArticleP>
+        <ArticleP>
+          Pentru gustul dulce, putem folosi mai des fructele întregi sau variante de preparate în care cantitatea de
+          zahăr adăugat este redusă.
+        </ArticleP>
+        <ArticleP>
+          Ideea este ca dulciurile să nu ajungă să ocupe locul alimentelor de care organismul are nevoie zi de zi.
+        </ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>Procesat și neprocesat: ce înseamnă în viața reală?</ArticleH2>
+        <ArticleP>Cuvântul „procesat” a ajuns să fie folosit foarte des ca sinonim pentru „nesănătos”.</ArticleP>
+        <ArticleP>Dar lucrurile nu sunt atât de simple.</ArticleP>
+        <ArticleP>
+          Un aliment neprocesat este foarte apropiat de forma în care îl găsim în natură. De exemplu: un măr întreg, un
+          morcov, un ou, o bucată de pește sau carne proaspătă.
+        </ArticleP>
+        <ArticleP>
+          Un aliment minim procesat a trecut printr-un proces simplu care îl face mai ușor de păstrat, transportat sau
+          consumat, fără să îi schimbe fundamental compoziția.
+        </ArticleP>
+        <ArticleP>
+          De exemplu: legume congelate, fructe congelate fără zahăr adăugat, lapte pasteurizat, iaurt simplu, fulgi de
+          ovăz, nuci ambalate fără adaosuri sau leguminoase fierte ori conservate simplu.
+        </ArticleP>
+        <ArticleP>Aceste alimente pot face parte fără probleme dintr-o alimentație echilibrată.</ArticleP>
+        <ArticleP>
+          Procesarea devine mai relevantă atunci când produsului îi sunt adăugate cantități importante de zahăr, sare,
+          grăsimi sau alte ingrediente, iar produsul final ajunge foarte diferit de alimentul de bază.
+        </ArticleP>
+        <ArticleP>
+          De exemplu, una este un iaurt simplu și alta este un desert lactat cu mult zahăr adăugat. Una este ovăzul
+          simplu și alta sunt cerealele foarte îndulcite. Una este carnea proaspătă și alta este un produs din carne cu
+          cantități mari de sare și grăsimi adăugate.
+        </ArticleP>
+        <ArticleP>
+          De aceea, când alegi un produs, nu te opri doar la întrebarea „Este procesat?”. Uită-te și la ingrediente,
+          cantitatea de zahăr adăugat, sarea, tipul de grăsime, fibrele și rolul produsului în alimentația ta.
+        </ArticleP>
+        <ArticleP>Asta nu înseamnă că trebuie să gătești absolut totul de la zero.</ArticleP>
+        <ArticleP>
+          Înseamnă să știi să faci diferența între un aliment procesat pentru siguranță sau conservare și un produs în
+          care procesarea a venit la pachet cu mult zahăr, sare, grăsimi și energie.
+        </ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>Dacă vrei să slăbești, principiile rămân, dar cantitățile se schimbă</ArticleH2>
+        <ArticleP>Poți mânca alimente foarte nutritive și totuși să consumi mai multă energie decât ai nevoie.</ArticleP>
+        <ArticleP>
+          De aceea, atunci când obiectivul este scăderea în greutate, nu discutăm doar despre calitatea alimentelor,
+          ci și despre cantitate și aport energetic.
+        </ArticleP>
+        <ArticleP>
+          În același timp, nu există o singură distribuție de carbohidrați, proteine și grăsimi potrivită tuturor.
+        </ArticleP>
+        <ArticleP>
+          Intervenția nutrițională trebuie adaptată persoanei, preferințelor, obiectivelor și posibilității de a
+          menține schimbările pe termen lung.
+        </ArticleP>
+        <ArticleP>
+          Asta înseamnă că nu trebuie să cauți dieta pe care o urmează altcineva. Trebuie să găsești structura
+          potrivită pentru tine.
+        </ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>Ce înseamnă, până la urmă, să mănânci echilibrat?</ArticleH2>
+        <ArticleP>Nu înseamnă să mănânci perfect.</ArticleP>
+        <ArticleP>Nu înseamnă să elimini carbohidrații.</ArticleP>
+        <ArticleP>Nu înseamnă să trăiești doar cu salate.</ArticleP>
+        <ArticleP>Și nici să transformi fiecare masă într-un calcul.</ArticleP>
+        <ArticleP>
+          Înseamnă ca, în majoritatea timpului, alimentația ta să conțină legume variate, fructe întregi, leguminoase,
+          cereale integrale, surse potrivite de proteină și grăsimi în cantități adaptate nevoilor tale, iar produsele
+          foarte bogate în zahăr, sare sau energie să nu ajungă să domine alimentația.
+        </ArticleP>
+        <ArticleP>Este important și să existe varietate.</ArticleP>
+        <ArticleP>
+          Poate astăzi alegi năut, mâine linte sau fasole. Poate într-o zi ai pește, în alta ouă sau carne. Schimbi
+          legumele, fructele și cerealele.
+        </ArticleP>
+        <ArticleP>Nu trebuie să mănânci „perfect”.</ArticleP>
+        <ArticleP>
+          Trebuie să construiești un mod de a mânca care îți asigură nutrienții de care ai nevoie și pe care îl poți
+          păstra în viața reală.
         </ArticleP>
       </section>
     </ArticleShell>

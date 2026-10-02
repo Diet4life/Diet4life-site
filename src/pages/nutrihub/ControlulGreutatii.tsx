@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleShell, ArticleH2, ArticleP, ArticleCallout, ArticleList } from "@/components/nutrihub/ArticleShell";
-import { WeightFactorsGrid } from "@/components/nutrihub/WeightFactorsGrid";
+import { ArticleShell, ArticleH2, ArticleP, ArticleLead, ArticleQuote } from "@/components/nutrihub/ArticleShell";
 
 export default function ControlulGreutatii() {
   const { language } = useLanguage();
@@ -23,180 +22,199 @@ export default function ControlulGreutatii() {
 
   return (
     <ArticleShell
-      category="NutriHub"
-      title="Controlul greutății: de ce nu este doar despre a mânca mai puțin"
-      subtitle="Greutatea este influențată de câtă energie consumăm și câtă folosim, dar acest echilibru nu funcționează izolat. Foamea, sațietatea, mișcarea, somnul, mediul, unele medicamente și adaptările organismului pot modifica felul în care mâncăm și câtă energie consumăm."
-      readTime="5 min citire"
-      updated="Actualizat: septembrie 2026"
-      tldr="Pentru a pierde în greutate este nevoie, în timp, de un deficit energetic. Dar asta nu înseamnă că slăbitul este doar o problemă de «a mânca mai puțin». Organismul se adaptează, apetitul poate crește, activitatea zilnică se poate modifica, iar greutatea de pe cântar fluctuează și din alte motive decât grăsimea corporală. De aceea, o strategie bună nu răspunde doar la întrebarea «Cum slăbesc?», ci și la «Cum pot menține rezultatul?»"
-      keyTakeaways={[
-        "Energia contează, dar controlul greutății nu este doar o problemă de voință.",
-        "Mâncatul sănătos și scăderea ponderală nu sunt exact același lucru — cantitatea contează și ea.",
-        "Greutatea de pe cântar poate fluctua fără ca masa de grăsime să se fi modificat în aceeași măsură.",
-        "„Metabolism blocat” nu este o explicație corectă; adaptările metabolice există, dar sunt variabile.",
-        "Menținerea greutății pierdute trebuie planificată, nu lăsată pentru după dietă.",
-      ]}
-      faq={[
-        {
-          q: "Mi s-a blocat metabolismul?",
-          a: "Nu în sensul în care termenul este folosit frecvent online. Odată cu scăderea ponderală, necesarul energetic scade, iar la unele persoane apare și o adaptare suplimentară a consumului energetic. Acest lucru nu înseamnă că organismul nu mai poate pierde în greutate.",
-        },
-        {
-          q: "De ce nu slăbesc dacă mănânc puțin?",
-          a: "Pot exista mai multe explicații: densitatea energetică a alimentelor, porțiile, băuturile, variațiile de greutate determinate de apă, modificarea activității sau, în anumite cazuri, factori medicali. Situația trebuie privită în ansamblu.",
-        },
-        {
-          q: "Sportul este obligatoriu pentru a slăbi?",
-          a: "Nu este obligatoriu pentru existența unui deficit energetic, dar activitatea fizică are beneficii importante pentru sănătate, funcție, menținerea masei musculare și managementul greutății pe termen lung.",
-        },
-        {
-          q: "Cât de des ar trebui să mă cântăresc?",
-          a: "Nu există o frecvență obligatorie. Pentru unele persoane monitorizarea regulată poate fi utilă, iar pentru altele poate deveni stresantă. Mai important decât o singură valoare este să urmărești tendința în timp.",
-        },
-        {
-          q: "Ce fac dacă greutatea nu mai scade?",
-          a: "Înainte de schimbări drastice, reevaluează porțiile, structura meselor, activitatea și perioada pe care analizezi evoluția. Dacă stagnarea persistă sau există alte simptome, poate fi utilă o evaluare individuală.",
-        },
-        {
-          q: "Am încercat multe diete și greutatea revine. Înseamnă că nu am suficientă voință?",
-          a: "Nu. Recâștigul ponderal este frecvent și poate fi influențat atât de revenirea obiceiurilor anterioare, cât și de adaptările biologice care apar după scăderea în greutate. Din acest motiv, menținerea trebuie tratată ca o etapă activă a managementului ponderal.",
-        },
-      ]}
+      category="CONTROLUL GREUTĂȚII"
+      title="Controlul greutății: de ce nu se reduce la „mănâncă mai puțin”"
       related={[
         { label: "Nutriție echilibrată: cum arată în viața reală?", href: "/nutrihub/nutritie-echilibrata" },
+        { label: "De ce este importantă proteina și de câtă avem nevoie?", href: "/nutrihub/cata-proteina-am-nevoie" },
         { label: "Câte calorii am nevoie, de fapt?", href: "/nutrihub/cate-calorii-am-nevoie" },
-        { label: "Sunt toate caloriile la fel?" },
-        { label: "Câtă proteină am nevoie?", href: "/nutrihub/cata-proteina-am-nevoie" },
-        { label: "Fibrele alimentare: cât ai nevoie și de ce nu trebuie să exagerezi", href: "/nutrihub/fibrele-alimentare" },
-        { label: "De ce nu slăbesc deși mănânc puțin?" },
-        { label: "Ce este platoul ponderal?" },
-        { label: "Produsele pentru slăbit: ce se întâmplă după ce nu le mai folosești?" },
+        { label: "Fibrele alimentare: de ce sunt importante", href: "/nutrihub/fibrele-alimentare" },
+        { label: "Sunt toate caloriile la fel?", href: "/nutrihub/sunt-toate-caloriile-la-fel" },
       ]}
-      sources="Articol documentat pe baza cadrului actual al Organizației Mondiale a Sănătății privind obezitatea ca boală cronică și recidivantă și a recomandărilor European Association for the Study of Obesity privind managementul individualizat și pe termen lung al obezității. Literatura privind adaptarea metabolică după scăderea ponderală a fost utilizată pentru a diferenția fenomenul real de conceptul popular și incorect de „metabolism blocat”."
+      sources={[
+        "World Health Organization. Obesity and overweight. WHO, actualizare 2025.",
+        "Wharton S, Lau DCW, Vallis M, et al. Obesity in adults: a clinical practice guideline. CMAJ. 2020;192:E875-E891. Canadian Adult Obesity Clinical Practice Guidelines.",
+        "Obesity Canada. Medical Nutrition Therapy in Obesity Management. Canadian Adult Obesity Clinical Practice Guidelines; actualizare 2022.",
+        "Busetto L, et al. EASO. A new framework for the diagnosis, staging and management of obesity in adults. Nature Medicine. 2024.",
+        "Nunes CL, Casanova N, Francisco R, et al. Does adaptive thermogenesis occur after weight loss in adults? A systematic review. British Journal of Nutrition. 2022;127:451-469. DOI: 10.1017/S0007114521001094.",
+        "van Baak MA, Mariman ECM. Obesity-induced and weight-loss-induced physiological factors affecting weight regain. Nature Reviews Endocrinology. 2023;19:655-670. DOI: 10.1038/s41574-023-00887-4.",
+      ]}
     >
       <section>
-        <ArticleH2>Energia contează. Atunci de ce nu este atât de simplu?</ArticleH2>
         <ArticleP>
-          Principiul de bază rămâne valabil: pentru ca masa corporală să scadă în timp, aportul de energie trebuie să fie mai mic decât energia consumată. Dar cele două părți ale ecuației se influențează reciproc.
+          Poate ai auzit de multe ori recomandarea: „mănâncă mai puțin și mișcă-te mai mult”. Din punct de vedere
+          energetic, pentru ca greutatea să scadă este nevoie ca, în timp, aportul de energie să fie mai mic decât
+          energia consumată de organism.
         </ArticleP>
-        <ArticleP>Când mănânci mai puțin și pierzi în greutate:</ArticleP>
-        <ArticleList
-          items={[
-            "organismul are nevoie de mai puțină energie pentru a susține o masă corporală mai mică;",
-            "la unele persoane poate crește senzația de foame;",
-            "activitatea spontană din timpul zilei se poate reduce;",
-            "consumul energetic se poate modifica.",
-          ]}
-        />
+        <ArticleP>Dar asta nu înseamnă că procesul este simplu.</ArticleP>
         <ArticleP>
-          De aceea, recomandarea „mănâncă mai puțin și mișcă-te mai mult” descrie principiul, dar nu explică întreaga problemă.
+          Organizația Mondială a Sănătății descrie obezitatea ca pe o boală cronică și recidivantă, care apare prin
+          interacțiunea mai multor factori: biologici, genetici, comportamentali, psihosociali și de mediu.
         </ArticleP>
         <ArticleP>
-          Iar atunci când vorbim despre obezitate, lucrurile sunt și mai complexe. Organizația Mondială a Sănătății o clasifică drept o boală cronică și recidivantă, rezultată din interacțiunea dintre factori biologici, comportamentali și de mediu.
+          Cu alte cuvinte, balanța energetică este importantă, dar nu explică singură de ce o persoană ajunge să ia
+          în greutate, de ce îi este greu să slăbească sau de ce greutatea poate reveni.
         </ArticleP>
       </section>
 
       <section>
-        <ArticleH2>Ce poate influența greutatea?</ArticleH2>
-        <ArticleP>Greutatea nu este un test de voință. În controlul ei pot conta simultan:</ArticleP>
-        <WeightFactorsGrid />
-        <ArticleP>Niciunul dintre acești factori nu explică singur fiecare situație.</ArticleP>
+        <ArticleH2>Deficitul energetic contează, dar nu spune toată povestea</ArticleH2>
+        <ArticleP>Pentru scădere ponderală este nevoie de un deficit energetic. Asta rămâne valabil.</ArticleP>
+        <ArticleP>
+          Problema apare atunci când de aici concluzionăm că, dacă cineva nu slăbește, înseamnă pur și simplu că
+          „mănâncă prea mult” sau că „nu are suficientă voință”.
+        </ArticleP>
+        <ArticleP>În viața reală, nu mâncăm doar pentru că ne este foame.</ArticleP>
+        <ArticleP>
+          Uneori alegem diferit când suntem obosiți, stresați, grăbiți, când avem un program haotic, când nu am mâncat
+          suficient în prima parte a zilei sau când anumite alimente sunt pur și simplu cele mai la îndemână.
+        </ArticleP>
+        <ArticleP>De aceea, controlul greutății nu poate fi redus la un calcul de calorii.</ArticleP>
       </section>
 
       <section>
-        <ArticleH2>„Mănânc puțin. De ce nu slăbesc?”</ArticleH2>
+        <ArticleH2>Nu este suficient să știm ce mănânci</ArticleH2>
         <ArticleP>
-          Este una dintre cele mai frecvente întrebări. Și „mănânc puțin” poate fi perfect adevărat dacă ne referim la volumul alimentelor. Dar volumul și energia nu sunt același lucru.
+          Un jurnal alimentar ne poate arăta ce și cât mănâncă o persoană. Dar uneori întrebarea mai importantă este:
         </ArticleP>
-        <ArticleP>De exemplu, cantități relativ mici de ulei, sosuri, nuci și semințe, unt de arahide, brânzeturi, produse de patiserie sau băuturi calorice pot contribui semnificativ la aportul energetic zilnic.</ArticleP>
-        <ArticleCallout>
-          Asta nu înseamnă că aceste alimente sunt „rele”. Înseamnă doar că uneori cantitatea de energie consumată este mai greu de estimat decât pare — și nu este vorba despre a acuza pacientul că „nu calculează corect”. Estimarea aportului alimentar este dificilă pentru aproape toată lumea.
-        </ArticleCallout>
-      </section>
-
-      <section>
-        <ArticleH2>„Mănânc sănătos. Atunci de ce nu slăbesc?”</ArticleH2>
+        <ArticleQuote>De ce ai ales acel aliment în acel moment?</ArticleQuote>
         <ArticleP>
-          Pentru că aliment nutritiv și aliment care produce automat scădere ponderală nu sunt același lucru. Uleiul de măsline, nucile, semințele, avocado sau unturile din nuci pot face parte foarte bine dintr-o alimentație sănătoasă, dar sunt și dense energetic.
+          Poți avea un plan alimentar foarte bine făcut și totuși să îți fie greu să îl urmezi. Nu pentru că „nu ai
+          voință”, ci pentru că viața reală nu arată ca un tabel.
         </ArticleP>
         <ArticleP>
-          La fel, două mese formate din alimente de calitate pot avea cantități foarte diferite de energie în funcție de porții și modul de preparare. Pentru controlul greutății contează împreună: calitatea alimentelor, cantitatea, structura meselor și ce poți susține în timp.
+          Pot exista zile aglomerate, mese luate pe fugă, perioade de oboseală, stres, foame mai mare, lipsă de
+          organizare sau situații în care alegerile alimentare devin pur și simplu mai dificile.
         </ArticleP>
-      </section>
-
-      <section>
-        <ArticleH2>De ce poate stagna cântarul?</ArticleH2>
-        <ArticleP>Înainte să reduci drastic mâncarea, merită să privești întregul tablou. Verifică:</ArticleP>
-        <ArticleList
-          items={[
-            "Porțiile — au crescut treptat fără să observi?",
-            "Alimentele dense energetic — au apărut mai multe uleiuri, sosuri, nuci, brânzeturi sau gustări?",
-            "Băuturile — cafeaua cu adaosuri, alcoolul sau alte băuturi aduc energie care poate fi ușor trecută cu vederea.",
-            "Mișcarea zilnică — mergi mai puțin, stai mai mult pe scaun sau te simți mai obosit decât înainte?",
-            "Somnul și rutina — s-au modificat somnul, programul meselor sau apetitul?",
-            "Fluctuațiile normale ale greutății — apa, aportul de sare, glicogenul, tranzitul intestinal și ciclul menstrual pot modifica temporar cifra de pe cântar.",
-            "Medicația sau sănătatea — în anumite situații merită luate în calcul și aceste cauze.",
-          ]}
-        />
         <ArticleP>
-          O schimbare de câteva zile pe cântar nu reflectă automat o schimbare identică a grăsimii corporale.
+          Ghidurile canadiene pentru managementul obezității recomandă tocmai de aceea o evaluare care să caute
+          cauzele creșterii în greutate, barierele reale și contextul de viață al persoanei, nu doar să noteze
+          greutatea și alimentele consumate.
+        </ArticleP>
+        <ArticleP>
+          De aceea, într-o consultație nu este suficient să întrebăm doar „ce ai mâncat?”. Este important să
+          înțelegem și ce ți-a fost greu, cât de foame îți era, cum arată programul tău și ce schimbări pot fi
+          menținute realist.
         </ArticleP>
       </section>
 
       <section>
-        <ArticleH2>De ce slăbirea nu este o linie dreaptă?</ArticleH2>
+        <ArticleH2>Nu există o singură dietă potrivită tuturor</ArticleH2>
         <ArticleP>
-          Pentru că organismul nu pierde exact aceeași cantitate în fiecare săptămână. Poți avea perioade în care greutatea scade, apoi pare că stagnează, apoi scade din nou. În plus, odată cu pierderea în greutate, necesarul energetic se reduce deoarece organismul susține o masă corporală mai mică.
+          Poate ai încercat în trecut mai multe variante: o dietă foarte strictă, o perioadă fără pâine, fără
+          dulciuri, fără cină sau un plan pe care l-ai urmat câteva săptămâni și apoi l-ai abandonat.
         </ArticleP>
         <ArticleP>
-          Poate exista și ceea ce literatura numește adaptare metabolică sau termogeneză adaptativă: la unele persoane, consumul energetic poate scădea ceva mai mult decât ar fi explicat doar prin modificarea greutății și compoziției corporale.
-        </ArticleP>
-        <ArticleCallout>
-          Asta nu înseamnă că „metabolismul s-a blocat”. Studiile arată că amploarea acestei adaptări diferă mult între persoane și că efectul poate fi modest, mai ales după stabilizarea greutății. Mesajul important este altul: necesarul unei persoane se poate modifica pe măsură ce scade în greutate, iar strategia poate avea nevoie de ajustări.
-        </ArticleCallout>
-      </section>
-
-      <section>
-        <ArticleH2>Cât de repede ar trebui să slăbesc?</ArticleH2>
-        <ArticleP>
-          Nu există un ritm potrivit pentru toată lumea. Ritmul depinde de greutatea inițială, compoziția corporală, tratament, nivelul de activitate, starea de sănătate și strategia aleasă.
+          Faptul că un anumit model alimentar funcționează pentru o persoană nu înseamnă că este cea mai bună soluție
+          pentru toată lumea.
         </ArticleP>
         <ArticleP>
-          În practica medicală, chiar și o reducere moderată a greutății poate aduce beneficii pentru sănătate la persoanele pentru care scăderea ponderală este indicată.
+          Obesity Canada subliniază că nu există un singur model alimentar universal pentru managementul obezității.
+          Recomandările ar trebui adaptate preferințelor, obiectivelor, contextului social și posibilității de a fi
+          menținute pe termen lung.
         </ArticleP>
         <ArticleP>
-          De aceea, obiectivul nu ar trebui să fie „Cât de repede pot slăbi?”, ci „Ce rezultat îmi îmbunătățește sănătatea și poate fi menținut?”
+          O intervenție care funcționează doar două săptămâni, dar nu poate fi integrată în viața de zi cu zi, are o
+          utilitate limitată pe termen lung.
         </ArticleP>
       </section>
 
       <section>
-        <ArticleH2>Slăbitul nu este finalul</ArticleH2>
+        <ArticleH2>Contează și cum sunt construite mesele</ArticleH2>
+        <ArticleP>Două mese cu același volum pot avea valori energetice foarte diferite.</ArticleP>
         <ArticleP>
-          Aceasta este una dintre cele mai importante idei despre controlul greutății: menținerea face parte din proces. După ce o persoană pierde în greutate, organismul nu revine pur și simplu la o stare neutră.
+          Alimentele cu densitate energetică mai mică pot permite un volum alimentar mai mare la un aport caloric mai
+          redus. În practică, asta poate face ca o alimentație pentru controlul greutății să fie mai ușor de urmat
+          decât una construită doar în jurul ideii de „porții cât mai mici”.
         </ArticleP>
         <ArticleP>
-          Pot persista factori care favorizează recâștigul ponderal: modificări ale apetitului, un necesar energetic mai mic și revenirea treptată la vechile obiceiuri sau contexte alimentare. Din acest motiv, organizațiile profesionale tratează tot mai mult obezitatea ca pe o afecțiune care necesită management pe termen lung, nu ca pe o „cură de slăbire” cu început și sfârșit.
+          De aceea contează structura mesei: prezența legumelor, a fructelor întregi, a surselor de proteină, a
+          fibrelor și modul în care sunt alese și combinate alimentele.
+        </ArticleP>
+        <ArticleP>Scopul nu este să ajungem să mâncăm cât mai puțin.</ArticleP>
+        <ArticleP>
+          Scopul este să construim mese care oferă nutrienții necesari, contribuie la sațietate și pot fi menținute
+          în viața reală.
+        </ArticleP>
+        <ArticleLead>Somnul și stresul fac și ele parte din context</ArticleLead>
+        <ArticleP>
+          Poate ai observat că după o noapte cu puțin somn îți este mai greu să îți organizezi mesele sau simți că
+          alegi mai des alimente foarte palatabile.
+        </ArticleP>
+        <ArticleP>Sau poate există perioade în care stresul schimbă modul în care mănânci.</ArticleP>
+        <ArticleP>
+          Asta nu înseamnă că „stresul îngrașă” sau că dacă dormi mai mult vei slăbi automat.
         </ArticleP>
         <ArticleP>
-          O strategie bună trebuie să includă din start întrebarea: cum voi mânca după ce am ajuns la rezultatul dorit?
+          Înseamnă doar că alimentația nu există separat de restul vieții. Somnul, stresul și programul zilnic pot
+          influența comportamentele alimentare și capacitatea de a menține anumite schimbări.
+        </ArticleP>
+        <ArticleP>
+          De aceea, merită luate în calcul atunci când încercăm să înțelegem de ce un plan funcționează într-o
+          perioadă și devine greu de urmat în alta.
         </ArticleP>
       </section>
 
       <section>
-        <ArticleH2>Când recomandările generale nu sunt suficiente</ArticleH2>
-        <ArticleP>Merită o evaluare individuală atunci când:</ArticleP>
-        <ArticleList
-          items={[
-            "greutatea crește sau scade rapid și fără intenție;",
-            "apar simptome persistente care nu pot fi explicate prin schimbările de alimentație sau activitate;",
-            "urmezi tratamente care pot influența greutatea;",
-            "ai încercat repetat strategii foarte restrictive, iar greutatea revine;",
-            "preocuparea pentru mâncare sau greutate produce anxietate importantă, restricții severe sau episoade de pierdere a controlului asupra alimentației.",
-          ]}
-        />
+        <ArticleH2>De ce apare uneori un platou?</ArticleH2>
         <ArticleP>
-          În astfel de situații, problema nu se rezolvă neapărat printr-o dietă și mai restrictivă.
+          Poate ai trecut deja prin asta: la început greutatea scade, apoi, deși simți că faci aceleași lucruri,
+          cântarul pare că se oprește.
         </ArticleP>
+        <ArticleP>Asta nu înseamnă automat că „ți s-a blocat metabolismul”.</ArticleP>
+        <ArticleP>
+          Pe măsură ce greutatea scade, un corp mai mic are nevoie de mai puțină energie. La unele persoane poate
+          apărea și o adaptare metabolică suplimentară, însă cercetările arată că amploarea acesteia este variabilă
+          și nu explică singură toate platourile ponderale.
+        </ArticleP>
+        <ArticleP>
+          În plus, greutatea de pe cântar nu reflectă doar țesutul adipos. Apa din organism, conținutul intestinal și
+          alte variații normale pot modifica temporar cifra pe care o vezi.
+        </ArticleP>
+        <ArticleP>Un platou nu înseamnă automat că ai făcut ceva greșit. Înseamnă că situația trebuie reevaluată în ansamblu.</ArticleP>
+      </section>
+
+      <section>
+        <ArticleH2>Slăbitul și menținerea nu sunt același lucru</ArticleH2>
+        <ArticleP>Pentru multe persoane, partea cea mai dificilă nu este doar să piardă în greutate, ci să mențină rezultatul.</ArticleP>
+        <ArticleP>
+          După scăderea ponderală pot apărea modificări ale mecanismelor implicate în foame, sațietate și consum
+          energetic, iar acestea pot favoriza recâștigul ponderal. Literatura actuală descrie recâștigul după slăbire
+          ca pe un fenomen frecvent și cu o componentă fiziologică reală.
+        </ArticleP>
+        <ArticleP>Asta nu înseamnă că greutatea va reveni inevitabil.</ArticleP>
+        <ArticleP>
+          Înseamnă că menținerea trebuie privită ca o etapă în sine, care poate necesita monitorizare, ajustări și
+          strategii diferite față de perioada de scădere.
+        </ArticleP>
+        <ArticleP>De aceea, obezitatea nu este o problemă care se rezolvă neapărat printr-o dietă de câteva săptămâni.</ArticleP>
+        <ArticleLead>Ce înseamnă o abordare care poate funcționa în viața reală?</ArticleLead>
+        <ArticleP>Înseamnă să nu pornim doar de la întrebarea:</ArticleP>
+        <ArticleQuote>„Ce ar trebui să mănânci?”</ArticleQuote>
+        <ArticleP>Ci și de la:</ArticleP>
+        <ArticleQuote>„Ce te împiedică să faci asta în mod constant?”</ArticleQuote>
+        <ArticleP>
+          Poate fi nevoie să lucrăm la structura meselor. Alteori la organizare, recunoașterea foamei și sațietății,
+          gestionarea situațiilor în care apar alegeri dificile sau găsirea unor variante alimentare pe care persoana
+          chiar le poate menține.
+        </ArticleP>
+        <ArticleP>
+          Obesity Canada recomandă o relație colaborativă cu pacientul și obiective adaptate valorilor, preferințelor
+          și realității lui, nu doar urmărirea unei greutăți „ideale”.
+        </ArticleP>
+        <ArticleP>
+          Succesul nu ar trebui măsurat doar prin cifra de pe cântar. Contează și îmbunătățirea comportamentelor
+          alimentare, a sănătății, a funcționalității și a calității vieții.
+        </ArticleP>
+        <ArticleP>Pentru a slăbi, balanța energetică contează. Dar controlul greutății nu se reduce la „mănâncă mai puțin”.</ArticleP>
+        <ArticleP>
+          Este important să știm ce mănânci, dar și de ce apar anumite alegeri, când îți este mai greu, cum
+          influențează viața de zi cu zi alimentația și ce schimbări poți menține pe termen lung.
+        </ArticleP>
+        <ArticleLead>
+          Un plan alimentar îți poate spune ce să mănânci. O intervenție nutrițională bine construită trebuie să
+          înțeleagă și persoana care îl va urma.
+        </ArticleLead>
       </section>
     </ArticleShell>
   );
