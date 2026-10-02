@@ -1,6 +1,5 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
-import { Link } from "wouter";
 import { useDocumentHead } from "@/hooks/use-document-head";
 import {
   Palette,
@@ -22,9 +21,14 @@ function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+// Same outer column as Home/Despre mine/Servicii's own PAGE_COLUMN (kept in
+// sync by hand -- importing would require exporting it from one of those
+// page files, which their own briefs said not to touch).
+const PAGE_COLUMN = "max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8";
+
 function NutriHighlight({ children }: { children: React.ReactNode }) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-5 py-2.5 text-sm font-medium text-primary">
+    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3.5 py-2 md:px-5 md:py-3 text-xs md:text-sm font-semibold text-primary">
       <Sparkles className="w-4 h-4 shrink-0" />
       {children}
     </div>
@@ -137,46 +141,93 @@ export default function NutriPentruCopii() {
   );
 
   return (
-    <div className="bg-secondary/30">
-      {/* Hero */}
-      <section className="py-20 md:py-28">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4 text-balance">
-              {ro ? "Nutri pentru copii" : "Nutri for Kids"}
-            </h1>
-            <p className="text-xl text-primary font-medium mb-6">
-              {ro ? "Educația nutrițională poate începe prin joacă." : "Nutrition education can start through play."}
-            </p>
-            <div className="text-muted-foreground leading-relaxed text-lg space-y-4 mb-8 max-w-2xl mx-auto">
-              <p>
-                {ro
-                  ? "Nutri este o mică bufniță curioasă, creată pentru a-i ajuta pe copii să descopere mâncarea într-un mod prietenos, vizual și fără presiune."
-                  : "Nutri is a curious little owl, created to help children discover food in a friendly, visual way, without pressure."}
+    <div
+      className="flex flex-col"
+      style={{
+        // Same page-scoped palette override as Home/About/Services (kept in
+        // sync by hand -- importing would require exporting it from one of
+        // those page files, which their own briefs said not to touch).
+        "--background": "37 62% 96%", // #FBF6EE
+        "--card": "38 73% 97%", // #FDF9F2
+        "--primary": "141 33% 27%", // #2F5D3F
+        "--muted-foreground": "22 16% 41%", // #7A6559
+      } as any}
+    >
+      {/* Hero -- text + the existing Nutri owl asset (already live on
+          Home.tsx's teaser section, reused here rather than duplicated as a
+          new asset), same borderless aspect-square crop treatment as that
+          section so the identity image never sits inside a heavy card. */}
+      <section className="pt-14 pb-10 md:pt-20 md:pb-14 bg-background">
+        <div className={PAGE_COLUMN}>
+          <div className="grid lg:grid-cols-[1fr_1fr] gap-5 lg:gap-[68px] items-start">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-3 md:mb-4">
+                <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
+                {ro ? "Pentru cei mici" : "For little ones"}
+              </span>
+              <h1 className="text-[36px] lg:text-5xl font-serif font-bold text-foreground leading-tight lg:leading-normal mb-3 text-balance">
+                {ro ? "Nutri pentru copii" : "Nutri for Kids"}
+              </h1>
+              <p className="text-lg md:text-xl text-primary font-medium mb-5">
+                {ro ? "Educația nutrițională poate începe prin joacă." : "Nutrition education can start through play."}
               </p>
-              <p>
+              <div className="text-base md:text-lg text-muted-foreground leading-relaxed space-y-4 mb-6">
+                <p>
+                  {ro
+                    ? "Nutri este o mică bufniță curioasă, creată pentru a-i ajuta pe copii să descopere mâncarea într-un mod prietenos, vizual și fără presiune."
+                    : "Nutri is a curious little owl, created to help children discover food in a friendly, visual way, without pressure."}
+                </p>
+                <p>
+                  {ro
+                    ? "Prin povești, jocuri și activități, Nutri îi însoțește pe cei mici în explorarea alimentelor, a culorilor din farfurie, a grupelor alimentare și, treptat, a noțiunilor simple despre nutrienți și rolul lor în organism."
+                    : "Through stories, games, and activities, Nutri accompanies children as they explore foods, the colors on their plate, food groups, and gradually, simple ideas about nutrients and their role in the body."}
+                </p>
+              </div>
+              <NutriHighlight>
                 {ro
-                  ? "Prin povești, jocuri și activități, Nutri îi însoțește pe cei mici în explorarea alimentelor, a culorilor din farfurie, a grupelor alimentare și, treptat, a noțiunilor simple despre nutrienți și rolul lor în organism."
-                  : "Through stories, games, and activities, Nutri accompanies children as they explore foods, the colors on their plate, food groups, and gradually, simple ideas about nutrients and their role in the body."}
-              </p>
-            </div>
-            <NutriHighlight>
-              {ro
-                ? "Fără presiune. Fără farfurii perfecte. Cu multă curiozitate."
-                : "No pressure. No perfect plates. Lots of curiosity."}
-            </NutriHighlight>
-          </motion.div>
+                  ? "Fără presiune. Fără farfurii perfecte. Cu multă curiozitate."
+                  : "No pressure. No perfect plates. Lots of curiosity."}
+              </NutriHighlight>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <div className="aspect-square overflow-hidden max-w-[420px] mx-auto lg:max-w-none">
+                <img
+                  src="/images/nutri-hero.png"
+                  alt={ro ? "Nutri, personajul Diet4Life pentru copii" : "Nutri, the Diet4Life character for kids"}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* De ce am creat Nutri */}
-      <section className="py-16 md:py-20 bg-background">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-            <h2 className="text-3xl font-serif font-bold text-foreground text-center mb-8">
+      {/* De ce am creat Nutri -- Nu cu / Ci cu contrast lightened from two
+          bordered boxes to a plain muted list (left) vs. a single accent-
+          bordered statement (right), same "subtle surface, not a card"
+          direction as the rest of this pass. */}
+      <section className="py-14 md:py-20 bg-background">
+        <div className={PAGE_COLUMN}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="max-w-3xl mx-auto"
+          >
+            <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground text-center leading-tight md:leading-normal mb-8 text-balance">
               {ro ? "De ce am creat Nutri" : "Why I created Nutri"}
             </h2>
-            <div className="text-muted-foreground leading-relaxed space-y-4 mb-10">
+            <div className="text-base md:text-lg text-muted-foreground leading-relaxed space-y-4 mb-10">
               <p>
                 {ro
                   ? "Când am devenit mamă, am început să privesc alimentația copiilor și dintr-o perspectivă diferită."
@@ -200,28 +251,26 @@ export default function NutriPentruCopii() {
               <p>{ro ? "Și m-am gândit că educația nutrițională poate începe altfel." : "And I thought nutrition education could start differently."}</p>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4 mb-6">
-              <div className="rounded-2xl border border-border bg-card p-6">
-                <ul className="space-y-3">
-                  {[
-                    ro ? "Nu cu reguli rigide." : "Not with rigid rules.",
-                    ro ? "Nu cu presiune." : "Not with pressure.",
-                    ro ? "Nu cu ideea unei farfurii perfecte." : "Not with the idea of a perfect plate.",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                      <X className="w-4 h-4 text-muted-foreground/60 shrink-0 mt-0.5" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 flex items-center">
-                <div className="flex items-start gap-2.5 text-sm font-medium text-foreground">
-                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <div className="grid sm:grid-cols-2 gap-8 mb-8 items-start">
+              <ul className="space-y-3">
+                {[
+                  ro ? "Nu cu reguli rigide." : "Not with rigid rules.",
+                  ro ? "Nu cu presiune." : "Not with pressure.",
+                  ro ? "Nu cu ideea unei farfurii perfecte." : "Not with the idea of a perfect plate.",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-sm md:text-base text-muted-foreground">
+                    <X className="w-4 h-4 text-muted-foreground/60 shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <div className="border-l-2 border-primary pl-5">
+                <p className="flex items-start gap-2.5 text-base md:text-lg font-semibold text-foreground">
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   {ro
                     ? "Ci cu joacă, culoare, curiozitate și descoperire."
                     : "But with play, color, curiosity, and discovery."}
-                </div>
+                </p>
               </div>
             </div>
 
@@ -232,153 +281,170 @@ export default function NutriPentruCopii() {
         </div>
       </section>
 
-      {/* Ce învață copiii alături de Nutri */}
-      <section className="py-16 md:py-20">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <h2 className="text-3xl font-serif font-bold text-foreground text-center mb-12">
+      {/* Ce învață copiii alături de Nutri -- icon-circle + bordered cards
+          replaced with plain editorial blocks (bare icon, no background,
+          no border) so the grid reads as a list of ideas rather than a
+          software feature grid. */}
+      <section className="py-14 md:py-20 bg-background">
+        <div className={PAGE_COLUMN}>
+          <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground text-center leading-tight md:leading-normal mb-10 md:mb-12 text-balance">
             {ro ? "Ce învață copiii alături de Nutri" : "What kids learn alongside Nutri"}
           </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="max-w-5xl mx-auto grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
             {LEARN_CARDS.map((card, i) => (
               <motion.div
                 key={card.titleRo}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="rounded-2xl bg-card border border-border p-6"
+                transition={{ duration: 0.5, delay: i * 0.06 }}
               >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <card.icon className="w-6 h-6 text-primary" />
-                </div>
+                <card.icon className="w-7 h-7 text-primary mb-3" strokeWidth={1.75} />
                 <h3 className="font-serif font-bold text-foreground text-lg mb-2">{ro ? card.titleRo : card.titleEn}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{ro ? card.textRo : card.textEn}</p>
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{ro ? card.textRo : card.textEn}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Filosofia Nutri */}
-      <section className="py-16 md:py-20 bg-background">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
-          <h2 className="text-3xl font-serif font-bold text-foreground mb-6">{ro ? "Filosofia Nutri" : "Nutri's Philosophy"}</h2>
-          <p className="text-muted-foreground leading-relaxed max-w-xl mx-auto mb-10">
-            {ro
-              ? "Nu vreau ca un copil să crească întrebându-se permanent dacă un aliment este „bun” sau „rău”."
-              : "I don't want a child to grow up constantly wondering whether a food is \"good\" or \"bad\"."}
-          </p>
+      {/* Filosofia Nutri -- the 4 question boxes lose their border/bg-card,
+          now bare icon+text rows so the section reads lighter. */}
+      <section className="py-14 md:py-20 bg-background">
+        <div className={PAGE_COLUMN}>
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-5 text-balance">
+              {ro ? "Filosofia Nutri" : "Nutri's Philosophy"}
+            </h2>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto mb-10">
+              {ro
+                ? "Nu vreau ca un copil să crească întrebându-se permanent dacă un aliment este „bun” sau „rău”."
+                : "I don't want a child to grow up constantly wondering whether a food is \"good\" or \"bad\"."}
+            </p>
 
-          <div className="grid sm:grid-cols-2 gap-4 mb-12 text-left">
-            {PHILOSOPHY_QUESTIONS.map((q) => (
-              <div key={q.ro} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5">
-                <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <p className="font-medium text-foreground">{ro ? q.ro : q.en}</p>
-              </div>
-            ))}
+            <div className="grid sm:grid-cols-2 gap-5 mb-12 text-left">
+              {PHILOSOPHY_QUESTIONS.map((q) => (
+                <div key={q.ro} className="flex items-start gap-3">
+                  <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <p className="font-medium text-foreground text-base md:text-lg">{ro ? q.ro : q.en}</p>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-2xl font-serif font-bold text-foreground mb-2">
+              {ro ? "Alimentația echilibrată nu înseamnă perfecțiune." : "Balanced eating doesn't mean perfection."}
+            </p>
+            <p className="text-base md:text-lg text-muted-foreground">
+              {ro
+                ? "Înseamnă varietate, curiozitate, flexibilitate și învățare în timp."
+                : "It means variety, curiosity, flexibility, and learning over time."}
+            </p>
           </div>
-
-          <p className="text-2xl font-serif font-bold text-foreground mb-2">
-            {ro ? "Alimentația echilibrată nu înseamnă perfecțiune." : "Balanced eating doesn't mean perfection."}
-          </p>
-          <p className="text-muted-foreground">
-            {ro
-              ? "Înseamnă varietate, curiozitate, flexibilitate și învățare în timp."
-              : "It means variety, curiosity, flexibility, and learning over time."}
-          </p>
         </div>
       </section>
 
-      {/* Produse */}
-      <section id="resurse-nutri" className="py-16 md:py-20 scroll-mt-20">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <h2 className="text-3xl font-serif font-bold text-foreground text-center mb-3">
-            {ro ? "Explorează lumea lui Nutri" : "Explore Nutri's world"}
-          </h2>
-          <p className="text-muted-foreground text-center max-w-xl mx-auto mb-12">
-            {ro
-              ? "Fiecare resursă Nutri are un scop simplu: să îi ajute pe copii să învețe ceva util despre mâncare în timp ce se joacă și explorează."
-              : "Every Nutri resource has one simple goal: to help children learn something useful about food while they play and explore."}
-          </p>
-          <div className="grid sm:grid-cols-2 gap-6">
-            {NUTRI_PRODUCTS.map((product) => (
-              <div key={product.titleRo} className="rounded-2xl bg-card border border-border p-6 flex flex-col">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <product.icon className="w-6 h-6 text-primary" />
+      {/* Resurse Nutri -- same 4 items, same "În curând" status on the one
+          not-yet-available title; still no price, no CTA, no link to
+          /products -- these are not purchasable yet. Card treatment matches
+          Services.tsx's own ServiceCard surface (border border-border
+          bg-card/60) rather than the old solid bg-card + icon-circle combo,
+          so this grid reads consistently with the rest of the premium
+          visual system instead of as a separate, boxier style. */}
+      <section id="resurse-nutri" className="py-14 md:py-20 bg-background scroll-mt-20">
+        <div className={PAGE_COLUMN}>
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground text-center leading-tight md:leading-normal mb-3 text-balance">
+              {ro ? "Explorează lumea lui Nutri" : "Explore Nutri's world"}
+            </h2>
+            <p className="text-base md:text-lg text-muted-foreground text-center max-w-xl mx-auto mb-12">
+              {ro
+                ? "Fiecare resursă Nutri are un scop simplu: să îi ajute pe copii să învețe ceva util despre mâncare în timp ce se joacă și explorează."
+                : "Every Nutri resource has one simple goal: to help children learn something useful about food while they play and explore."}
+            </p>
+            <div className="grid sm:grid-cols-2 gap-6">
+              {NUTRI_PRODUCTS.map((product) => (
+                <div key={product.titleRo} className="rounded-2xl border border-border bg-card/60 p-6 flex flex-col">
+                  <div className="flex items-start justify-between mb-3">
+                    <product.icon className="w-7 h-7 text-primary" strokeWidth={1.75} />
+                    {(ro ? product.badgeRo : product.badgeEn) && (
+                      <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+                        {ro ? product.badgeRo : product.badgeEn}
+                      </span>
+                    )}
                   </div>
-                  {(ro ? product.badgeRo : product.badgeEn) && (
-                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
-                      {ro ? product.badgeRo : product.badgeEn}
-                    </span>
+                  <h3 className="font-serif font-bold text-foreground text-lg">{ro ? product.titleRo : product.titleEn}</h3>
+                  {(ro ? product.subtitleRo : product.subtitleEn) && (
+                    <p className="text-xs font-medium text-primary uppercase tracking-wide mt-0.5 mb-2">
+                      {ro ? product.subtitleRo : product.subtitleEn}
+                    </p>
                   )}
-                </div>
-                <h3 className="font-serif font-bold text-foreground text-lg">{ro ? product.titleRo : product.titleEn}</h3>
-                {(ro ? product.subtitleRo : product.subtitleEn) && (
-                  <p className="text-xs font-medium text-primary uppercase tracking-wide mt-0.5 mb-2">
-                    {ro ? product.subtitleRo : product.subtitleEn}
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed mt-2 flex-1">
+                    {ro ? product.descRo : product.descEn}
                   </p>
-                )}
-                <p className="text-sm text-muted-foreground leading-relaxed mt-2 flex-1">
-                  {ro ? product.descRo : product.descEn}
-                </p>
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Și pentru părinți */}
-      <section className="py-16 md:py-20 bg-background">
-        <div className="container mx-auto px-4 max-w-2xl text-center">
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <Users className="w-7 h-7 text-primary" />
+      <section className="py-14 md:py-20 bg-background">
+        <div className={PAGE_COLUMN}>
+          <div className="max-w-2xl mx-auto text-center">
+            <Users className="w-7 h-7 text-primary mx-auto mb-5" strokeWidth={1.75} />
+            <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-6 text-balance">
+              {ro ? "Și pentru părinți" : "And for parents too"}
+            </h2>
+            <div className="text-base md:text-lg text-muted-foreground leading-relaxed space-y-4 mb-8">
+              <p>
+                {ro
+                  ? "Nutri este creat pentru copii, dar și pentru adulții care îi însoțesc."
+                  : "Nutri is made for children, but also for the adults who accompany them."}
+              </p>
+              <p>
+                {ro
+                  ? "Pentru că mesele nu trebuie să devină permanent negocieri, teste sau surse de stres."
+                  : "Because mealtimes shouldn't constantly become negotiations, tests, or a source of stress."}
+              </p>
+              <p>
+                {ro
+                  ? "Uneori este suficient să oferim copilului ocazia să observe, să exploreze și să învețe în ritmul lui."
+                  : "Sometimes it's enough to give a child the chance to observe, explore, and learn at their own pace."}
+              </p>
+            </div>
+            <NutriHighlight>
+              {ro ? "Nu avem nevoie de copii care mănâncă perfect." : "We don't need children who eat perfectly."}
+            </NutriHighlight>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed mt-6 max-w-lg mx-auto">
+              {ro
+                ? "Avem nevoie să îi ajutăm să devină curioși, să înțeleagă mai bine mâncarea și să construiască, în timp, o relație sănătoasă cu ea."
+                : "We need to help them become curious, understand food better, and build a healthy relationship with it over time."}
+            </p>
           </div>
-          <h2 className="text-3xl font-serif font-bold text-foreground mb-6">{ro ? "Și pentru părinți" : "And for parents too"}</h2>
-          <div className="text-muted-foreground leading-relaxed space-y-4 mb-8">
-            <p>
-              {ro
-                ? "Nutri este creat pentru copii, dar și pentru adulții care îi însoțesc."
-                : "Nutri is made for children, but also for the adults who accompany them."}
-            </p>
-            <p>
-              {ro
-                ? "Pentru că mesele nu trebuie să devină permanent negocieri, teste sau surse de stres."
-                : "Because mealtimes shouldn't constantly become negotiations, tests, or a source of stress."}
-            </p>
-            <p>
-              {ro
-                ? "Uneori este suficient să oferim copilului ocazia să observe, să exploreze și să învețe în ritmul lui."
-                : "Sometimes it's enough to give a child the chance to observe, explore, and learn at their own pace."}
-            </p>
-          </div>
-          <NutriHighlight>
-            {ro ? "Nu avem nevoie de copii care mănâncă perfect." : "We don't need children who eat perfectly."}
-          </NutriHighlight>
-          <p className="text-muted-foreground leading-relaxed mt-6 max-w-lg mx-auto">
-            {ro
-              ? "Avem nevoie să îi ajutăm să devină curioși, să înțeleagă mai bine mâncarea și să construiască, în timp, o relație sănătoasă cu ea."
-              : "We need to help them become curious, understand food better, and build a healthy relationship with it over time."}
-          </p>
         </div>
       </section>
 
-      {/* CTA final */}
-      <section className="py-16 md:py-20">
-        <div className="container mx-auto px-4 max-w-2xl text-center">
-          <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-6">
-            {ro ? "Descoperă cărțile și activitățile Nutri" : "Discover Nutri's books and activities"}
-          </h2>
-          <button
-            type="button"
-            onClick={() => scrollToId("resurse-nutri")}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary hover:bg-primary/90 active:scale-[0.97] text-primary-foreground font-medium px-8 h-12 transition-all"
-            data-testid="button-explore-nutri-resources"
-          >
-            {ro ? "Explorează resursele Nutri" : "Explore Nutri's resources"}
-            <ArrowRight className="w-4 h-4" />
-          </button>
-          <p className="text-sm text-muted-foreground mt-5 tracking-wide">Learn • Explore • Understand • Choose</p>
+      {/* CTA final -- same scroll-to-resources behavior, button restyled to
+          match the hand-built CTA pattern used on Home/Services (rounded
+          corners, not a full pill; visible focus ring). */}
+      <section className="py-14 md:py-20 bg-background">
+        <div className={PAGE_COLUMN}>
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-2xl md:text-[28px] font-serif font-bold text-foreground mb-6 text-balance">
+              {ro ? "Descoperă cărțile și activitățile Nutri" : "Discover Nutri's books and activities"}
+            </h2>
+            <button
+              type="button"
+              onClick={() => scrollToId("resurse-nutri")}
+              className="inline-flex items-center justify-center gap-2 h-12 px-8 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold transition-all"
+              data-testid="button-explore-nutri-resources"
+            >
+              {ro ? "Explorează resursele Nutri" : "Explore Nutri's resources"}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <p className="text-sm text-muted-foreground mt-5 tracking-wide">Learn • Explore • Understand • Choose</p>
+          </div>
         </div>
       </section>
     </div>
