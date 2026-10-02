@@ -391,7 +391,7 @@ export default function Services() {
             <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
             {ro ? "Servicii" : "Services"}
           </span>
-          <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-4 text-balance">
+          <h1 className="text-[36px] lg:text-5xl font-serif font-bold text-foreground leading-tight lg:leading-normal mb-4 text-balance">
             {ro ? "Alege nivelul de sprijin de care ai nevoie." : "Choose the level of support you need."}
           </h1>
           <p className="text-muted-foreground max-lg:text-[17px] max-lg:leading-[1.55] lg:text-lg lg:leading-relaxed">
@@ -506,7 +506,7 @@ export default function Services() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-2xl md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-4 text-balance">
+          <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-4 text-balance">
             {ro ? "Nu știi de unde să începi?" : "Not sure where to start?"}
           </h2>
           <p className="text-muted-foreground max-lg:text-[17px] max-lg:leading-[1.55] lg:text-lg lg:leading-relaxed mb-6">

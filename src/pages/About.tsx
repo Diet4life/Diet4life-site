@@ -39,14 +39,22 @@ export default function About() {
           spec (desktop sizes untouched). */}
       <section className="pt-8 pb-8 md:pt-20 md:pb-20 bg-background">
         <div className={PAGE_COLUMN}>
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-16">
+          {/* Portrait no longer a bordered, fixed-fraction column -- a grid
+              with a dedicated image column (instead of flex + w-5/12/w-7/12)
+              reads less like two rigid equal boxes, and dropping the border
+              (the one concrete thing separating it from the hero's borderless
+              treatment) is the main move here. Radius is kept -- removing it
+              entirely read harsher, not more refined, against a rectangular
+              photo with hard edges. Mobile cap widened (320px -> 380px) so it
+              doesn't read as a small standalone card floating above the text. */}
+          <div className="grid lg:grid-cols-[0.85fr_1fr] items-start lg:items-center gap-5 lg:gap-16">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="order-2 lg:order-1 w-full lg:w-5/12"
+              className="order-2 lg:order-1 w-full"
             >
-              <div className="relative aspect-[900/1040] max-w-[320px] mx-auto lg:max-w-none lg:mx-0 rounded-2xl overflow-hidden border border-border">
+              <div className="relative aspect-[900/1040] max-w-[380px] mx-auto lg:max-w-none rounded-2xl overflow-hidden">
                 <img
                   src="/images/portrait.png"
                   alt="Camelia Amuza"
@@ -59,14 +67,14 @@ export default function About() {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.15 }}
-              className="order-1 lg:order-2 w-full lg:w-7/12"
+              className="order-1 lg:order-2 w-full"
             >
               <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-3 md:mb-4">
                 <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
                 {ro ? "Despre mine" : "About me"}
               </span>
 
-              <h1 className="text-[36px] leading-[1.1] md:text-5xl md:leading-normal font-serif font-bold text-foreground mb-2 text-balance">
+              <h1 className="text-[36px] leading-[1.1] lg:text-5xl lg:leading-normal font-serif font-bold text-foreground mb-2 text-balance">
                 Camelia Amuza
               </h1>
               <p className="text-lg md:text-xl font-semibold text-primary mb-3 md:mb-5">
@@ -97,7 +105,7 @@ export default function About() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-[30px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
+            <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
               {ro ? "Ce am învățat din practică" : "What I've learned in practice"}
             </h2>
             <div className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed space-y-4">
@@ -233,7 +241,7 @@ export default function About() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-[30px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
+            <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
               {ro ? "Filozofia mea" : "My philosophy"}
             </h2>
             <p className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed">

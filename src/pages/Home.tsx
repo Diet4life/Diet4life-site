@@ -80,12 +80,12 @@ export default function Home() {
             >
               {/* Editorial kicker -- no pill/background/border, a thin rule
                   instead of a badge shape. */}
-              <span className="inline-flex items-center gap-2 text-[11px] lg:text-xs font-semibold tracking-[0.13em] lg:tracking-[0.16em] uppercase text-[hsl(var(--rodie))] mb-4">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-[hsl(var(--rodie))] mb-4">
                 <span className="inline-block w-4 h-px bg-[hsl(var(--rodie))]" aria-hidden="true" />
                 {ro ? "Nutriție. Fără mituri." : "Nutrition. No myths."}
               </span>
 
-              <h1 className="font-serif font-bold text-foreground text-[32px] min-[390px]:text-[34px] lg:text-[57px] leading-[1.03] lg:leading-[1.06] tracking-[-0.01em] max-w-[340px] lg:max-w-[560px] mb-2 lg:mb-4">
+              <h1 className="font-serif font-bold text-foreground text-[36px] lg:text-[54px] leading-[1.1] lg:leading-[1.08] tracking-[-0.01em] max-w-[340px] lg:max-w-[560px] mb-2 lg:mb-4">
                 {ro ? "În spatele fiecărui aliment există " : "Behind every food, there's "}
                 <span className="text-primary">{ro ? "o întrebare." : "a question."}</span>
               </h1>
@@ -218,24 +218,24 @@ export default function Home() {
           section rather than pasted on top of it. Mobile order (Calculator
           first, then Jurnal) falls out of plain DOM order in the
           single-column stack, no extra ordering needed. */}
-      <section className="py-20 bg-background">
+      <section className="py-14 md:py-20 bg-background">
         <div className={PAGE_COLUMN}>
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal text-center mb-3 text-balance">
+          <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal text-center mb-3 text-balance">
             {ro ? "Din răspunsuri, în practică" : "From answers to practice"}
           </h2>
-          <p className="text-base md:text-lg text-muted-foreground text-center max-w-2xl mx-auto mb-14">
+          <p className="text-base md:text-lg text-muted-foreground text-center max-w-2xl mx-auto mb-10 md:mb-14">
             {ro
               ? "Instrumente simple care te ajută să înțelegi mai bine nevoile și obiceiurile tale."
               : "Simple tools to help you better understand your needs and habits."}
           </p>
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-5 md:gap-8">
             <Link
               href="/calculator"
-              className="group flex flex-col h-full rounded-2xl border border-border bg-card/60 p-5 md:p-6 transition-colors hover:border-primary/30"
+              className="group flex flex-col h-full rounded-2xl bg-card/60 p-4 md:p-5 transition-colors hover:bg-card"
               data-testid="link-apply-calculator"
             >
-              <div className="rounded-xl overflow-hidden mb-6">
+              <div className="rounded-xl overflow-hidden mb-4 md:mb-5">
                 <picture>
                   <source srcSet="/images/tool-calculator.webp" type="image/webp" />
                   <img
@@ -263,10 +263,10 @@ export default function Home() {
 
             <Link
               href="/consultatii"
-              className="group flex flex-col h-full rounded-2xl border border-border bg-card/60 p-5 md:p-6 transition-colors hover:border-primary/30"
+              className="group flex flex-col h-full rounded-2xl bg-card/60 p-4 md:p-5 transition-colors hover:bg-card"
               data-testid="link-apply-journal"
             >
-              <div className="rounded-xl overflow-hidden mb-6">
+              <div className="rounded-xl overflow-hidden mb-4 md:mb-5">
                 <picture>
                   <source srcSet="/images/tool-journal.webp" type="image/webp" />
                   <img
@@ -292,7 +292,7 @@ export default function Home() {
               </span>
             </Link>
           </div>
-          <p className="text-xs text-muted-foreground text-center mt-12">
+          <p className="text-xs text-muted-foreground text-center mt-10 md:mt-12">
             {ro
               ? "Instrumentele au rol educațional și nu oferă diagnostic medical."
               : "These tools are educational and do not provide a medical diagnosis."}
@@ -315,7 +315,7 @@ export default function Home() {
           spacing/scale untouched per the brief. */}
       <section className="py-14 md:py-20 bg-background">
         <div className={PAGE_COLUMN}>
-          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-4 lg:gap-8 items-center">
+          <div className="grid lg:grid-cols-[1fr_1fr] gap-4 lg:gap-10 items-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -326,7 +326,7 @@ export default function Home() {
                 <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
                 {ro ? "Pentru cei mici" : "For little ones"}
               </span>
-              <h2 className="text-2xl md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-2 md:mb-3 text-balance">
+              <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-2 md:mb-3 text-balance">
                 {ro ? "Nutriția poate începe și prin joacă." : "Nutrition can start with play, too."}
               </h2>
               <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-4 md:mb-6">
@@ -358,11 +358,23 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <img
-                src="/images/nutri-hero.png"
-                alt={ro ? "Nutri, personajul Diet4Life pentru copii" : "Nutri, the Diet4Life character for kids"}
-                className="w-full h-auto"
-              />
+              {/* The source image is a wide 4:3 canvas with the owl occupying
+                  only its center ~59% of the width (measured: owl content
+                  x=[275,1123] of 1448px) -- a plain w-full render leaves a
+                  lot of flat cream margin on both sides, reading as "empty
+                  canvas." Cropping to a square via object-cover (not editing
+                  the source file) keeps the owl fully in frame -- it only
+                  fills 89.5% of the image height, so a 1:1 crop (which keeps
+                  the full 1086px height) trims none of the subject -- while
+                  giving it real visual weight. No border/background added,
+                  so the borderless "floating" treatment is unchanged. */}
+              <div className="aspect-square overflow-hidden max-w-[420px] mx-auto lg:max-w-none">
+                <img
+                  src="/images/nutri-hero.png"
+                  alt={ro ? "Nutri, personajul Diet4Life pentru copii" : "Nutri, the Diet4Life character for kids"}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </motion.div>
           </div>
         </div>
@@ -376,13 +388,13 @@ export default function Home() {
           CTA is full-width on mobile (auto-width from sm: up) with a more
           moderate mobile height. Link target (/services), copy, and every
           other section are untouched. */}
-      <section className="py-20 bg-background">
+      <section className="py-14 md:py-20 bg-background">
         <div className={PAGE_COLUMN}>
         <div className="max-w-2xl mx-auto text-center">
           <span className="inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
             {ro ? "Sprijin personalizat" : "Personalized support"}
           </span>
-          <h2 className="text-2xl md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-5 text-balance">
+          <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-5 text-balance">
             {ro ? "Când ai nevoie de ceva adaptat ție" : "When you need something tailored to you"}
           </h2>
           <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-8">
