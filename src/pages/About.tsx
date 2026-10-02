@@ -47,7 +47,14 @@ export default function About() {
               entirely read harsher, not more refined, against a rectangular
               photo with hard edges. Mobile cap widened (320px -> 380px) so it
               doesn't read as a small standalone card floating above the text. */}
-          <div className="grid lg:grid-cols-[0.85fr_1fr] items-start lg:items-center gap-5 lg:gap-16">
+          {/* items-start (not lg:items-center) so the eyebrow/H1 line up
+              with the top of the portrait instead of floating vertically
+              centered against a noticeably taller image -- same rule now
+              applied to every two-column image+text section on the site
+              (hero already did this via self-start; Nutri section below
+              gets the same fix). Gap matches the hero's own 68px exactly,
+              not an approximate value, for the same reason. */}
+          <div className="grid lg:grid-cols-[0.85fr_1fr] items-start gap-5 lg:gap-[68px]">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}

@@ -315,12 +315,19 @@ export default function Home() {
           spacing/scale untouched per the brief. */}
       <section className="py-14 md:py-20 bg-background">
         <div className={PAGE_COLUMN}>
-          <div className="grid lg:grid-cols-[1fr_1fr] gap-4 lg:gap-10 items-center">
+          {/* items-start + the hero's own 68px gap -- same vertical-alignment
+              and spacing rule as the hero and the About portrait section, so
+              all three two-column image+text sections read as one system.
+              Text column gets an explicit max-width (it had none before) so
+              the paragraph can't stretch to the full ~580px grid column on
+              wide screens. */}
+          <div className="grid lg:grid-cols-[1fr_1fr] gap-5 lg:gap-[68px] items-start">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
+              className="lg:max-w-[460px]"
             >
               <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-3 md:mb-4">
                 <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
