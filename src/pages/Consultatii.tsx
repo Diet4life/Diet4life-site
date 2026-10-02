@@ -853,7 +853,6 @@ export default function Consultatii() {
                     ro ? "Fișă date personale (12 câmpuri)" : "Personal data sheet (12 fields)",
                     ro ? "Tabel 7 zile × 5 mese/zi" : "7-day × 5 meals/day table",
                     ro ? "Scală foame/sațietate și motivul mesei, la fiecare masă" : "Hunger/fullness scale and eating reason, per meal",
-                    ro ? "Ghid estimare porții vizual" : "Visual portion estimation guide",
                     ro ? "Spațiu note suplimentare / zi" : "Extra notes space per day",
                     ro ? "Format A4, ușor de printat" : "A4 format, easy to print",
                   ].map((item, i) => (
