@@ -217,8 +217,12 @@ export default function Home() {
           shadow, not rotated) so the images read as integrated into the
           section rather than pasted on top of it. Mobile order (Calculator
           first, then Jurnal) falls out of plain DOM order in the
-          single-column stack, no extra ordering needed. */}
-      <section className="py-14 md:py-20 bg-background">
+          single-column stack, no extra ordering needed. Section padding
+          tightened (was py-14 md:py-20 -- stacked with neighboring
+          sections' own py-14/20, this produced 112-160px gaps between
+          content that reads as one continuous flow) to a shared
+          inter-section rhythm of ~64px mobile / ~80px desktop. */}
+      <section className="py-8 md:py-10 bg-background">
         <div className={PAGE_COLUMN}>
         <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal text-center mb-3 text-balance">
@@ -311,9 +315,9 @@ export default function Home() {
           any card/border/shadow treatment removed for the same reason.
           Mobile-only compacting (smaller heading, lighter highlight pill,
           shorter CTA, tighter gaps, the "Cărți • Activități..." line
-          dropped) via responsive classes; desktop keeps its original
-          spacing/scale untouched per the brief. */}
-      <section className="py-14 md:py-20 bg-background">
+          dropped) via responsive classes. Section padding tightened to the
+          shared inter-section rhythm (was py-14 md:py-20). */}
+      <section className="py-8 md:py-10 bg-background">
         <div className={PAGE_COLUMN}>
           {/* items-start + the hero's own 68px gap -- same vertical-alignment
               and spacing rule as the hero and the About portrait section, so
@@ -376,10 +380,20 @@ export default function Home() {
                   giving it real visual weight. No border/background added,
                   so the borderless "floating" treatment is unchanged. */}
               <div className="aspect-square overflow-hidden max-w-[420px] mx-auto lg:max-w-none">
+                {/* Same radial-mask edge feather as the dedicated
+                    /nutri-pentru-copii page (see that file's comment for
+                    the full reasoning) -- the source PNG is an official
+                    asset and is never edited, so this is CSS-only. Fade
+                    zone only reaches the empty cream corners, never the
+                    owl itself. */}
                 <img
                   src="/images/nutri-hero.png"
                   alt={ro ? "Nutri, personajul Diet4Life pentru copii" : "Nutri, the Diet4Life character for kids"}
                   className="w-full h-full object-cover"
+                  style={{
+                    maskImage: "radial-gradient(ellipse at center, black 85%, transparent 100%)",
+                    WebkitMaskImage: "radial-gradient(ellipse at center, black 85%, transparent 100%)",
+                  }}
                 />
               </div>
             </motion.div>
@@ -394,8 +408,10 @@ export default function Home() {
           slightly smaller on mobile so it doesn't read oversized, and the
           CTA is full-width on mobile (auto-width from sm: up) with a more
           moderate mobile height. Link target (/services), copy, and every
-          other section are untouched. */}
-      <section className="py-14 md:py-20 bg-background">
+          other section are untouched. Top padding matches the shared
+          inter-section rhythm; bottom keeps extra room as the page's own
+          closing margin before the footer (was py-14 md:py-20 symmetric). */}
+      <section className="pt-8 pb-14 md:pt-10 md:pb-16 bg-background">
         <div className={PAGE_COLUMN}>
         <div className="max-w-2xl mx-auto text-center">
           <span className="inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">

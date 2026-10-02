@@ -47,7 +47,13 @@ export function ArticleShell({ category, title, sources, related, children }: Ar
 
   return (
     <div className="min-h-screen bg-background py-16 md:py-20" style={ARTICLE_PAGE_STYLE}>
-      <div className="container mx-auto px-4 max-w-[720px]">
+      {/* "container" dropped (its own responsive max-width classes could
+          conflict/compete with the explicit max-w-[720px] here) in favor of
+          a plain centered column with the same mobile padding convention
+          used sitewide (PAGE_COLUMN's px-[18px]/20px, not Tailwind's
+          default px-4/16px) so article pages match the rest of the site's
+          horizontal rhythm on phones. */}
+      <div className="mx-auto px-[18px] min-[380px]:px-5 max-w-[720px]">
         <Link
           href="/nutrihub"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
@@ -151,9 +157,18 @@ export function ArticleP({ children }: { children: ReactNode }) {
 // lighter-weight in-flow sub-heading (styled as bold body text in the
 // Word doc, not a full Heading 2) -- kept visually distinct from ArticleH2
 // so the article's own two-tier heading structure is preserved as approved.
+//
+// Was font-serif (Playfair Display) at text-lg/xl -- large and heavy enough
+// to read as a second, competing heading rather than emphasized body text
+// (flagged directly: "Un plan alimentar îți poate spune ce să mănânci..."
+// in Controlul greutății visibly switched font mid-article). Playfair is
+// now reserved for ArticleH2/H1 only, per the rule that bold/important body
+// text must never look like a heading. Emphasis comes from Inter
+// semibold + a touch above body size + tight tracking instead of a
+// different typeface.
 export function ArticleLead({ children }: { children: ReactNode }) {
   return (
-    <p className="font-serif font-semibold text-foreground text-lg md:text-xl leading-snug mb-3">
+    <p className="font-sans font-semibold text-foreground text-[18px] md:text-[19px] leading-snug tracking-[-0.01em] mb-3">
       {children}
     </p>
   );

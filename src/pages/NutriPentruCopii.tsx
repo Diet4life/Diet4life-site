@@ -156,8 +156,13 @@ export default function NutriPentruCopii() {
       {/* Hero -- text + the existing Nutri owl asset (already live on
           Home.tsx's teaser section, reused here rather than duplicated as a
           new asset), same borderless aspect-square crop treatment as that
-          section so the identity image never sits inside a heavy card. */}
-      <section className="pt-14 pb-10 md:pt-20 md:pb-14 bg-background">
+          section so the identity image never sits inside a heavy card.
+          Section padding tightened (was pt-14 pb-10 md:pt-20 md:pb-14 --
+          160px+ gaps into the next section) -- top keeps a bit more room
+          since this is the page's own start, bottom matches the shared
+          inter-section rhythm below (~64px mobile / ~80px desktop,
+          combined with the next section's own top padding). */}
+      <section className="pt-10 pb-8 md:pt-16 md:pb-10 bg-background">
         <div className={PAGE_COLUMN}>
           <div className="grid lg:grid-cols-[1fr_1fr] gap-5 lg:gap-[68px] items-start">
             <motion.div
@@ -200,10 +205,24 @@ export default function NutriPentruCopii() {
               transition={{ duration: 0.6, delay: 0.1 }}
             >
               <div className="aspect-square overflow-hidden max-w-[420px] mx-auto lg:max-w-none">
+                {/* Soft edge-feather via CSS mask (the source PNG is an
+                    official asset and is never edited/re-exported) -- a
+                    radial fade that only reaches the image's outer corners.
+                    Default radial-gradient sizing (ellipse, farthest-corner)
+                    means the fade zone (85%-100%) starts well past the
+                    square's mid-edge distance (~70.7% of that same radius),
+                    so the owl -- which already sits with ~5% margin inside
+                    this crop -- is never touched; only the empty cream
+                    corners soften into the page background, taking the hard
+                    rectangular edge off without a border/card/shadow. */}
                 <img
                   src="/images/nutri-hero.png"
                   alt={ro ? "Nutri, personajul Diet4Life pentru copii" : "Nutri, the Diet4Life character for kids"}
                   className="w-full h-full object-cover"
+                  style={{
+                    maskImage: "radial-gradient(ellipse at center, black 85%, transparent 100%)",
+                    WebkitMaskImage: "radial-gradient(ellipse at center, black 85%, transparent 100%)",
+                  }}
                 />
               </div>
             </motion.div>
@@ -214,8 +233,10 @@ export default function NutriPentruCopii() {
       {/* De ce am creat Nutri -- Nu cu / Ci cu contrast lightened from two
           bordered boxes to a plain muted list (left) vs. a single accent-
           bordered statement (right), same "subtle surface, not a card"
-          direction as the rest of this pass. */}
-      <section className="py-14 md:py-20 bg-background">
+          direction as the rest of this pass. Section padding tightened
+          (was py-14 md:py-20, stacking with neighbors into 112-160px gaps)
+          to the page's shared inter-section rhythm. */}
+      <section className="py-8 md:py-10 bg-background">
         <div className={PAGE_COLUMN}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -284,8 +305,9 @@ export default function NutriPentruCopii() {
       {/* Ce învață copiii alături de Nutri -- icon-circle + bordered cards
           replaced with plain editorial blocks (bare icon, no background,
           no border) so the grid reads as a list of ideas rather than a
-          software feature grid. */}
-      <section className="py-14 md:py-20 bg-background">
+          software feature grid. Section padding tightened to match the
+          shared inter-section rhythm (was py-14 md:py-20). */}
+      <section className="py-8 md:py-10 bg-background">
         <div className={PAGE_COLUMN}>
           <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground text-center leading-tight md:leading-normal mb-10 md:mb-12 text-balance">
             {ro ? "Ce învață copiii alături de Nutri" : "What kids learn alongside Nutri"}
@@ -309,8 +331,10 @@ export default function NutriPentruCopii() {
       </section>
 
       {/* Filosofia Nutri -- the 4 question boxes lose their border/bg-card,
-          now bare icon+text rows so the section reads lighter. */}
-      <section className="py-14 md:py-20 bg-background">
+          now bare icon+text rows so the section reads lighter. Section
+          padding tightened to match the shared inter-section rhythm (was
+          py-14 md:py-20). */}
+      <section className="py-8 md:py-10 bg-background">
         <div className={PAGE_COLUMN}>
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-5 text-balance">
@@ -349,8 +373,10 @@ export default function NutriPentruCopii() {
           Services.tsx's own ServiceCard surface (border border-border
           bg-card/60) rather than the old solid bg-card + icon-circle combo,
           so this grid reads consistently with the rest of the premium
-          visual system instead of as a separate, boxier style. */}
-      <section id="resurse-nutri" className="py-14 md:py-20 bg-background scroll-mt-20">
+          visual system instead of as a separate, boxier style. Section
+          padding tightened to match the shared inter-section rhythm (was
+          py-14 md:py-20). */}
+      <section id="resurse-nutri" className="py-8 md:py-10 bg-background scroll-mt-20">
         <div className={PAGE_COLUMN}>
           <div className="max-w-5xl mx-auto">
             <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground text-center leading-tight md:leading-normal mb-3 text-balance">
@@ -388,8 +414,9 @@ export default function NutriPentruCopii() {
         </div>
       </section>
 
-      {/* Și pentru părinți */}
-      <section className="py-14 md:py-20 bg-background">
+      {/* Și pentru părinți -- section padding tightened to match the shared
+          inter-section rhythm (was py-14 md:py-20). */}
+      <section className="py-8 md:py-10 bg-background">
         <div className={PAGE_COLUMN}>
           <div className="max-w-2xl mx-auto text-center">
             <Users className="w-7 h-7 text-primary mx-auto mb-5" strokeWidth={1.75} />
@@ -427,8 +454,11 @@ export default function NutriPentruCopii() {
 
       {/* CTA final -- same scroll-to-resources behavior, button restyled to
           match the hand-built CTA pattern used on Home/Services (rounded
-          corners, not a full pill; visible focus ring). */}
-      <section className="py-14 md:py-20 bg-background">
+          corners, not a full pill; visible focus ring). Top padding matches
+          the shared inter-section rhythm; bottom keeps extra room as the
+          page's own closing margin before the footer (was py-14 md:py-20
+          symmetric). */}
+      <section className="pt-8 pb-14 md:pt-10 md:pb-16 bg-background">
         <div className={PAGE_COLUMN}>
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-2xl md:text-[28px] font-serif font-bold text-foreground mb-6 text-balance">

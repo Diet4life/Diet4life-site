@@ -115,7 +115,14 @@ export default function About() {
             <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
               {ro ? "Ce am învățat din practică" : "What I've learned in practice"}
             </h2>
-            <div className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed space-y-4">
+            {/* Explicit reading-width cap (was unconstrained, inheriting the
+                full max-w-3xl/768px column shared with the 2-col card grid
+                below it -- at 18px/leading-relaxed that reads as long,
+                full-bleed lines rather than an editorial paragraph column).
+                720px keeps it within the same column as the cards (no
+                mx-auto re-centering needed) while giving prose its own,
+                narrower measure. */}
+            <div className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed lg:max-w-[720px] space-y-4">
               <p>
                 {ro
                   ? "Oamenii nu au nevoie doar să știe ce au voie să mănânce. Au nevoie să înțeleagă de ce fac anumite alegeri, cum își pot organiza mesele și, mai ales, cum pot adapta recomandările la viața lor reală — nu la una ideală, care există doar în teorie."
@@ -251,7 +258,9 @@ export default function About() {
             <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
               {ro ? "Filozofia mea" : "My philosophy"}
             </h2>
-            <p className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed">
+            {/* Same reading-width cap as "Ce am învățat din practică" above,
+                for the same reason. */}
+            <p className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed lg:max-w-[720px]">
               {ro
                 ? "Nu urmăresc alimentația perfectă. Mă interesează mult mai mult ca persoana din fața mea să ajungă la o variantă bună pentru sănătatea ei — una pe care o poate menține pe termen lung, nu doar câteva săptămâni."
                 : "I'm not chasing perfect eating. What matters far more to me is that the person in front of me reaches a version that's good for their health — one they can maintain long-term, not just for a few weeks."}
