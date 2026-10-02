@@ -125,17 +125,34 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
               className="mt-4 mb-7 lg:my-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-start"
             >
-              <picture>
-                <source srcSet="/images/hero.webp" type="image/webp" />
-                <img
-                  src="/images/hero.jpg"
-                  alt={ro ? "Rodie tăiată, fotografie editorială Diet4Life" : "Cut pomegranate, Diet4Life editorial photograph"}
-                  width={1086}
-                  height={1086}
-                  loading="eager"
-                  className="w-full h-auto max-w-[360px] md:max-w-[480px] lg:max-w-none lg:w-[700px] xl:w-[820px] mx-auto lg:mx-0 lg:ml-auto lg:-mr-10 xl:-mr-20"
-                />
-              </picture>
+              {/* The source photo is a square (1086x1086) with the actual
+                  pomegranate confined to roughly its bottom 89% / right 98%
+                  -- the top ~11% and left ~30% are empty feathered
+                  background (measured directly: saturated-subject pixels
+                  only start at row 123/1086 = 11.3% from the top). Rendered
+                  at full square before, that empty top band read as "the
+                  image starts too low" even though the box itself was
+                  already flush with the text column (verified: zero CSS
+                  gap). Fix is a CSS-only crop -- a shorter-than-square
+                  wrapper + object-cover/object-bottom -- that trims most of
+                  that empty top margin while keeping 100% of the fruit
+                  (bottom/right edges, where the subject actually sits,
+                  stay untouched) and a small safety margin above the
+                  measured 11.3% so the dried stem crown is never clipped.
+                  Source file itself is untouched. */}
+              <div className="max-w-[360px] md:max-w-[480px] lg:max-w-none lg:w-[700px] xl:w-[820px] mx-auto lg:mx-0 lg:ml-auto lg:-mr-10 xl:-mr-20 aspect-[1/0.9]">
+                <picture>
+                  <source srcSet="/images/hero.webp" type="image/webp" />
+                  <img
+                    src="/images/hero.jpg"
+                    alt={ro ? "Rodie tăiată, fotografie editorială Diet4Life" : "Cut pomegranate, Diet4Life editorial photograph"}
+                    width={1086}
+                    height={977}
+                    loading="eager"
+                    className="w-full h-full object-cover object-bottom"
+                  />
+                </picture>
+              </div>
 
               {/* Editorial caption, not a card -- no background/border/shadow,
                   small and airy so it doesn't compete with the hero copy. */}

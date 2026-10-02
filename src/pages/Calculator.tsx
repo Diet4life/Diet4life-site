@@ -1065,21 +1065,33 @@ export default function Calculator() {
                 </p>
               </div>
 
-              {/* ── 16. Mesaj important ── */}
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 mt-6 text-center">
-                <Sparkles className="w-5 h-5 text-primary mx-auto mb-2" />
-                <h3 className="font-serif font-bold text-foreground mb-2">
-                  {ro ? "Cifrele sunt doar începutul." : "The numbers are just the start."}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+              {/* ── 16. Mesaj important -- was a bordered bg-primary/5 "app
+                  card" with a stacked icon/h3/p/outlined-Button; now a slim
+                  editorial transition band (a top rule, not a box) between
+                  the numbers above and the practical food section below.
+                  Icon shrinks to sit inline with the eyebrow instead of
+                  large and centered; CTA becomes a text link with an arrow
+                  (same pattern as the article/related-article links
+                  elsewhere on the site) instead of an outlined Button. */}
+              <div className="mt-8 pt-6 border-t border-border/60 text-center">
+                <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary mb-2">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {ro ? "Cifrele sunt doar începutul" : "The numbers are just the start"}
+                </p>
+                <p className="text-base text-foreground max-w-md mx-auto mb-3">
                   {ro
                     ? "25 g de fibre sau 60 g de proteină nu spun mare lucru dacă nu știi cum arată în farfurie."
                     : "25 g of fiber or 60 g of protein don't mean much if you don't know what that looks like on a plate."}
                 </p>
-                <Button variant="outline" className="rounded-full" onClick={() => scrollToId("exemple-practice")} data-testid="button-show-examples">
+                <button
+                  type="button"
+                  onClick={() => scrollToId("exemple-practice")}
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-2.5 transition-all"
+                  data-testid="button-show-examples"
+                >
                   {ro ? "Arată-mi cum arată în alimente" : "Show me what that looks like in food"}
-                  <ArrowRight className="w-4 h-4 ml-1.5" />
-                </Button>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
             </motion.div>
           )}
@@ -1088,8 +1100,16 @@ export default function Calculator() {
         {/* ── 17–20. Only shown once a real result exists ────────────────── */}
         {result.status === "ok" && (
           <>
-            {/* Exemple practice */}
-            <div id="exemple-practice" className="scroll-mt-24 mt-16">
+            {/* Exemple practice -- the 3 groups were identical utility
+                cards (bg-card/60 box + filled pill chips), reading like
+                three dashboard widgets. Now plain typography + spacing: a
+                top rule stands in for the card boundary, the category
+                label carries the hierarchy (small, bold, uppercase,
+                primary-colored), and foods are a light comma-separated
+                line (muted text, not filled tag shapes) -- same foods,
+                same grouping, curated-list feel instead of chip-picker
+                feel. */}
+            <div id="exemple-practice" className="scroll-mt-24 mt-12">
               <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-2">
                 {ro ? "Ce înseamnă aceste cifre în viața reală?" : "What do these numbers mean in real life?"}
               </h2>
@@ -1098,37 +1118,39 @@ export default function Calculator() {
                   ? "Doar exemple de alimente uzuale — nu un plan sau un meniu."
                   : "Just examples of everyday foods — not a plan or a menu."}
               </p>
-              <div className="grid sm:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-3 gap-8 sm:gap-6 max-w-3xl mx-auto">
                 {[
                   { title: ro ? "Proteină" : "Protein", icon: Dumbbell, items: ro ? PROTEIN_FOODS : PROTEIN_FOODS_EN },
                   { title: ro ? "Fibre" : "Fiber", icon: Leaf, items: ro ? FIBER_FOODS : FIBER_FOODS_EN },
                   { title: ro ? "Carbohidrați" : "Carbohydrates", icon: Wheat, items: ro ? CARB_FOODS : CARB_FOODS_EN },
                 ].map((group) => (
-                  <div key={group.title} className="rounded-2xl bg-card/60 p-5">
+                  <div key={group.title} className="border-t-2 border-primary/25 pt-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <group.icon className="w-4 h-4 text-primary" />
-                      <p className="text-sm font-semibold text-foreground">{group.title}</p>
+                      <group.icon className="w-4 h-4 text-primary" strokeWidth={1.75} />
+                      <p className="text-xs font-semibold uppercase tracking-wide text-foreground">{group.title}</p>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {group.items.map((food) => (
-                        <span key={food} className="text-xs px-2.5 py-1 rounded-full bg-secondary/50 text-foreground">
-                          {food}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {group.items.join(" · ")}
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Farfuria Diet4Life */}
-            <div id="farfurie" className="scroll-mt-24 mt-16">
+            {/* Farfuria Diet4Life -- was the diagram boxed inside a
+                bg-card/60 + p-6/8 container (the "PowerPoint graphic in a
+                card" look). PlateDiagram itself is untouched (shared with
+                the NutriHub articles) -- only its wrapper here changes: no
+                background, no padding box, so the circle and its legend
+                sit directly on the page and read as part of the page
+                rather than a pasted-in diagram. */}
+            <div id="farfurie" className="scroll-mt-24 mt-12">
               <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-2">
                 {ro ? "Construiește o masă, nu o ecuație" : "Build a meal, not an equation"}
               </h2>
-              <div className="rounded-2xl bg-card/60 p-6 md:p-8 mt-6">
+              <div className="max-w-2xl mx-auto mt-6">
                 <PlateDiagram />
-                <div className="mt-5 pt-5 border-t border-border text-center">
+                <div className="mt-5 pt-5 border-t border-border/60 text-center">
                   <p className="font-serif font-bold text-foreground mb-1.5">{ro ? "Reper, nu regulă." : "A reference, not a rule."}</p>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
                     {ro
@@ -1139,64 +1161,78 @@ export default function Calculator() {
               </div>
             </div>
 
-            {/* Exemple de mese reale */}
-            <div id="exemple-mese" className="scroll-mt-24 mt-16">
+            {/* Exemple de mese reale -- was 6 empty rounded-xl bg-card/60
+                pills with text inside (looked unfinished / like selectable
+                options). Now a plain two-column editorial list: a small
+                accent dot instead of a pill shape, a thin separator
+                between rows instead of a box around each one. Same exact
+                6 meal examples, same 2-col desktop / 1-col mobile grid. */}
+            <div id="exemple-mese" className="scroll-mt-24 mt-12">
               <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-6">
                 {ro ? "Exemple de mese reale" : "Real meal examples"}
               </h2>
-              <div className="grid sm:grid-cols-2 gap-3">
+              {/* divide-y gives mobile's single column a clean separator
+                  between rows; disabled at sm+ (2 columns) since a divide-y
+                  border would land between items that aren't visually
+                  adjacent -- the column/row gap alone reads as separation
+                  there. */}
+              <div className="grid sm:grid-cols-2 gap-x-10 sm:gap-y-3 max-w-2xl mx-auto divide-y divide-border/50 sm:divide-y-0">
                 {(ro ? MEAL_EXAMPLES_RO : MEAL_EXAMPLES_EN).map((meal) => (
-                  <div key={meal} className="rounded-xl bg-card/60 px-4 py-3 text-sm text-foreground">
-                    {meal}
+                  <div key={meal} className="flex items-start gap-2.5 py-2.5 sm:py-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" aria-hidden="true" />
+                    <p className="text-sm text-foreground">{meal}</p>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground text-center mt-4 max-w-lg mx-auto">
+              <p className="text-xs text-muted-foreground text-center mt-5 max-w-lg mx-auto">
                 {ro
                   ? "Ingredientele nu trebuie să fie întotdeauna separate pe farfurie — ciorbele, tocănițele, pastele și preparatele la cuptor pot conține aceleași componente într-un singur preparat."
                   : "Ingredients don't have to be physically separated on the plate — soups, stews, pastas and baked dishes can contain the same components in a single preparation."}
               </p>
             </div>
 
-            {/* Ce faci cu rezultatul -- was a fixed 2-card + 4-chip grid
-                (risking a "mini NutriHub homepage" feel); now one article
-                chosen from NUTRIHUB_RECOMMENDATION by the same
-                directionBranch already driving the rest of the results,
-                plus a single optional secondary link to the protein
-                article -- only when a real protein number was actually
-                shown, never next to the "needs evaluation" panel. */}
-            <div id="ce-faci-cu-rezultatul" className="scroll-mt-24 mt-16">
+            {/* Ce faci cu rezultatul -- was a full bg-card/60 box around a
+                small amount of content (oversized footprint for one title
+                + one link). Now the same left-accent-border treatment
+                already used for editorial callouts elsewhere on the site
+                (the Nutri page's "Ci cu..." block, ArticleQuote) instead of
+                a card -- compact, no background, reads as a recommendation
+                note rather than another dashboard tile. Same contextual
+                article logic, same optional protein secondary link. */}
+            <div id="ce-faci-cu-rezultatul" className="scroll-mt-24 mt-12">
               <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-6">
                 {ro ? "Ce faci cu rezultatul?" : "What do you do with the result?"}
               </h2>
-              <Link
-                href={NUTRIHUB_RECOMMENDATION[result.directionBranch].href}
-                className="group block rounded-2xl bg-card/60 p-6 hover:bg-card transition-colors"
-                data-testid="link-nutrihub-contextual"
-              >
-                <p className="text-xs font-semibold tracking-wide uppercase text-primary mb-2">
+              <div className="max-w-xl mx-auto border-l-2 border-primary pl-5 py-0.5">
+                <p className="text-xs font-semibold tracking-wide uppercase text-primary mb-1.5">
                   {ro ? "Recomandat pentru tine" : "Recommended for you"}
                 </p>
-                <p className="font-serif font-bold text-lg text-foreground mb-2">
-                  {ro
-                    ? NUTRIHUB_RECOMMENDATION[result.directionBranch].titleRo
-                    : NUTRIHUB_RECOMMENDATION[result.directionBranch].titleEn}
-                </p>
-                <span className="text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                  {ro ? "Citește articolul" : "Read the article"}
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </Link>
-              {result.protein.kind !== "needs_individual_evaluation" && (
                 <Link
-                  href={PROTEIN_ARTICLE.href}
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-4"
-                  data-testid="link-nutrihub-protein"
+                  href={NUTRIHUB_RECOMMENDATION[result.directionBranch].href}
+                  className="group block"
+                  data-testid="link-nutrihub-contextual"
                 >
-                  {ro ? PROTEIN_ARTICLE.titleRo : PROTEIN_ARTICLE.titleEn}
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <p className="font-serif font-bold text-lg text-foreground group-hover:text-primary transition-colors mb-1.5">
+                    {ro
+                      ? NUTRIHUB_RECOMMENDATION[result.directionBranch].titleRo
+                      : NUTRIHUB_RECOMMENDATION[result.directionBranch].titleEn}
+                  </p>
+                  <span className="text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    {ro ? "Citește articolul" : "Read the article"}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
                 </Link>
-              )}
+                {result.protein.kind !== "needs_individual_evaluation" && (
+                  <Link
+                    href={PROTEIN_ARTICLE.href}
+                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-3"
+                    data-testid="link-nutrihub-protein"
+                  >
+                    {ro ? PROTEIN_ARTICLE.titleRo : PROTEIN_ARTICLE.titleEn}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                )}
+              </div>
             </div>
           </>
         )}

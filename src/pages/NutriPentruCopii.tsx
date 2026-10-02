@@ -157,12 +157,13 @@ export default function NutriPentruCopii() {
           Home.tsx's teaser section, reused here rather than duplicated as a
           new asset), same borderless aspect-square crop treatment as that
           section so the identity image never sits inside a heavy card.
-          Section padding tightened (was pt-14 pb-10 md:pt-20 md:pb-14 --
-          160px+ gaps into the next section) -- top keeps a bit more room
-          since this is the page's own start, bottom matches the shared
-          inter-section rhythm below (~64px mobile / ~80px desktop,
-          combined with the next section's own top padding). */}
-      <section className="pt-10 pb-8 md:pt-16 md:pb-10 bg-background">
+          Section padding tightened twice now (was pt-14 pb-10 md:pt-20
+          md:pb-14, then pt-10 pb-8 md:pt-16 md:pb-10 -- still measured at
+          80px/64px into the next section, over the 40-64/32-48px target
+          for this kind of close, related-idea transition). Top keeps more
+          room since this is the page's own start; bottom now matches the
+          shared tighter inter-section rhythm below. */}
+      <section className="pt-10 pb-5 md:pt-16 md:pb-7 bg-background">
         <div className={PAGE_COLUMN}>
           <div className="grid lg:grid-cols-[1fr_1fr] gap-5 lg:gap-[68px] items-start">
             <motion.div
@@ -234,9 +235,9 @@ export default function NutriPentruCopii() {
           bordered boxes to a plain muted list (left) vs. a single accent-
           bordered statement (right), same "subtle surface, not a card"
           direction as the rest of this pass. Section padding tightened
-          (was py-14 md:py-20, stacking with neighbors into 112-160px gaps)
-          to the page's shared inter-section rhythm. */}
-      <section className="py-8 md:py-10 bg-background">
+          again -- measured at 80px/64px into the next section, over the
+          40-64/32-48px target -- to the page's shared tighter rhythm. */}
+      <section className="py-5 md:py-7 bg-background">
         <div className={PAGE_COLUMN}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -305,9 +306,9 @@ export default function NutriPentruCopii() {
       {/* Ce învață copiii alături de Nutri -- icon-circle + bordered cards
           replaced with plain editorial blocks (bare icon, no background,
           no border) so the grid reads as a list of ideas rather than a
-          software feature grid. Section padding tightened to match the
-          shared inter-section rhythm (was py-14 md:py-20). */}
-      <section className="py-8 md:py-10 bg-background">
+          software feature grid. Section padding tightened again to match
+          the shared tighter rhythm. */}
+      <section className="py-5 md:py-7 bg-background">
         <div className={PAGE_COLUMN}>
           <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground text-center leading-tight md:leading-normal mb-10 md:mb-12 text-balance">
             {ro ? "Ce învață copiii alături de Nutri" : "What kids learn alongside Nutri"}
@@ -332,9 +333,8 @@ export default function NutriPentruCopii() {
 
       {/* Filosofia Nutri -- the 4 question boxes lose their border/bg-card,
           now bare icon+text rows so the section reads lighter. Section
-          padding tightened to match the shared inter-section rhythm (was
-          py-14 md:py-20). */}
-      <section className="py-8 md:py-10 bg-background">
+          padding tightened again to match the shared tighter rhythm. */}
+      <section className="py-5 md:py-7 bg-background">
         <div className={PAGE_COLUMN}>
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-5 text-balance">
@@ -374,9 +374,8 @@ export default function NutriPentruCopii() {
           bg-card/60) rather than the old solid bg-card + icon-circle combo,
           so this grid reads consistently with the rest of the premium
           visual system instead of as a separate, boxier style. Section
-          padding tightened to match the shared inter-section rhythm (was
-          py-14 md:py-20). */}
-      <section id="resurse-nutri" className="py-8 md:py-10 bg-background scroll-mt-20">
+          padding tightened again to match the shared tighter rhythm. */}
+      <section id="resurse-nutri" className="py-5 md:py-7 bg-background scroll-mt-20">
         <div className={PAGE_COLUMN}>
           <div className="max-w-5xl mx-auto">
             <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground text-center leading-tight md:leading-normal mb-3 text-balance">
@@ -414,9 +413,9 @@ export default function NutriPentruCopii() {
         </div>
       </section>
 
-      {/* Și pentru părinți -- section padding tightened to match the shared
-          inter-section rhythm (was py-14 md:py-20). */}
-      <section className="py-8 md:py-10 bg-background">
+      {/* Și pentru părinți -- section padding tightened again to match the
+          shared tighter rhythm. */}
+      <section className="py-5 md:py-7 bg-background">
         <div className={PAGE_COLUMN}>
           <div className="max-w-2xl mx-auto text-center">
             <Users className="w-7 h-7 text-primary mx-auto mb-5" strokeWidth={1.75} />
@@ -454,11 +453,10 @@ export default function NutriPentruCopii() {
 
       {/* CTA final -- same scroll-to-resources behavior, button restyled to
           match the hand-built CTA pattern used on Home/Services (rounded
-          corners, not a full pill; visible focus ring). Top padding matches
-          the shared inter-section rhythm; bottom keeps extra room as the
-          page's own closing margin before the footer (was py-14 md:py-20
-          symmetric). */}
-      <section className="pt-8 pb-14 md:pt-10 md:pb-16 bg-background">
+          corners, not a full pill; visible focus ring). Top padding
+          tightened again to match the shared tighter rhythm; bottom keeps
+          extra room as the page's own closing margin before the footer. */}
+      <section className="pt-5 pb-14 md:pt-7 md:pb-16 bg-background">
         <div className={PAGE_COLUMN}>
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-2xl md:text-[28px] font-serif font-bold text-foreground mb-6 text-balance">
