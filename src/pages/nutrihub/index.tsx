@@ -119,10 +119,11 @@ export default function NutriHub() {
       </section>
 
       {/* Featured article -- editorial, visually distinct from the regular grid.
-          Image is wired to FEATURED_IMAGE_SRC but the file doesn't exist in
-          public/images/nutrihub/ yet (supplied separately); onError hides it
-          and the card falls back to a text-only layout rather than showing a
-          broken-image icon. Swap nothing else once the file is added. */}
+          The image container's aspect ratio (4:3) matches the source photo's
+          own native ratio (1448x1086) exactly, at every breakpoint -- so
+          object-cover never actually crops anything, guaranteeing both
+          plates stay fully visible regardless of viewport width. onError
+          still falls back to a text-only layout if the file is ever missing. */}
       <section className="pb-10 md:pb-14">
         <div className={PAGE_COLUMN}>
           <motion.div {...reveal(0.05)}>
@@ -133,7 +134,7 @@ export default function NutriHub() {
               data-testid="link-featured-article"
             >
               {!featuredImageFailed && (
-                <div className="order-1 md:order-2 aspect-[16/10] md:aspect-auto">
+                <div className="order-1 md:order-2 aspect-[4/3]">
                   <img
                     src={FEATURED_IMAGE_SRC}
                     alt={ro ? "Comparație vizuală: aceeași energie, farfurii diferite" : "Visual comparison: the same energy, different plates"}
