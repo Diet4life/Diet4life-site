@@ -70,16 +70,6 @@ const EMPTY_PATIENT: PatientInfo = {
   discomfortFoods: "", mainDifficulty: "", objectives: "",
 };
 
-// Hand portion guide — a visual, memorable alternative to a scale/measuring cup.
-// The color triplets are used both as jsPDF fill colors and as inline RGB styles on the web page.
-const PORTION_GUIDE = [
-  { hand: "Palmă", color: [92, 138, 103] as [number, number, number], group: "Proteine", examples: "carne, pește, tofu, ouă" },
-  { hand: "Pumn", color: [70, 130, 180] as [number, number, number], group: "Legume", examples: "crude sau gătite" },
-  { hand: "Căuș de mână", color: [200, 150, 60] as [number, number, number], group: "Carbohidrați", examples: "orez, cartofi, cereale, paste" },
-  { hand: "Degetul mare", color: [230, 140, 60] as [number, number, number], group: "Grăsimi", examples: "ulei, unt, nuci, semințe" },
-  { hand: "Vârful degetului", color: [200, 90, 90] as [number, number, number], group: "Adaosuri bogate caloric", examples: "dulceață, unt de arahide, sosuri" },
-];
-
 // Hunger/fullness scale (1-5) shown per meal in the journal — 3 is the sweet spot both
 // ways (hungry-but-not-starving before, comfortably satisfied after), extremes at 1/5.
 const HUNGER_SCALE = [
@@ -235,17 +225,17 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.text(introWrapped, margin, y);
   y += introWrapped.length * 4.3 + 3;
 
-  // Instructions box — two short paragraphs (general instructions + a plain-
-  // text hand/spoon reference, no separate table per the patient's request).
-  // Height computed from wrapped line counts so text never overflows it.
+  // Instructions box — a single short paragraph of general instructions.
+  // The second paragraph (a plain-text hand/spoon portion reference) was
+  // removed per explicit instruction, not replaced with another hand-measure
+  // recommendation. Height computed from the wrapped line count so text
+  // never overflows it, and shrinks naturally now that there's only one
+  // paragraph — everything below (Date pacient, etc.) flows up accordingly.
   const instrText1 = "Notează toate mesele și gustările timp de 7 zile consecutive. Include orele, cantitățile aproximative, lichidele consumate și orice simptome sau observații relevante.";
-  const instrText2 = "Cantitățile pot fi notate aproximativ, folosind repere simple: linguri pentru garnituri sau sosuri, palma pentru dimensiunea unei porții de carne sau pește, iar degetele pentru grosime.";
   doc.setFontSize(9);
   const instrWrapped1 = doc.splitTextToSize(instrText1, pageW - 2 * margin - 10);
-  const instrWrapped2 = doc.splitTextToSize(instrText2, pageW - 2 * margin - 10);
   const instrLineH = 4.2;
-  const instrParaGap = 4;
-  const instrBoxHeight = 7 + instrWrapped1.length * instrLineH + instrParaGap + instrWrapped2.length * instrLineH;
+  const instrBoxHeight = 7 + instrWrapped1.length * instrLineH;
   doc.setFillColor(...COLOR_INSTR_BG);
   doc.setDrawColor(...COLOR_BORDER);
   doc.setLineWidth(LINE_WIDTH_THIN);
@@ -256,7 +246,6 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.setFont("Inter", "normal");
   doc.setTextColor(...COLOR_TEXT);
   doc.text(instrWrapped1, margin + 5, y + 10.5);
-  doc.text(instrWrapped2, margin + 5, y + 10.5 + instrWrapped1.length * instrLineH + instrParaGap);
   y += instrBoxHeight + 7;
 
   // ── Date pacient ──────────────────────────────────────────────────────────
@@ -896,41 +885,6 @@ export default function Consultatii() {
                     ? "PDF format A4 · Printabil · Parte din pregătirea pentru consultație"
                     : "A4 PDF format · Printable · Part of your consultation prep"}
                 </p>
-              </CardContent>
-            </Card>
-
-            {/* Portion guide */}
-            <Card>
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <Utensils className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-xl font-serif font-bold text-foreground">
-                    {ro ? "Ghid vizual: mâna ca unitate de măsură" : "Visual guide: your hand as a measuring tool"}
-                  </h3>
-                </div>
-                <p className="text-sm text-muted-foreground mb-6">
-                  {ro
-                    ? "Simplu și eficient, fără cântar sau pahar gradat."
-                    : "Simple and effective, no scale or measuring cup needed."}
-                </p>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {PORTION_GUIDE.map((p, i) => (
-                    <div key={i} className="flex items-start gap-3 py-2.5 px-3 bg-secondary/40 rounded-xl">
-                      <span
-                        className="w-3 h-3 rounded-full shrink-0 mt-1"
-                        style={{ backgroundColor: `rgb(${p.color.join(",")})` }}
-                      />
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {p.hand} <span className="font-normal text-muted-foreground">→ {p.group}</span>
-                        </p>
-                        <p className="text-xs text-muted-foreground">{p.examples}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </CardContent>
             </Card>
 
