@@ -6,6 +6,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+// Same palette override as Home/Despre mine/Servicii (see those files'
+// own comments) -- kept in sync by hand, not imported, since importing
+// would require exporting it from one of those page files. NutriHub's
+// own background intentionally differs (white/zinc, not the warm cream
+// used elsewhere) per its own design spec -- see NUTRIHUB_PAGE_STYLE
+// in nutrihub/index.tsx for the matching hub-page values; this shell
+// uses the same --foreground/--primary/--muted-foreground but a
+// near-white --background/--card so an article reads as a continuation
+// of the hub, not a jump back to the warmer Home/Despre palette.
+const ARTICLE_PAGE_STYLE = {
+  "--background": "0 0% 100%", // #FFFFFF
+  "--card": "0 0% 98%", // zinc-50
+  "--border": "220 9% 89%", // zinc-200-ish
+  "--foreground": "146 10% 14%", // #1F2622
+  "--primary": "141 33% 27%", // #2F5D3F
+  "--muted-foreground": "22 16% 41%", // #7A6559
+} as any;
+
 export interface FaqItem {
   q: string;
   a: string;
@@ -50,8 +68,8 @@ export function ArticleShell({
   const ro = language === "ro";
 
   return (
-    <div className="min-h-screen bg-background py-16 md:py-20">
-      <div className="container mx-auto px-4 max-w-2xl">
+    <div className="min-h-screen bg-background py-16 md:py-20" style={ARTICLE_PAGE_STYLE}>
+      <div className="container mx-auto px-4 max-w-[720px]">
         <Link
           href="/nutrihub"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
@@ -67,7 +85,7 @@ export function ArticleShell({
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <span className="inline-block text-xs font-semibold tracking-wide uppercase text-primary bg-primary/10 px-3 py-1 rounded-full mb-4">
+          <span className="inline-block text-xs font-semibold tracking-wide uppercase text-primary mb-3">
             {category}
           </span>
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground leading-tight mb-4 text-balance">
@@ -76,28 +94,11 @@ export function ArticleShell({
           <p className="text-lg text-muted-foreground leading-relaxed mb-5">
             {subtitle}
           </p>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-            <span>
-              {ro ? "Scris de Camelia Amuza — nutriționist-dietetician autorizat" : "Written by Camelia Amuza — licensed dietitian-nutritionist"}
-            </span>
-            <span className="text-border">·</span>
-            <span>{updated}</span>
-            <span className="text-border">·</span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              {readTime}
-            </span>
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Clock className="w-3.5 h-3.5" />
+            {readTime}
           </div>
         </motion.header>
-
-        <Card className="bg-primary/5 border-primary/20 mb-10">
-          <CardContent className="p-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">
-              {ro ? "Pe scurt" : "In short"}
-            </p>
-            <p className="text-foreground leading-relaxed">{tldr}</p>
-          </CardContent>
-        </Card>
 
         <div className="space-y-10">{children}</div>
 
@@ -150,7 +151,7 @@ export function ArticleShell({
                   <Link
                     key={i}
                     href={item.href}
-                    className="flex items-center rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:border-primary/40 hover:shadow-sm transition-all"
+                    className="flex items-center rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:border-primary/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 ease-out"
                     data-testid={`link-related-${i}`}
                   >
                     {item.label}
@@ -184,6 +185,12 @@ export function ArticleShell({
             </AccordionItem>
           </Accordion>
         </div>
+
+        <p className="mt-6 pt-6 border-t border-border text-xs text-muted-foreground leading-relaxed">
+          {ro
+            ? "Acest material are scop educativ și nu înlocuiește recomandările personalizate oferite în urma unei evaluări medicale sau nutriționale."
+            : "This material is for educational purposes only and does not replace personalized recommendations provided through a medical or nutritional evaluation."}
+        </p>
       </div>
     </div>
   );
@@ -198,7 +205,7 @@ export function ArticleH2({ children }: { children: ReactNode }) {
 }
 
 export function ArticleP({ children }: { children: ReactNode }) {
-  return <p className="text-foreground leading-relaxed mb-3 last:mb-0">{children}</p>;
+  return <p className="text-[17px] md:text-lg text-foreground leading-[1.7] mb-3 last:mb-0">{children}</p>;
 }
 
 export function ArticleCallout({ children }: { children: ReactNode }) {

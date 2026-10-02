@@ -1,123 +1,184 @@
 import { Link } from "wouter";
-import { motion } from "framer-motion";
-import { Scale, Salad, Dumbbell, Flame, Wheat, ChevronRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const TOPICS = [
+// Same outer column as Home/Despre mine/Servicii's own PAGE_COLUMN (kept in
+// sync by hand -- importing would require exporting it from one of those
+// page files, which their own briefs said not to touch).
+const PAGE_COLUMN = "max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8";
+
+// NutriHub's own palette: deliberately NOT the warm cream used by
+// Home/Despre/Servicii -- the spec for this page calls for a whiter,
+// more "editorial publication" background, with the same warm cream
+// (#FDF9F2) reused only as an occasional soft surface (the featured-
+// article block below), not as the page background. --primary and
+// --muted-foreground are the exact same values already established on
+// Home/Despre/Servicii (#2F5D3F / #7A6559) -- this page reuses them
+// rather than inventing new ones. Mirrored in ArticleShell.tsx so an
+// article page reads as a continuation of this page, not a jump back
+// to the warmer palette.
+const NUTRIHUB_PAGE_STYLE = {
+  "--background": "0 0% 100%", // #FFFFFF
+  "--card": "0 0% 98%", // zinc-50
+  "--border": "220 9% 89%", // zinc-200-ish
+  "--foreground": "146 10% 14%", // #1F2622
+  "--primary": "141 33% 27%", // #2F5D3F
+  "--muted-foreground": "22 16% 41%", // #7A6559
+} as any;
+
+const ARTICLES = [
   {
     slug: "nutritie-echilibrata",
-    icon: Salad,
     categoryRo: "Nutriție echilibrată",
     categoryEn: "Balanced nutrition",
-    titleRo: "Nutriție echilibrată",
-    titleEn: "Balanced nutrition",
-    excerptRo: "Cum arată în viața reală o alimentație echilibrată — fără cântărit, fără interdicții, cu exemple din bucătăria de zi cu zi.",
-    excerptEn: "What balanced eating actually looks like in real life — no weighing, no forbidden foods, with everyday meal examples.",
+    titleRo: "Nutriție echilibrată: cum arată în viața reală?",
+    titleEn: "Balanced nutrition: what it actually looks like",
+    descriptionRo: "Cum construim o alimentație echilibrată, fără reguli rigide și fără să complicăm inutil lucrurile.",
+    descriptionEn: "How we build a balanced diet, without rigid rules or unnecessary complication.",
   },
   {
     slug: "controlul-greutatii",
-    icon: Scale,
     categoryRo: "Controlul greutății",
     categoryEn: "Weight control",
-    titleRo: "Controlul greutății",
-    titleEn: "Weight control",
-    excerptRo: "De ce controlul greutății nu este doar despre a mânca mai puțin — și ce influențează cu adevărat cântarul.",
-    excerptEn: "Why weight control isn't just about eating less — and what actually influences the scale.",
+    titleRo: "Controlul greutății: de ce nu se reduce la „mănâncă mai puțin”",
+    titleEn: "Weight control: why it's not just \"eat less\"",
+    descriptionRo: "Greutatea nu ține doar de cât mănânci. Contează contextul, sațietatea și schimbările pe care le poți menține.",
+    descriptionEn: "Weight isn't only about how much you eat. Context, satiety, and sustainable changes matter too.",
   },
   {
     slug: "cata-proteina-am-nevoie",
-    icon: Dumbbell,
     categoryRo: "Macronutrienți",
     categoryEn: "Macronutrients",
-    titleRo: "Câtă proteină am nevoie?",
-    titleEn: "How much protein do I need?",
-    excerptRo: "0,8 g/kg corp e reperul cunoscut — dar nu e reperul potrivit pentru toată lumea. Cine are, de regulă, nevoie de mai mult.",
-    excerptEn: "0.8 g/kg is the well-known reference — but it isn't the right one for everyone. Who typically needs more.",
+    titleRo: "De ce este importantă proteina și de câtă avem nevoie?",
+    titleEn: "Why protein matters and how much you actually need",
+    descriptionRo: "Ce rol are proteina, cum diferă sursele alimentare și de ce necesarul nu este același pentru toată lumea.",
+    descriptionEn: "What role protein plays, how food sources differ, and why the need isn't the same for everyone.",
   },
   {
     slug: "cate-calorii-am-nevoie",
-    icon: Flame,
-    categoryRo: "Controlul greutății",
-    categoryEn: "Weight control",
+    categoryRo: "Energie și necesar caloric",
+    categoryEn: "Energy & caloric needs",
     titleRo: "Câte calorii am nevoie, de fapt?",
     titleEn: "How many calories do I actually need?",
-    excerptRo: "Necesarul caloric nu e un număr magic fix — e o estimare construită din mai mulți factori, care se schimbă în timp.",
-    excerptEn: "Caloric need isn't a fixed magic number — it's an estimate built from several factors, and it changes over time.",
+    descriptionRo: "Necesarul caloric poate fi estimat, dar nu este o cifră fixă. Află ce îl influențează și cum trebuie interpretat.",
+    descriptionEn: "Caloric need can be estimated, but it isn't a fixed number. Find out what influences it and how to interpret it.",
   },
   {
     slug: "fibrele-alimentare",
-    icon: Wheat,
-    categoryRo: "Macronutrienți",
-    categoryEn: "Macronutrients",
-    titleRo: "Fibrele alimentare",
-    titleEn: "Dietary fiber",
-    excerptRo: "Cât ai nevoie și de ce nu trebuie să exagerezi — despre trendul „fibermaxxing” de pe rețelele sociale.",
-    excerptEn: "How much you need and why more isn't automatically better — on the \"fibermaxxing\" social media trend.",
+    categoryRo: "Fibre alimentare",
+    categoryEn: "Dietary fiber",
+    titleRo: "Fibrele alimentare: de ce sunt importante",
+    titleEn: "Dietary fiber: why it matters",
+    descriptionRo: "Ce sunt fibrele, unde le găsim, cât avem nevoie și de ce toleranța poate diferi de la o persoană la alta.",
+    descriptionEn: "What fiber is, where to find it, how much you need, and why tolerance can differ from person to person.",
   },
 ];
 
 export default function NutriHub() {
   const { language } = useLanguage();
   const ro = language === "ro";
+  const prefersReducedMotion = useReducedMotion();
+
+  const reveal = (delay = 0) =>
+    prefersReducedMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: 12 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true },
+          transition: { duration: 0.35, delay, ease: "easeOut" },
+        };
 
   return (
-    <div className="min-h-screen bg-background">
-      <section className="py-16 md:py-24 bg-secondary/20">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <span className="inline-block text-xs font-semibold tracking-wide uppercase text-primary bg-primary/10 px-3 py-1 rounded-full mb-4">
-              NutriHub
+    <div className="min-h-screen bg-background" style={NUTRIHUB_PAGE_STYLE}>
+      {/* Hero -- minimal, left-aligned, no surrounding card/band */}
+      <section className="pt-14 pb-10 md:pt-20 md:pb-14">
+        <div className={PAGE_COLUMN}>
+          <motion.div {...reveal()} className="max-w-2xl">
+            <span className="text-xs font-semibold tracking-wide uppercase text-primary mb-4 block">
+              NUTRIHUB
             </span>
-            <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-5 text-balance">
-              {ro ? "Explorează pe subiecte" : "Explore by topic"}
+            <h1 className="text-[34px] md:text-5xl font-serif font-bold text-foreground leading-[1.15] md:leading-tight mb-5 text-balance">
+              {ro ? "Nutriție explicată clar." : "Nutrition explained clearly."}
             </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed">
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
               {ro
-                ? "Articole scrise pentru pacientul obișnuit — informație corectă medical, fără moralizare și fără reguli rigide."
-                : "Articles written for the everyday patient — medically accurate information, without moralizing or rigid rules."}
+                ? "Informație nutrițională bazată pe dovezi, explicată pentru viața reală — fără mituri și fără reguli inutile."
+                : "Evidence-based nutrition information, explained for real life — no myths, no unnecessary rules."}
             </p>
           </motion.div>
         </div>
       </section>
 
-      <section className="py-16 md:py-20">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {TOPICS.map((topic, i) => {
-              const Icon = topic.icon;
-              return (
-                <motion.div
-                  key={topic.slug}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
+      {/* Featured article -- editorial, visually distinct from the regular grid.
+          No image: the "comparație calorii" image this card would need does not
+          exist anywhere in the project, and the article it would link to
+          ("Sunt toate caloriile la fel?") hasn't been written yet (still a
+          "coming soon" chip on the pillar articles) -- so the CTA is shown as
+          an inert "în curând" state rather than a dead link, and the card is
+          text-only rather than inventing a stock/placeholder image. See the
+          audit note in the chat for what's needed to make this fully live. */}
+      <section className="pb-10 md:pb-14">
+        <div className={PAGE_COLUMN}>
+          <motion.div
+            {...reveal(0.05)}
+            className="rounded-2xl border border-border px-6 py-8 md:px-12 md:py-14"
+            style={{ backgroundColor: "#FDF9F2" }}
+          >
+            <span className="text-xs font-semibold tracking-wide uppercase text-primary mb-3 block">
+              {ro ? "Energie și alegeri alimentare" : "Energy & food choices"}
+            </span>
+            <h2 className="text-2xl md:text-[32px] font-serif font-bold text-foreground leading-tight mb-3 max-w-2xl text-balance">
+              {ro ? "Sunt toate caloriile la fel?" : "Are all calories equal?"}
+            </h2>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-5 max-w-xl">
+              {ro
+                ? "Aceeași energie poate arăta foarte diferit în farfurie. Contează și din ce alimente provin caloriile."
+                : "The same amount of energy can look very different on a plate. Where your calories come from matters too."}
+            </p>
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              {ro ? "Citește articolul" : "Read the article"}
+              <span className="text-xs font-semibold uppercase tracking-wide">
+                {ro ? "— în curând" : "— coming soon"}
+              </span>
+            </span>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Remaining articles */}
+      <section className="pb-16 md:pb-24">
+        <div className={PAGE_COLUMN}>
+          <motion.h2 {...reveal()} className="text-[28px] md:text-[32px] font-serif font-bold text-foreground mb-6 md:mb-8">
+            {ro ? "Explorează NutriHub" : "Explore NutriHub"}
+          </motion.h2>
+
+          <div className="grid md:grid-cols-2 gap-5 md:gap-6">
+            {ARTICLES.map((article, i) => (
+              <motion.div key={article.slug} {...reveal(0.05 + i * 0.05)}>
+                <Link
+                  href={`/nutrihub/${article.slug}`}
+                  className="group flex flex-col h-full rounded-2xl border border-border bg-card px-6 py-6 md:px-7 md:py-7 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 ease-out"
+                  data-testid={`link-nutrihub-topic-${article.slug}`}
                 >
-                  <Link
-                    href={`/nutrihub/${topic.slug}`}
-                    className="group flex flex-col h-full rounded-2xl bg-card border border-border p-8 hover:border-primary/40 hover:shadow-md transition-all"
-                    data-testid={`link-nutrihub-topic-${topic.slug}`}
-                  >
-                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-5">
-                      <Icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <span className="inline-block text-xs font-semibold tracking-wide uppercase text-primary mb-2">
-                      {ro ? topic.categoryRo : topic.categoryEn}
+                  <span className="text-xs font-semibold tracking-wide uppercase text-primary mb-2.5">
+                    {ro ? article.categoryRo : article.categoryEn}
+                  </span>
+                  <h3 className="font-serif font-bold text-foreground text-xl md:text-2xl leading-snug mb-2.5 text-balance">
+                    {ro ? article.titleRo : article.titleEn}
+                  </h3>
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed flex-1 line-clamp-3">
+                    {ro ? article.descriptionRo : article.descriptionEn}
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                    {ro ? "Citește articolul" : "Read the article"}
+                    <span className="inline-block transition-transform duration-200 ease-out group-hover:translate-x-[3px]">
+                      →
                     </span>
-                    <h2 className="font-serif font-bold text-foreground text-xl mb-2">
-                      {ro ? topic.titleRo : topic.titleEn}
-                    </h2>
-                    <p className="text-sm text-muted-foreground leading-relaxed flex-1">
-                      {ro ? topic.excerptRo : topic.excerptEn}
-                    </p>
-                    <span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:gap-2 transition-all">
-                      {ro ? "Citește articolul" : "Read the article"}
-                      <ChevronRight className="w-4 h-4" />
-                    </span>
-                  </Link>
-                </motion.div>
-              );
-            })}
+                  </span>
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
