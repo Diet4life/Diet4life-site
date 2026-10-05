@@ -1113,7 +1113,7 @@ export default function Consultatii() {
                             ))}
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-1">
-                            {ro ? "1 = foame extremă · 3 = gata de masă · 5 = neutră" : "1 = extremely hungry · 3 = ready to eat · 5 = neutral"}
+                            {ro ? "1 = foame extremă · 3 = foame moderată · 5 = fără senzație de foame" : "1 = extreme hunger · 3 = moderate hunger · 5 = no hunger"}
                           </p>
                         </div>
                         <div>
@@ -1138,7 +1138,9 @@ export default function Consultatii() {
                             ))}
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-1">
-                            {ro ? "1 = încă flămândă · 3 = confortabil sătulă · 5 = prea plină" : "1 = still hungry · 3 = comfortably full · 5 = overfull"}
+                            {ro
+                              ? "1 = senzație de foame încă prezentă · 3 = sațietate confortabilă · 5 = senzație de prea plin"
+                              : "1 = hunger still present · 3 = comfortable fullness · 5 = overly full"}
                           </p>
                         </div>
                       </div>
