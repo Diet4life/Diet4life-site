@@ -6,6 +6,7 @@ import {
   getDirectionBranch,
   calculateWeightReferenceRange,
   calculateWeightLossRange,
+  calculateWeightMilestoneRange,
 } from "./bmi";
 
 describe("BMI calculation", () => {
@@ -99,5 +100,27 @@ describe("weight-loss orientative deficit range (10–20% of TEE, BMI >= 25 only
     const tee = 1200.4 / 0.8;
     const r = calculateWeightLossRange(tee);
     expect(r.blocked).toBe(false);
+  });
+});
+
+describe("weight milestone range (5-10% reduction from current weight, overweight/obese display only)", () => {
+  it("computes the spec's own worked example (96kg -> 86.4-91.2kg)", () => {
+    const r = calculateWeightMilestoneRange(96);
+    expect(r.low).toBe(86.4);
+    expect(r.high).toBe(91.2);
+  });
+
+  it("rounds both bounds to one decimal", () => {
+    // 83 * 0.9 = 74.7 ; 83 * 0.95 = 78.85 -> 78.9 (standard rounding, like formatBmi)
+    const r = calculateWeightMilestoneRange(83);
+    expect(r.low).toBe(74.7);
+    expect(r.high).toBe(78.9);
+  });
+
+  it("low is always a 10% reduction, high is always a 5% reduction (low < high)", () => {
+    const r = calculateWeightMilestoneRange(110.5);
+    expect(r.low).toBeCloseTo(110.5 * 0.9, 1);
+    expect(r.high).toBeCloseTo(110.5 * 0.95, 1);
+    expect(r.low).toBeLessThan(r.high);
   });
 });

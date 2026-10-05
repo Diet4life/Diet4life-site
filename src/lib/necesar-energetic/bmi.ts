@@ -70,6 +70,26 @@ export function calculateWeightReferenceRange(heightCm: number): WeightRange {
   };
 }
 
+export interface WeightMilestoneRange {
+  low: number;
+  high: number;
+}
+
+/**
+ * "Un prim reper orientativ" -- shown only for overweight/obese branches.
+ * A 5-10% reduction from the person's actual current weight, displayed as a
+ * range (never a single target). Purely a display value: no timeframe, no
+ * rate, no deficit -- just two points on the same current-weight basis
+ * already used elsewhere on this page. Never call this "greutate ideală" or
+ * imply it is mandatory/final.
+ */
+export function calculateWeightMilestoneRange(currentWeightKg: number): WeightMilestoneRange {
+  return {
+    low: Math.round(currentWeightKg * 0.9 * 10) / 10,
+    high: Math.round(currentWeightKg * 0.95 * 10) / 10,
+  };
+}
+
 export type WeightLossResult =
   | { blocked: false; kcalLow: number; kcalHigh: number }
   | { blocked: true };

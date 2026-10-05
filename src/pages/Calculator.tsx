@@ -65,9 +65,11 @@ import {
   getDirectionBranch,
   calculateWeightReferenceRange,
   calculateWeightLossRange,
+  calculateWeightMilestoneRange,
   type BmiCategory,
   type DirectionBranch,
   type WeightRange,
+  type WeightMilestoneRange,
 } from "@/lib/necesar-energetic/bmi";
 
 // ─── Age-block message — reused as both the field's validation message and,   ─
@@ -304,7 +306,9 @@ type ResultState =
       bmi: number;
       bmiCategory: BmiCategory;
       directionBranch: DirectionBranch;
+      weightKg: number;
       weightRange: WeightRange;
+      weightMilestone: WeightMilestoneRange;
       energy: EnergyResult;
       protein: ProteinResult;
       carbs: GramRange | null;
@@ -351,6 +355,7 @@ export default function Calculator() {
     const bmiCategory = getBmiCategory(bmiRaw);
     const directionBranch = getDirectionBranch(bmiCategory);
     const weightRange = calculateWeightReferenceRange(parsed.height);
+    const weightMilestone = calculateWeightMilestoneRange(parsed.weight);
 
     const ree = calculateREE(sex, parsed.weight, parsed.height, parsed.age);
     const teeRaw = calculateTEE(ree, PAL[parsed.activityLevel]);
@@ -382,7 +387,19 @@ export default function Calculator() {
 
     setShowCarbGrams(false);
     setShowFatGrams(false);
-    setResult({ status: "ok", bmi, bmiCategory, directionBranch, weightRange, energy, protein, carbs, fat });
+    setResult({
+      status: "ok",
+      bmi,
+      bmiCategory,
+      directionBranch,
+      weightKg: parsed.weight,
+      weightRange,
+      weightMilestone,
+      energy,
+      protein,
+      carbs,
+      fat,
+    });
     requestAnimationFrame(() => scrollToId("rezultate"));
   };
 
@@ -739,39 +756,114 @@ export default function Calculator() {
               </div>
 
               {/* ── 10. Interval orientativ de greutate ──────────────────────── */}
-              {/* This card's own caveat text (below) is kept verbatim and
-                  NOT folded into the new consolidated interpretation block
-                  -- it specifically distinguishes this range from a
-                  personalized/"ideal" target weight, which is a distinct,
-                  deliberate safeguard (see the standing "never expose an
+              {/* For overweight/obese: a compact 3-step orientation flow
+                  (current weight -> first 5-10% milestone -> mathematical
+                  BMI reference interval), per explicit spec. For
+                  reference/underweight: unchanged from before -- this
+                  card's own caveat text is kept verbatim and NOT folded
+                  into the consolidated interpretation block below, since it
+                  specifically distinguishes this range from a personalized/
+                  "ideal" target weight (the standing "never expose an
                   ideal-weight formula" rule), not generic repetition. */}
-              <div className="rounded-2xl bg-card/60 p-6 mb-4">
-                <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                  <Scale className="w-4 h-4 text-primary" />
-                  <p className="text-sm font-medium">
+              {result.directionBranch === "overweight" || result.directionBranch === "obese" ? (
+                <div className="rounded-2xl bg-card/60 p-6 mb-4">
+                  <div className="flex items-center gap-2 mb-5 text-muted-foreground">
+                    <Scale className="w-4 h-4 text-primary" />
+                    <p className="text-sm font-medium">
+                      {ro
+                        ? "Unde ești acum și care poate fi următorul reper?"
+                        : "Where are you now, and what could the next milestone be?"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-0 divide-y divide-border/50 sm:divide-y-0">
+                    {/* Step 1 — current weight */}
+                    <div className="flex-1 sm:pr-5">
+                      <p className="text-xs font-semibold tracking-wide uppercase text-muted-foreground mb-1.5">
+                        {ro ? "Greutatea ta actuală" : "Your current weight"}
+                      </p>
+                      <p className="text-2xl font-bold font-serif text-foreground" data-testid="text-current-weight">
+                        {result.weightKg.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg
+                      </p>
+                    </div>
+
+                    <div className="hidden sm:flex items-center px-2 text-primary/30 pt-6" aria-hidden="true">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+
+                    {/* Step 2 — first orientative milestone (5-10% reduction, range only) */}
+                    <div className="flex-1 pt-5 sm:pt-0 sm:px-5">
+                      <p className="text-xs font-semibold tracking-wide uppercase text-primary mb-1.5">
+                        {ro ? "Un prim reper orientativ" : "A first orientative milestone"}
+                      </p>
+                      <p className="text-2xl font-bold font-serif text-foreground" data-testid="text-weight-milestone">
+                        {result.weightMilestone.low.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                        –
+                        {result.weightMilestone.high.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{" "}
+                        kg
+                      </p>
+                    </div>
+
+                    <div className="hidden sm:flex items-center px-2 text-primary/30 pt-6" aria-hidden="true">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+
+                    {/* Step 3 — unchanged BMI 18.5-24.9 mathematical reference interval */}
+                    <div className="flex-1 pt-5 sm:pt-0 sm:pl-5">
+                      <p className="text-xs font-semibold tracking-wide uppercase text-muted-foreground mb-1.5">
+                        {ro ? "Interval matematic de referință" : "Mathematical reference interval"}
+                      </p>
+                      <p className="text-2xl font-bold font-serif text-foreground" data-testid="text-weight-range">
+                        {result.weightRange.min.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                        –
+                        {result.weightRange.max.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{" "}
+                        kg
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step-2-specific framing: why 5-10%, not a repeat of the closing disclaimer below */}
+                  <p className="text-xs text-muted-foreground mt-5 pt-5 border-t border-border/60 leading-relaxed">
                     {ro
-                      ? `Interval orientativ de greutate corespunzător unui IMC ${BMI_REFERENCE_RANGE_MIN.toString().replace(".", ",")}–${BMI_REFERENCE_RANGE_MAX.toString().replace(".", ",")}`
-                      : `Orientative weight range corresponding to a BMI of ${BMI_REFERENCE_RANGE_MIN}–${BMI_REFERENCE_RANGE_MAX}`}
+                      ? "O reducere de aproximativ 5–10% din greutatea actuală este frecvent utilizată ca prim obiectiv clinic și poate fi asociată cu beneficii pentru sănătate. Reperul potrivit diferă însă în funcție de contextul individual."
+                      : "A reduction of about 5–10% of your current weight is commonly used as a first clinical objective and may be associated with health benefits. The right milestone, however, differs depending on individual context."}
+                  </p>
+                  {/* Shared closing text -- general "not final, not mandatory" disclaimer, distinct from the clinical-framing sentence above */}
+                  <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+                    {ro
+                      ? "Acesta este un reper orientativ, nu o greutate finală și nu un obiectiv obligatoriu. Obiectivele de greutate trebuie adaptate contextului medical, compoziției corporale și priorităților individuale."
+                      : "This is an orientative milestone, not a final weight, and not a mandatory goal. Weight goals should be adapted to medical context, body composition, and individual priorities."}
                   </p>
                 </div>
-                <p className="text-2xl font-bold font-serif text-foreground" data-testid="text-weight-range">
-                  {result.weightRange.min.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-                  –
-                  {result.weightRange.max.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{" "}
-                  kg
-                </p>
-                {/* Expanded per explicit instruction: spells out exactly
-                    where the two numbers come from (BMI 18.5-24.9 x the
-                    entered height) before repeating the "not an automatic
-                    target" safeguard -- the old version asserted the
-                    safeguard without explaining the arithmetic, which read
-                    as arbitrary. Still never says "greutate ideală". */}
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                  {ro
-                    ? `Acest interval este calculat matematic pentru un IMC între ${BMI_REFERENCE_RANGE_MIN.toString().replace(".", ",")} și ${BMI_REFERENCE_RANGE_MAX.toString().replace(".", ",")}, folosind înălțimea introdusă. Nu reprezintă automat greutatea pe care ar trebui să o atingi. Un obiectiv potrivit se stabilește în funcție de contextul individual, compoziția corporală și starea de sănătate.`
-                    : `This range is calculated mathematically for a BMI between ${BMI_REFERENCE_RANGE_MIN} and ${BMI_REFERENCE_RANGE_MAX}, using the height you entered. It does not automatically represent the weight you should reach. An appropriate goal is set based on individual context, body composition, and health status.`}
-                </p>
-              </div>
+              ) : (
+                <div className="rounded-2xl bg-card/60 p-6 mb-4">
+                  <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                    <Scale className="w-4 h-4 text-primary" />
+                    <p className="text-sm font-medium">
+                      {ro
+                        ? `Interval orientativ de greutate corespunzător unui IMC ${BMI_REFERENCE_RANGE_MIN.toString().replace(".", ",")}–${BMI_REFERENCE_RANGE_MAX.toString().replace(".", ",")}`
+                        : `Orientative weight range corresponding to a BMI of ${BMI_REFERENCE_RANGE_MIN}–${BMI_REFERENCE_RANGE_MAX}`}
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold font-serif text-foreground" data-testid="text-weight-range">
+                    {result.weightRange.min.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                    –
+                    {result.weightRange.max.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{" "}
+                    kg
+                  </p>
+                  {/* Expanded per explicit instruction: spells out exactly
+                      where the two numbers come from (BMI 18.5-24.9 x the
+                      entered height) before repeating the "not an automatic
+                      target" safeguard -- the old version asserted the
+                      safeguard without explaining the arithmetic, which read
+                      as arbitrary. Still never says "greutate ideală". */}
+                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                    {ro
+                      ? `Acest interval este calculat matematic pentru un IMC între ${BMI_REFERENCE_RANGE_MIN.toString().replace(".", ",")} și ${BMI_REFERENCE_RANGE_MAX.toString().replace(".", ",")}, folosind înălțimea introdusă. Nu reprezintă automat greutatea pe care ar trebui să o atingi. Un obiectiv potrivit se stabilește în funcție de contextul individual, compoziția corporală și starea de sănătate.`
+                      : `This range is calculated mathematically for a BMI between ${BMI_REFERENCE_RANGE_MIN} and ${BMI_REFERENCE_RANGE_MAX}, using the height you entered. It does not automatically represent the weight you should reach. An appropriate goal is set based on individual context, body composition, and health status.`}
+                  </p>
+                </div>
+              )}
 
               {/* ── Consolidated interpretation block ─────────────────────────
                   Replaces the generic "this is an estimate / needs vary"
