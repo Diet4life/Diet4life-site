@@ -72,12 +72,16 @@ const EMPTY_PATIENT: PatientInfo = {
 
 // Hunger/fullness scale (1-5) shown per meal in the journal — 3 is the sweet spot both
 // ways (hungry-but-not-starving before, comfortably satisfied after), extremes at 1/5.
+// Wording is gender-neutral (no feminine-only adjectives like "flămândă"/
+// "sătulă"/"grea"/"neutră") per explicit instruction — rewritten as
+// physiological-state descriptions rather than adjectives agreeing with an
+// implied subject's gender.
 const HUNGER_SCALE = [
-  { level: "1", color: [200, 90, 90] as [number, number, number], before: "Foame extremă, amețeală", after: "Încă flămândă" },
-  { level: "2", color: [230, 140, 60] as [number, number, number], before: "Foarte flămândă", after: "Aproape sătulă" },
-  { level: "3", color: [47, 93, 63] as [number, number, number], before: "Flămândă, gata de masă", after: "Confortabil sătulă (ideal)" },
-  { level: "4", color: [230, 140, 60] as [number, number, number], before: "Puțin flămândă", after: "Sătulă, grea" },
-  { level: "5", color: [200, 90, 90] as [number, number, number], before: "Neutră, deloc flămândă", after: "Prea plină" },
+  { level: "1", color: [200, 90, 90] as [number, number, number], before: "Foame extremă, posibilă amețeală", after: "Senzație de foame încă prezentă" },
+  { level: "2", color: [230, 140, 60] as [number, number, number], before: "Foame accentuată", after: "Sațietate ușoară" },
+  { level: "3", color: [47, 93, 63] as [number, number, number], before: "Foame moderată, moment potrivit pentru masă", after: "Sațietate confortabilă" },
+  { level: "4", color: [230, 140, 60] as [number, number, number], before: "Foame ușoară", after: "Sațietate accentuată, senzație de greutate" },
+  { level: "5", color: [200, 90, 90] as [number, number, number], before: "Fără senzație de foame", after: "Senzație de prea plin" },
 ];
 
 // ─── Unicode font loading (Inter + Playfair Display — matches the site's own
@@ -214,24 +218,22 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   doc.setFontSize(10);
   doc.setTextColor(...COLOR_TEXT_SECONDARY);
   doc.text("Pregătire pentru consultație nutrițională", margin, y);
-  y += 8;
-
-  // Simple completion message (no more "photograph/scan/email it" wording)
-  const introText = "Completează jurnalul timp de 7 zile consecutive și păstrează-l pentru consultația nutrițională.";
-  doc.setFont("Inter", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...COLOR_TEXT_SECONDARY);
-  const introWrapped = doc.splitTextToSize(introText, pageW - 2 * margin);
-  doc.text(introWrapped, margin, y);
-  y += introWrapped.length * 4.3 + 3;
+  y += 12;
 
   // Instructions box — a single short paragraph of general instructions.
+  // The redundant top sentence that used to sit above this box ("Completează
+  // jurnalul timp de 7 zile consecutive...") was removed per explicit
+  // instruction -- it duplicated the "7 zile consecutive" idea already
+  // stated inside the box's own instruction text below, with nothing new
+  // above it. Spacing after the subtitle increased slightly (8 -> 12) to
+  // keep the box from sitting too close to it now that the paragraph
+  // between them is gone.
   // The second paragraph (a plain-text hand/spoon portion reference) was
   // removed per explicit instruction, not replaced with another hand-measure
   // recommendation. Height computed from the wrapped line count so text
   // never overflows it, and shrinks naturally now that there's only one
   // paragraph — everything below (Date pacient, etc.) flows up accordingly.
-  const instrText1 = "Notează toate mesele și gustările timp de 7 zile consecutive. Include orele, cantitățile aproximative, lichidele consumate și orice simptome sau observații relevante.";
+  const instrText1 = "Notează mesele și gustările timp de 7 zile consecutive. Include orele, cantitățile aproximative, lichidele consumate și orice simptome sau observații relevante.";
   doc.setFontSize(9);
   const instrWrapped1 = doc.splitTextToSize(instrText1, pageW - 2 * margin - 10);
   const instrLineH = 4.2;
