@@ -250,27 +250,27 @@ export default function NutriPentruCopii() {
               {ro ? "De ce am creat Nutri" : "Why I created Nutri"}
             </h2>
             <div className="text-base md:text-lg text-muted-foreground leading-relaxed space-y-4 mb-10">
-              <p>
+              <p className="text-editorial">
                 {ro
                   ? "Când am devenit mamă, am început să privesc alimentația copiilor și dintr-o perspectivă diferită."
                   : "When I became a mother, I started looking at children's nutrition from a different perspective too."}
               </p>
-              <p>
+              <p className="text-editorial">
                 {ro
                   ? "Ca dietetician, știam deja cât de importante sunt diversitatea alimentară, echilibrul și obiceiurile construite încă din copilărie. Dar odată cu diversificarea propriului copil, toate aceste lucruri au devenit mult mai concrete."
                   : "As a dietitian, I already knew how important food diversity, balance, and habits built in childhood are. But once my own child started on solid foods, all of this became much more concrete."}
               </p>
-              <p>
+              <p className="text-editorial">
                 {ro
                   ? "Am văzut câtă răbdare presupune uneori introducerea unui aliment nou. Un gust poate fi refuzat. O textură poate părea ciudată. Un aliment acceptat într-o zi poate fi respins în alta."
                   : "I saw how much patience introducing a new food sometimes takes. A taste can be refused. A texture can seem strange. A food accepted one day can be rejected the next."}
               </p>
-              <p>
+              <p className="text-editorial">
                 {ro
                   ? "Am început să observ și mai atent ceea ce se întâmplă în jur: părinți îngrijorați pentru că cei mici refuză legumele, copii reticenți la alimente noi și foarte multe mesaje despre ce „trebuie” sau „nu trebuie” să mănânce un copil."
                   : "I started noticing, even more closely, what happens around us: parents worried because their little ones refuse vegetables, children hesitant about new foods, and a lot of messages about what a child \"should\" or \"shouldn't\" eat."}
               </p>
-              <p>{ro ? "Și m-am gândit că educația nutrițională poate începe altfel." : "And I thought nutrition education could start differently."}</p>
+              <p className="text-editorial">{ro ? "Și m-am gândit că educația nutrițională poate începe altfel." : "And I thought nutrition education could start differently."}</p>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-8 mb-8 items-start">

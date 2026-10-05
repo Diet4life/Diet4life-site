@@ -150,7 +150,7 @@ export function ArticleH2({ children }: { children: ReactNode }) {
 }
 
 export function ArticleP({ children }: { children: ReactNode }) {
-  return <p className="text-[17px] md:text-lg text-foreground leading-[1.7] mb-3 last:mb-0">{children}</p>;
+  return <p className="text-editorial text-[17px] md:text-lg text-foreground leading-[1.7] mb-3 last:mb-0">{children}</p>;
 }
 
 // A short bold lead-in line used by the approved source documents as a

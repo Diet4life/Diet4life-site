@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type Language = 'ro' | 'en';
 
@@ -51,6 +51,17 @@ function getInitialLanguage(): Language {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>(getInitialLanguage);
+
+  // Keeps <html lang> in sync with the active language -- index.html ships
+  // a static lang="ro" for the Romanian-first default, but language
+  // switching here is client-side (no page reload), so without this the
+  // attribute would stay "ro" even while English content is shown. Browsers
+  // use it to pick the correct hyphenation dictionary for justified prose
+  // (.text-editorial, see index.css) and it's the right thing for screen
+  // readers regardless.
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const toggleLanguage = () => {
     setLanguage(prev => {

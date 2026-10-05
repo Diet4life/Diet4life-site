@@ -1704,12 +1704,12 @@ export default function Consultatii() {
         </div>
         <Card className="mb-10">
           <CardContent className="p-8">
-            <p className="text-sm text-foreground leading-relaxed mb-3">
+            <p className="text-editorial text-sm text-foreground leading-relaxed mb-3">
               {ro
                 ? "Dacă ai analize medicale recente, pregătește-le pentru consultație. Nu este necesar să repeți analize pe care le ai deja și nici să efectuezi toate investigațiile de mai jos înainte de prima întâlnire."
                 : "If you have recent medical tests, have them ready for the consultation. There's no need to repeat tests you already have, or to get all the investigations below before the first meeting."}
             </p>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+            <p className="text-editorial text-sm text-muted-foreground leading-relaxed mb-5">
               {ro
                 ? "Analizele ne ajută să avem o imagine mai completă asupra statusului metabolic și nutrițional și să adaptăm recomandările la situația individuală."
                 : "These tests help us get a fuller picture of your metabolic and nutritional status, and adapt our recommendations to your individual situation."}
@@ -1759,12 +1759,12 @@ export default function Consultatii() {
         </div>
         <Card className="mb-10">
           <CardContent className="p-8">
-            <p className="text-sm text-foreground leading-relaxed mb-2">
+            <p className="text-editorial text-sm text-foreground leading-relaxed mb-2">
               {ro
                 ? "Dacă ai afecțiuni diagnosticate sau ești urmărit de un medic specialist, pregătește documentele relevante pentru consultație: scrisori medicale, bilete de externare, investigații sau recomandări medicale."
                 : "If you have diagnosed conditions or are followed by a specialist, prepare the documents relevant to the consultation: medical letters, discharge notes, investigations or medical recommendations."}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-editorial text-sm text-muted-foreground">
               {ro
                 ? "Nu este necesar să pregătești întregul istoric medical, ci doar documentele relevante pentru problema discutată."
                 : "There's no need to prepare your entire medical history — just the documents relevant to the issue at hand."}
@@ -1779,7 +1779,7 @@ export default function Consultatii() {
         </div>
         <Card className="border-primary/20 bg-primary/5 mb-4">
           <CardContent className="p-8">
-            <p className="text-sm text-foreground leading-relaxed">
+            <p className="text-editorial text-sm text-foreground leading-relaxed">
               {ro
                 ? "Trimite jurnalul și documentele relevante înainte de consultație prin canalul de comunicare stabilit cu dieteticianul."
                 : "Send the journal and any relevant documents before your consultation through the communication channel established with your dietitian."}

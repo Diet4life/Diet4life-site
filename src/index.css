@@ -328,4 +328,25 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+
+  /* Editorial justified body text -- applied selectively to long-form prose
+     only (About bio, NutriHub article paragraphs, longer explanatory copy
+     on Calculator/Consultatii/Nutri pentru copii), never globally. Mobile
+     stays left-aligned: justification on a narrow column produces ugly,
+     uneven word gaps. From md (768px) up it switches to justified text
+     with inter-word spacing and automatic hyphenation, so the right edge
+     reads as a clean editorial column instead of a ragged one. Relies on
+     the page's own lang attribute (kept in sync with the active site
+     language in LanguageContext) for correct Romanian/English hyphenation
+     dictionaries -- never a manual line-break hack. */
+  .text-editorial {
+    text-align: left;
+  }
+  @media (min-width: 768px) {
+    .text-editorial {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: auto;
+    }
+  }
 }

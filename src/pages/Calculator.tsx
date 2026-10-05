@@ -823,13 +823,13 @@ export default function Calculator() {
                   </div>
 
                   {/* Step-2-specific framing: why 5-10%, not a repeat of the closing disclaimer below */}
-                  <p className="text-xs text-muted-foreground mt-5 pt-5 border-t border-border/60 leading-relaxed">
+                  <p className="text-editorial text-xs text-muted-foreground mt-5 pt-5 border-t border-border/60 leading-relaxed">
                     {ro
                       ? "O reducere de aproximativ 5–10% din greutatea actuală este frecvent utilizată ca prim obiectiv clinic și poate fi asociată cu beneficii pentru sănătate. Reperul potrivit diferă însă în funcție de contextul individual."
                       : "A reduction of about 5–10% of your current weight is commonly used as a first clinical objective and may be associated with health benefits. The right milestone, however, differs depending on individual context."}
                   </p>
                   {/* Shared closing text -- general "not final, not mandatory" disclaimer, distinct from the clinical-framing sentence above */}
-                  <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+                  <p className="text-editorial text-xs text-muted-foreground mt-3 leading-relaxed">
                     {ro
                       ? "Acesta este un reper orientativ, nu o greutate finală și nu un obiectiv obligatoriu. Obiectivele de greutate trebuie adaptate contextului medical, compoziției corporale și priorităților individuale."
                       : "This is an orientative milestone, not a final weight, and not a mandatory goal. Weight goals should be adapted to medical context, body composition, and individual priorities."}
@@ -857,7 +857,7 @@ export default function Calculator() {
                       target" safeguard -- the old version asserted the
                       safeguard without explaining the arithmetic, which read
                       as arbitrary. Still never says "greutate ideală". */}
-                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                  <p className="text-editorial text-xs text-muted-foreground mt-2 leading-relaxed">
                     {ro
                       ? `Acest interval este calculat matematic pentru un IMC între ${BMI_REFERENCE_RANGE_MIN.toString().replace(".", ",")} și ${BMI_REFERENCE_RANGE_MAX.toString().replace(".", ",")}, folosind înălțimea introdusă. Nu reprezintă automat greutatea pe care ar trebui să o atingi. Un obiectiv potrivit se stabilește în funcție de contextul individual, compoziția corporală și starea de sănătate.`
                       : `This range is calculated mathematically for a BMI between ${BMI_REFERENCE_RANGE_MIN} and ${BMI_REFERENCE_RANGE_MAX}, using the height you entered. It does not automatically represent the weight you should reach. An appropriate goal is set based on individual context, body composition, and health status.`}
@@ -878,7 +878,7 @@ export default function Calculator() {
                   <p className="text-sm font-semibold text-foreground mb-1">
                     {ro ? "Cum să interpretezi rezultatul" : "How to read your result"}
                   </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-editorial text-sm text-muted-foreground leading-relaxed">
                     {ro
                       ? "Cifrele de mai jos sunt estimări, nu măsurători exacte. Necesarul real poate diferi de la o persoană la alta, chiar și la aceeași greutate și înălțime — contează nivelul real de activitate, compoziția corporală, acuratețea datelor introduse și contextul individual de sănătate."
                       : "The figures below are estimates, not exact measurements. Actual needs can differ from person to person, even at the same weight and height — real activity level, body composition, the accuracy of the data you entered, and individual health context all play a role."}

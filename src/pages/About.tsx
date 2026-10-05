@@ -89,7 +89,7 @@ export default function About() {
               </p>
 
               <div className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed lg:max-w-[560px]">
-                <p>
+                <p className="text-editorial">
                   {ro
                     ? "Lucrez în principal cu persoane care se confruntă cu obezitatea — o zonă a nutriției care presupune mai mult decât o listă de alimente permise și interzise. Pentru mine, nutriția înseamnă să înțeleg contextul fiecărei persoane și să găsim soluții care pot fi aplicate în viața de zi cu zi."
                     : "I work primarily with people facing obesity — an area of nutrition that takes much more than a list of allowed and forbidden foods. To me, nutrition means understanding each person's context and finding solutions that can actually be applied in everyday life."}
@@ -122,12 +122,12 @@ export default function About() {
                 mx-auto re-centering needed) while giving prose a visibly
                 narrower measure. */}
             <div className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed lg:max-w-[680px] space-y-4">
-              <p>
+              <p className="text-editorial">
                 {ro
                   ? "Oamenii nu au nevoie doar să știe ce au voie să mănânce. Au nevoie să înțeleagă de ce fac anumite alegeri, cum își pot organiza mesele și, mai ales, cum pot adapta recomandările la viața lor reală — nu la una ideală, care există doar în teorie."
                   : "People don't just need to know what they're allowed to eat. They need to understand why they're making certain choices, how to organize their meals, and — most importantly — how to adapt recommendations to their real life, not an ideal one that only exists in theory."}
               </p>
-              <p>
+              <p className="text-editorial">
                 {ro
                   ? "De aceea îmi place să explic nutriția simplu, fără reguli inutile și fără să complic lucrurile mai mult decât e nevoie. Informația trebuie să fie corectă din punct de vedere medical, dar și ușor de aplicat, altfel rămâne doar teorie pe hârtie. Scopul este să construim împreună obiceiuri care chiar rezistă în timp, nu soluții rapide care dispar odată cu motivația."
                   : "That's why I like to explain nutrition simply, without unnecessary rules and without overcomplicating things. Information has to be medically accurate, but also easy to apply — otherwise it stays theory on paper. The goal is to build habits together that actually last, not quick fixes that disappear along with motivation."}
@@ -259,7 +259,7 @@ export default function About() {
             </h2>
             {/* Same reading-width cap as "Ce am învățat din practică" above,
                 for the same reason. */}
-            <p className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed lg:max-w-[680px]">
+            <p className="text-editorial text-muted-foreground max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed lg:max-w-[680px]">
               {ro
                 ? "Nu urmăresc alimentația perfectă. Mă interesează mult mai mult ca persoana din fața mea să ajungă la o variantă bună pentru sănătatea ei — una pe care o poate menține pe termen lung, nu doar câteva săptămâni."
                 : "I'm not chasing perfect eating. What matters far more to me is that the person in front of me reaches a version that's good for their health — one they can maintain long-term, not just for a few weeks."}
