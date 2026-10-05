@@ -193,6 +193,55 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     doc.text("Diet4Life Concept  •  contact@diet4lifeconcept.ro  •  0766 572 968", pageW / 2, 289, { align: "center" });
   };
 
+  // ── Reflection page (mid-week checkpoint + final 7-day reflection) ──────
+  // Shared layout for both one-off reflection pages: a green header band
+  // (matching the day pages' own band, minus the "Data:" field, since these
+  // aren't a single day's log), then each question gets its own ruled
+  // writing box, with the available page height split evenly across however
+  // many questions are passed in. This keeps the mid-week page (3
+  // questions) generously spaced and the final page (6 questions) still
+  // readable without overflow, from one consistent pattern rather than two
+  // separate ad-hoc layouts.
+  const drawReflectionPage = (title: string, questions: string[]) => {
+    doc.addPage();
+    paintBackground();
+    y = margin;
+
+    const bandHeight = 8;
+    doc.setFillColor(...COLOR_GREEN);
+    doc.rect(margin, y, pageW - 2 * margin, bandHeight, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("Inter", "bold");
+    doc.setFontSize(10);
+    doc.text(title, margin + 4, y + 5.5);
+    y += bandHeight + 10;
+
+    const pageBottom = 273;
+    const gap = 5;
+    const availableHeight = pageBottom - y;
+    const slotHeight = (availableHeight - (questions.length - 1) * gap) / questions.length;
+
+    questions.forEach((question, qi) => {
+      doc.setFont("Inter", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(...COLOR_TEXT);
+      const qWrapped = doc.splitTextToSize(`${qi + 1}. ${question}`, pageW - 2 * margin - 10);
+      doc.text(qWrapped, margin, y + 4.5);
+      const qTextHeight = qWrapped.length * 4.2;
+
+      const boxY = y + qTextHeight + 3;
+      const boxHeight = Math.max(slotHeight - qTextHeight - 3, 12);
+      doc.setDrawColor(...COLOR_BORDER);
+      doc.setLineWidth(LINE_WIDTH_THIN);
+      doc.setFillColor(...COLOR_SURFACE);
+      doc.roundedRect(margin, boxY, pageW - 2 * margin, boxHeight, 2, 2, "FD");
+
+      y += slotHeight + gap;
+    });
+
+    drawFooter();
+  };
+
   // ── Page 1: header ──────────────────────────────────────────────────────
   paintBackground();
   doc.setFont("Inter", "bold");
@@ -427,17 +476,25 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     doc.text("Î = înainte de masă   ·   D = după masă", margin, y);
     y += 6;
 
-    // Notes box — renamed to also cover symptoms, with a small example line
+    // Reflection box — renamed from a symptom-log note to a genuine
+    // reflective prompt, per explicit patient feedback requesting more
+    // space to write about moments that didn't go as intended. The old
+    // "Ex.: balonare, greață..." symptom-example line was dropped rather
+    // than stacked alongside the new prompt: two hint lines above an
+    // already space-constrained writing box would crowd it, and symptoms/
+    // sensations are still a natural thing to note under "Ce ai observat?"
+    // without a dedicated example line spelling it out. Tone is
+    // deliberately non-judgmental -- no "ce ai greșit" / "abatere" / "eșec".
     doc.setFont("Inter", "bold");
     doc.setFontSize(9.5);
     doc.setTextColor(...COLOR_TEXT);
-    doc.text("Note suplimentare / simptome", margin, y);
+    doc.text("Observații despre ziua de azi", margin, y);
     y += 4.5;
     doc.setFont("Inter", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...COLOR_TEXT_SECONDARY);
     const notesHintWrapped = doc.splitTextToSize(
-      "Ex.: balonare, greață, reflux, disconfort abdominal, energie, somn sau alte observații.",
+      "Ce ai observat? Ce a fost mai dificil? Ce ai vrea să faci diferit data viitoare?",
       pageW - 2 * margin
     );
     doc.text(notesHintWrapped, margin, y);
@@ -451,7 +508,29 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     doc.roundedRect(margin, y, pageW - 2 * margin, notesBoxHeight, 2, 2, "FD");
 
     drawFooter();
+
+    // Mid-week checkpoint — one compact page inserted right after Day 4,
+    // before Day 5, per explicit instruction. Not a dense workbook spread:
+    // 3 questions only, generously spaced via drawReflectionPage above.
+    if (di === 3) {
+      drawReflectionPage("Bilanț la jumătatea săptămânii", [
+        "Ce tipar ai observat până acum?",
+        "În ce momente ți-a fost cel mai greu?",
+        "Ce te-a ajutat să faci alegeri mai apropiate de ce îți doreai?",
+      ]);
+    }
   });
+
+  // Final 7-day reflection — one page, added after Day 7. Makes the journal
+  // useful in consultation, not just a food log.
+  drawReflectionPage("Reflecția mea după 7 zile", [
+    "Ce a mers bine?",
+    "Ce a fost cel mai dificil?",
+    "Ce factori declanșatori au apărut cel mai des?",
+    "Ce ai vrea să păstrezi?",
+    "Ce ai vrea să schimbi?",
+    "Care ar fi un obiectiv realist pentru perioada următoare?",
+  ]);
 
   doc.save("Jurnal_Alimentar_7Zile_Diet4Life.pdf");
 }
