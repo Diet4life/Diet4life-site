@@ -39,6 +39,7 @@ import {
   FAT_PCT_MAX,
   BMI_REFERENCE_RANGE_MIN,
   BMI_REFERENCE_RANGE_MAX,
+  PROTEIN_G_PER_KG_ADULT,
   type ActivityLevel,
 } from "@/lib/necesar-energetic/constants";
 import {
@@ -918,33 +919,62 @@ export default function Calculator() {
                         ? "La persoanele cu suprapondere sau obezitate, necesarul de proteină nu este estimat automat doar pe baza greutății corporale actuale. Pentru stabilirea unui aport individual este necesară o evaluare nutrițională."
                         : "For people who are overweight or living with obesity, protein needs aren't automatically estimated from current body weight alone. Establishing an individual intake requires a nutritional evaluation."}
                     </p>
-                  ) : (
+                  ) : result.protein.max === null ? (
                     <>
-                      <p className="text-xl font-bold font-serif text-foreground" data-testid="text-protein-value">
-                        {result.protein.max === null
-                          ? `≈ ${result.protein.min} g/zi`
-                          : `≈ ${result.protein.min}–${result.protein.max} g/zi`}
+                      {/* Healthy adult (18-64y) branch -- redesigned to lead
+                          with the body-weight reference (what the EFSA
+                          figure actually is) before the grams/day number,
+                          per explicit request: g/kg -> g/day reads as more
+                          concrete to a patient than a %-of-energy framing
+                          alone. "≈ 0,8 g/kg/zi" is the rounded, easy-to-
+                          remember headline figure; the exact EFSA PRI
+                          (0.83, from the same PROTEIN_G_PER_KG_ADULT
+                          constant the calculation itself already uses) is
+                          cited as a secondary note, not invented separately.
+                          The 10-15%-of-energy line from the previous round
+                          is removed here (per the same request) -- this is
+                          the one branch it applied confusing-not-concrete
+                          framing to; the senior branch below is untouched. */}
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {ro ? "Reper general" : "General reference"}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {result.protein.max === null
-                          ? (ro ? "Reper de bază pentru adultul sănătos." : "Basic reference point for a healthy adult.")
-                          : (ro
-                              ? "Pentru adulții vârstnici sănătoși, aportul proteic recomandat este în general mai mare decât reperul pentru adultul tânăr."
-                              : "For healthy older adults, the recommended protein intake is generally higher than the young-adult reference.")}
+                      <p className="text-lg font-bold font-serif text-foreground" data-testid="text-protein-per-kg">
+                        {ro ? "≈ 0,8 g proteine/kg corp/zi" : "≈ 0.8 g protein/kg body weight/day"}
+                      </p>
+                      <p className="text-xl font-bold font-serif text-foreground mt-1" data-testid="text-protein-value">
+                        ≈ {result.protein.min} g/zi
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/50">
+                        {ro
+                          ? `EFSA PRI: ${PROTEIN_G_PER_KG_ADULT.toString().replace(".", ",")} g/kg/zi pentru adulți.`
+                          : `EFSA PRI: ${PROTEIN_G_PER_KG_ADULT} g/kg/day for adults.`}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1.5">
                         {ro
                           ? "Nevoile pot fi diferite în funcție de activitate, obiective, vârstă și stare de sănătate."
                           : "Needs can differ based on activity, goals, age, and health status."}
                       </p>
-                      {/* New secondary energy-share line -- a static,
-                          general adult reference (10-15%), never derived
-                          from or feeding back into the gram-based result
-                          above, which stays the primary/only calculated
-                          protein output. Only shown alongside a real
-                          numeric result, never next to the "needs
-                          evaluation" panel (that branch returns before
-                          reaching this JSX entirely). */}
+                    </>
+                  ) : (
+                    <>
+                      {/* Senior (≥65y, ESPEN 1.0-1.2 g/kg) branch --
+                          deliberately left exactly as the previous round
+                          shipped it, including its own 10-15%-of-energy
+                          line, per explicit instruction to keep the
+                          older-adult context separate from this change. */}
+                      <p className="text-xl font-bold font-serif text-foreground" data-testid="text-protein-value">
+                        ≈ {result.protein.min}–{result.protein.max} g/zi
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {ro
+                          ? "Pentru adulții vârstnici sănătoși, aportul proteic recomandat este în general mai mare decât reperul pentru adultul tânăr."
+                          : "For healthy older adults, the recommended protein intake is generally higher than the young-adult reference."}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1.5">
+                        {ro
+                          ? "Nevoile pot fi diferite în funcție de activitate, obiective, vârstă și stare de sănătate."
+                          : "Needs can differ based on activity, goals, age, and health status."}
+                      </p>
                       <p className="text-xs text-muted-foreground mt-1.5 pt-1.5 border-t border-border/50">
                         {ro
                           ? "Ca reper general, proteinele pot reprezenta aproximativ 10–15% din aportul energetic zilnic la adulții sănătoși."
