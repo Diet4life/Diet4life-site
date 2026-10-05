@@ -70,6 +70,37 @@ const EMPTY_PATIENT: PatientInfo = {
   discomfortFoods: "", mainDifficulty: "", objectives: "",
 };
 
+// ─── Reflection fields — the online-journal counterpart to the PDF's daily
+// reflection box, mid-week checkpoint, and final 7-day reflection (added in
+// the previous round). Kept as its own state slice, parallel to `journal`,
+// rather than folded into MealEntry/JournalDay, since these aren't per-meal
+// data.
+interface ReflectionsState {
+  daily: string[]; // length 7, one per day, index-aligned with `journal`
+  midWeek: string[]; // length 3
+  final: string[]; // length 6
+}
+const EMPTY_REFLECTIONS = (): ReflectionsState => ({
+  daily: Array(7).fill(""),
+  midWeek: Array(3).fill(""),
+  final: Array(6).fill(""),
+});
+
+const MID_WEEK_QUESTIONS = [
+  { ro: "Ce tipar ai observat până acum?", en: "What pattern have you noticed so far?" },
+  { ro: "În ce momente ți-a fost cel mai greu?", en: "In which moments was it hardest for you?" },
+  { ro: "Ce te-a ajutat să faci alegeri mai apropiate de ce îți doreai?", en: "What helped you make choices closer to what you wanted?" },
+];
+
+const FINAL_QUESTIONS = [
+  { ro: "Ce a mers bine?", en: "What went well?" },
+  { ro: "Ce a fost cel mai dificil?", en: "What was hardest?" },
+  { ro: "Ce factori declanșatori au apărut cel mai des?", en: "Which triggers came up most often?" },
+  { ro: "Ce ai vrea să păstrezi?", en: "What would you like to keep?" },
+  { ro: "Ce ai vrea să schimbi?", en: "What would you like to change?" },
+  { ro: "Care ar fi un obiectiv realist pentru perioada următoare?", en: "What would be a realistic goal for the period ahead?" },
+];
+
 // Hunger/fullness scale (1-5) shown per meal in the journal — 3 is the sweet spot both
 // ways (hungry-but-not-starving before, comfortably satisfied after), extremes at 1/5.
 // Wording is gender-neutral (no feminine-only adjectives like "flămândă"/
@@ -165,7 +196,7 @@ const LINE_WIDTH_THIN = 0.15; // one consistent, very light border weight, used 
 const COLOR_FORM_BORDER: [number, number, number] = [217, 221, 215]; // #D9DDD7 -- Date pacient table only
 
 // ─── PDF Generator ─────────────────────────────────────────────────────────
-async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
+async function generatePDF(patient: PatientInfo, journal: JournalDay[], reflections?: ReflectionsState) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   await registerFonts(doc);
   const margin = 15;
@@ -193,6 +224,23 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     doc.text("Diet4Life Concept  •  contact@diet4lifeconcept.ro  •  0766 572 968", pageW / 2, 289, { align: "center" });
   };
 
+  // Prints the patient's own typed text inside an already-drawn writing box
+  // (used when the online journal was filled in before downloading, so the
+  // PDF isn't silently blank where the online version has real answers).
+  // Clipped to however many lines actually fit the box's height, so a very
+  // long answer can't spill into the next element on the page -- the box
+  // itself, its position, and every box drawn with no answer are completely
+  // unaffected.
+  const writeTextInBox = (text: string, boxX: number, boxY: number, boxW: number, boxH: number) => {
+    doc.setFont("Inter", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...COLOR_TEXT);
+    const lineH = 4.3;
+    const wrapped = doc.splitTextToSize(text, boxW - 6);
+    const maxLines = Math.max(1, Math.floor((boxH - 6) / lineH));
+    doc.text(wrapped.slice(0, maxLines), boxX + 3, boxY + 6);
+  };
+
   // ── Reflection page (mid-week checkpoint + final 7-day reflection) ──────
   // Shared layout for both one-off reflection pages: a green header band
   // (matching the day pages' own band, minus the "Data:" field, since these
@@ -202,7 +250,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
   // questions) generously spaced and the final page (6 questions) still
   // readable without overflow, from one consistent pattern rather than two
   // separate ad-hoc layouts.
-  const drawReflectionPage = (title: string, questions: string[]) => {
+  const drawReflectionPage = (title: string, questions: string[], answers?: string[]) => {
     doc.addPage();
     paintBackground();
     y = margin;
@@ -235,6 +283,11 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
       doc.setLineWidth(LINE_WIDTH_THIN);
       doc.setFillColor(...COLOR_SURFACE);
       doc.roundedRect(margin, boxY, pageW - 2 * margin, boxHeight, 2, 2, "FD");
+
+      const answer = answers?.[qi]?.trim();
+      if (answer) {
+        writeTextInBox(answer, margin, boxY, pageW - 2 * margin, boxHeight);
+      }
 
       y += slotHeight + gap;
     });
@@ -507,30 +560,43 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
     const notesBoxHeight = Math.max(18, dayPageBottom - y);
     doc.roundedRect(margin, y, pageW - 2 * margin, notesBoxHeight, 2, 2, "FD");
 
+    const dailyReflectionText = reflections?.daily[di]?.trim();
+    if (dailyReflectionText) {
+      writeTextInBox(dailyReflectionText, margin, y, pageW - 2 * margin, notesBoxHeight);
+    }
+
     drawFooter();
 
     // Mid-week checkpoint — one compact page inserted right after Day 4,
     // before Day 5, per explicit instruction. Not a dense workbook spread:
     // 3 questions only, generously spaced via drawReflectionPage above.
     if (di === 3) {
-      drawReflectionPage("Bilanț la jumătatea săptămânii", [
-        "Ce tipar ai observat până acum?",
-        "În ce momente ți-a fost cel mai greu?",
-        "Ce te-a ajutat să faci alegeri mai apropiate de ce îți doreai?",
-      ]);
+      drawReflectionPage(
+        "Bilanț la jumătatea săptămânii",
+        [
+          "Ce tipar ai observat până acum?",
+          "În ce momente ți-a fost cel mai greu?",
+          "Ce te-a ajutat să faci alegeri mai apropiate de ce îți doreai?",
+        ],
+        reflections?.midWeek
+      );
     }
   });
 
   // Final 7-day reflection — one page, added after Day 7. Makes the journal
   // useful in consultation, not just a food log.
-  drawReflectionPage("Reflecția mea după 7 zile", [
-    "Ce a mers bine?",
-    "Ce a fost cel mai dificil?",
-    "Ce factori declanșatori au apărut cel mai des?",
-    "Ce ai vrea să păstrezi?",
-    "Ce ai vrea să schimbi?",
-    "Care ar fi un obiectiv realist pentru perioada următoare?",
-  ]);
+  drawReflectionPage(
+    "Reflecția mea după 7 zile",
+    [
+      "Ce a mers bine?",
+      "Ce a fost cel mai dificil?",
+      "Ce factori declanșatori au apărut cel mai des?",
+      "Ce ai vrea să păstrezi?",
+      "Ce ai vrea să schimbi?",
+      "Care ar fi un obiectiv realist pentru perioada următoare?",
+    ],
+    reflections?.final
+  );
 
   doc.save("Jurnal_Alimentar_7Zile_Diet4Life.pdf");
 }
@@ -540,6 +606,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[]) {
 // is auto-saved on this device/browser — no account or server involved.
 const STORAGE_KEY_PATIENT = "diet4life_journal_patient";
 const STORAGE_KEY_JOURNAL = "diet4life_journal_data";
+const STORAGE_KEY_REFLECTIONS = "diet4life_journal_reflections";
 
 function loadPatientDraft(): PatientInfo {
   try {
@@ -560,6 +627,21 @@ function loadJournalDraft(): JournalDay[] {
   }
 }
 
+function loadReflectionsDraft(): ReflectionsState {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_REFLECTIONS);
+    const parsed = raw ? JSON.parse(raw) : null;
+    const valid =
+      parsed &&
+      Array.isArray(parsed.daily) && parsed.daily.length === 7 &&
+      Array.isArray(parsed.midWeek) && parsed.midWeek.length === 3 &&
+      Array.isArray(parsed.final) && parsed.final.length === 6;
+    return valid ? parsed : EMPTY_REFLECTIONS();
+  } catch {
+    return EMPTY_REFLECTIONS();
+  }
+}
+
 // ─── Section tabs ──────────────────────────────────────────────────────────
 const TABS = [
   { id: "info", icon: BookOpen, labelRo: "Informații & PDF", labelEn: "Info & PDF" },
@@ -576,6 +658,7 @@ export default function Consultatii() {
   const [activeTab, setActiveTab] = useState("info");
   const [patient, setPatient] = useState<PatientInfo>(loadPatientDraft);
   const [journal, setJournal] = useState<JournalDay[]>(loadJournalDraft);
+  const [reflections, setReflections] = useState<ReflectionsState>(loadReflectionsDraft);
   const [activeDay, setActiveDay] = useState(0);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [journalSent, setJournalSent] = useState(false);
@@ -595,11 +678,12 @@ export default function Consultatii() {
     try {
       window.localStorage.setItem(STORAGE_KEY_PATIENT, JSON.stringify(patient));
       window.localStorage.setItem(STORAGE_KEY_JOURNAL, JSON.stringify(journal));
+      window.localStorage.setItem(STORAGE_KEY_REFLECTIONS, JSON.stringify(reflections));
       setDraftSaved(true);
     } catch {
       // localStorage unavailable (private browsing, storage full, etc.) — fail silently
     }
-  }, [patient, journal]);
+  }, [patient, journal, reflections]);
 
   const resetDraft = () => {
     if (!window.confirm(ro
@@ -607,10 +691,12 @@ export default function Consultatii() {
       : "This will permanently delete the journal saved in this browser.")) return;
     setPatient(EMPTY_PATIENT);
     setJournal(EMPTY_JOURNAL());
+    setReflections(EMPTY_REFLECTIONS());
     setActiveDay(0);
     try {
       window.localStorage.removeItem(STORAGE_KEY_PATIENT);
       window.localStorage.removeItem(STORAGE_KEY_JOURNAL);
+      window.localStorage.removeItem(STORAGE_KEY_REFLECTIONS);
     } catch {
       // ignore
     }
@@ -652,6 +738,27 @@ export default function Consultatii() {
       return next;
     });
 
+  const setDailyReflection = (day: number, value: string) =>
+    setReflections(prev => {
+      const daily = [...prev.daily];
+      daily[day] = value;
+      return { ...prev, daily };
+    });
+
+  const setMidWeekAnswer = (qi: number, value: string) =>
+    setReflections(prev => {
+      const midWeek = [...prev.midWeek];
+      midWeek[qi] = value;
+      return { ...prev, midWeek };
+    });
+
+  const setFinalAnswer = (qi: number, value: string) =>
+    setReflections(prev => {
+      const final = [...prev.final];
+      final[qi] = value;
+      return { ...prev, final };
+    });
+
   const POST_DOWNLOAD_MESSAGE = ro
     ? "Jurnalul tău este gata. Descarcă documentul și trimite-l înainte de consultație prin canalul de comunicare stabilit cu dieteticianul."
     : "Your journal is ready. Download the document and send it before your consultation through the communication channel established with your dietitian.";
@@ -660,7 +767,7 @@ export default function Consultatii() {
     if (isGeneratingPdf) return;
     setIsGeneratingPdf(true);
     try {
-      await generatePDF(patient, journal);
+      await generatePDF(patient, journal, reflections);
       toast({ title: ro ? "PDF descărcat!" : "PDF downloaded!", description: POST_DOWNLOAD_MESSAGE });
     } catch (err) {
       toast({
@@ -1078,6 +1185,40 @@ export default function Consultatii() {
               ))}
             </div>
 
+            {/* Hunger/fullness scale reference — same neutral terminology as
+                the PDF's own "Scala foame – sațietate" table (reuses
+                HUNGER_SCALE directly, not a re-typed copy). Collapsed by
+                default so it doesn't crowd the page; it's a reference, not
+                something filled in per meal. */}
+            <Accordion type="single" collapsible className="border border-border rounded-xl px-4">
+              <AccordionItem value="scale" className="border-b-0">
+                <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline">
+                  {ro ? "Vezi scala foame – sațietate (1–5)" : "See the hunger – fullness scale (1–5)"}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-4">
+                    {HUNGER_SCALE.map(h => (
+                      <div key={h.level} className="flex gap-3">
+                        <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center">
+                          {h.level}
+                        </span>
+                        <div className="flex-1 space-y-0.5 text-sm">
+                          <p className="text-foreground">
+                            <span className="text-muted-foreground">{ro ? "Foame: " : "Hunger: "}</span>
+                            {h.before}
+                          </p>
+                          <p className="text-foreground">
+                            <span className="text-muted-foreground">{ro ? "Sațietate: " : "Fullness: "}</span>
+                            {h.after}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
             {/* Journal table for active day */}
             <Card>
               <CardContent className="p-6">
@@ -1265,6 +1406,28 @@ export default function Consultatii() {
                   {ro ? "Adaugă masă / gustare" : "Add meal / snack"}
                 </Button>
 
+                {/* Daily reflection — mirrors the PDF's "Observații despre
+                    ziua de azi" box exactly (same heading, same prompt).
+                    Tone is non-judgmental -- no "ce ai greșit" / "abatere" /
+                    "eșec". */}
+                <div className="mt-6 pt-4 border-t border-border">
+                  <label className="text-sm font-semibold text-foreground mb-1 block">
+                    {ro ? "Observații despre ziua de azi" : "Observations about today"}
+                  </label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {ro
+                      ? "Ce ai observat? Ce a fost mai dificil? Ce ai vrea să faci diferit data viitoare?"
+                      : "What did you notice? What was hardest? What would you like to do differently next time?"}
+                  </p>
+                  <Textarea
+                    value={reflections.daily[activeDay]}
+                    onChange={e => setDailyReflection(activeDay, e.target.value)}
+                    placeholder={ro ? "Scrie aici..." : "Write here..."}
+                    className="rounded-xl min-h-[110px]"
+                    data-testid={`textarea-daily-reflection-${activeDay}`}
+                  />
+                </div>
+
                 {/* Navigate days */}
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
                   <Button
@@ -1289,6 +1452,73 @@ export default function Consultatii() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Mid-week checkpoint — appears after Day 4, mirroring the
+                PDF's own page order (the checkpoint page sits right after
+                Day 4's page there too). Compact: 3 questions only, not a
+                dense workbook spread. */}
+            {activeDay === 3 && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-serif font-bold text-foreground mb-1">
+                    {ro ? "Bilanț la jumătatea săptămânii" : "Mid-week checkpoint"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-5">
+                    {ro
+                      ? "Un moment scurt de reflecție, înainte să continui."
+                      : "A short moment to reflect, before you continue."}
+                  </p>
+                  <div className="space-y-5">
+                    {MID_WEEK_QUESTIONS.map((q, qi) => (
+                      <div key={qi}>
+                        <label className="text-sm font-medium text-foreground mb-1.5 block">
+                          {qi + 1}. {ro ? q.ro : q.en}
+                        </label>
+                        <Textarea
+                          value={reflections.midWeek[qi]}
+                          onChange={e => setMidWeekAnswer(qi, e.target.value)}
+                          className="rounded-xl min-h-[90px]"
+                          data-testid={`textarea-midweek-${qi}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Final 7-day reflection — appears after Day 7, mirroring the
+                PDF's own final page. Makes the journal useful in
+                consultation, not just a food log. */}
+            {activeDay === 6 && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-serif font-bold text-foreground mb-1">
+                    {ro ? "Reflecția mea după 7 zile" : "My reflection after 7 days"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-5">
+                    {ro
+                      ? "Câteva întrebări care pot fi utile și în consultație, nu doar pentru tine."
+                      : "A few questions that can be useful in your consultation too, not just for you."}
+                  </p>
+                  <div className="space-y-5">
+                    {FINAL_QUESTIONS.map((q, qi) => (
+                      <div key={qi}>
+                        <label className="text-sm font-medium text-foreground mb-1.5 block">
+                          {qi + 1}. {ro ? q.ro : q.en}
+                        </label>
+                        <Textarea
+                          value={reflections.final[qi]}
+                          onChange={e => setFinalAnswer(qi, e.target.value)}
+                          className="rounded-xl min-h-[90px]"
+                          data-testid={`textarea-final-${qi}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Send actions */}
             <Card className="border-primary/20 bg-primary/5">
