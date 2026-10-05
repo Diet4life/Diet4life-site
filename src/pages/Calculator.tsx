@@ -26,7 +26,6 @@ import {
   Scale,
   Compass,
 } from "lucide-react";
-import { PlateDiagram } from "@/components/nutrihub/PlateDiagram";
 import {
   PAL,
   MAX_AGE,
@@ -1244,30 +1243,6 @@ export default function Calculator() {
               </div>
             </div>
 
-            {/* Farfuria Diet4Life -- was the diagram boxed inside a
-                bg-card/60 + p-6/8 container (the "PowerPoint graphic in a
-                card" look). PlateDiagram itself is untouched (shared with
-                the NutriHub articles) -- only its wrapper here changes: no
-                background, no padding box, so the circle and its legend
-                sit directly on the page and read as part of the page
-                rather than a pasted-in diagram. */}
-            <div id="farfurie" className="scroll-mt-24 mt-12">
-              <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-2">
-                {ro ? "Construiește o masă, nu o ecuație" : "Build a meal, not an equation"}
-              </h2>
-              <div className="max-w-2xl mx-auto mt-6">
-                <PlateDiagram />
-                <div className="mt-5 pt-5 border-t border-border/60 text-center">
-                  <p className="font-serif font-bold text-foreground mb-1.5">{ro ? "Reper, nu regulă." : "A reference, not a rule."}</p>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    {ro
-                      ? "Proporțiile se adaptează mesei, nivelului de activitate, obiectivului și nevoilor individuale."
-                      : "The proportions adapt to the meal, activity level, goal, and individual needs."}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Exemple de mese reale -- was 6 empty rounded-xl bg-card/60
                 pills with text inside (looked unfinished / like selectable
                 options). Now a plain two-column editorial list: a small
@@ -1302,9 +1277,14 @@ export default function Calculator() {
                 note rather than another dashboard tile. Same contextual
                 article logic, same optional protein secondary link. */}
             <div id="ce-faci-cu-rezultatul" className="scroll-mt-24 mt-12">
-              <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-6">
-                {ro ? "Ce faci cu rezultatul?" : "What do you do with the result?"}
+              <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-2">
+                {ro ? "Cum folosești aceste repere?" : "How do you use these reference points?"}
               </h2>
+              <p className="text-sm text-muted-foreground text-center mb-6 max-w-lg mx-auto">
+                {ro
+                  ? "Rezultatul este un punct de orientare. Următorul pas este să îl pui în contextul vieții tale de zi cu zi."
+                  : "The result is a point of reference. The next step is putting it in the context of your everyday life."}
+              </p>
               <div className="max-w-xl mx-auto border-l-2 border-primary pl-5 py-0.5">
                 <p className="text-xs font-semibold tracking-wide uppercase text-primary mb-1.5">
                   {ro ? "Recomandat pentru tine" : "Recommended for you"}
