@@ -140,29 +140,44 @@ const ACTIVITY_OPTIONS: { value: ActivityLevel; ro: string; en: string; descRo: 
 
 // ─── Practical food examples (no quantities — informational only) ──────────
 const PROTEIN_FOODS = ["ouă", "iaurt", "brânză proaspătă", "pește", "carne", "linte", "fasole", "năut"];
+const CARB_FOODS = ["cartof", "orez", "ovăz", "mămăligă", "paste", "pâine", "leguminoase", "fructe"];
 const FIBER_FOODS = ["legume", "fructe", "fasole", "linte", "ovăz", "pâine integrală", "cereale integrale"];
-const CARB_FOODS = ["cartof", "pâine", "orez", "paste", "ovăz", "mămăligă", "leguminoase", "fructe"];
 
 const PROTEIN_FOODS_EN = ["eggs", "yogurt", "cottage cheese", "fish", "meat", "lentils", "beans", "chickpeas"];
+const CARB_FOODS_EN = ["potatoes", "rice", "oats", "polenta", "pasta", "bread", "legumes", "fruit"];
 const FIBER_FOODS_EN = ["vegetables", "fruit", "beans", "lentils", "oats", "whole-grain bread", "whole grains"];
-const CARB_FOODS_EN = ["potatoes", "bread", "rice", "pasta", "oats", "polenta", "legumes", "fruit"];
 
-// ─── Real Romanian meal examples ─────────────────────────────────────────────
+// ─── Real Romanian meal examples -- replaced this round with a more varied
+// set per explicit instruction; bread now appears in exactly one example
+// (was appearing in several). ────────────────────────────────────────────
 const MEAL_EXAMPLES_RO = [
-  "omletă + roșii/ardei + pâine",
-  "pește + cartof + salată",
-  "tocăniță de pui + mămăligă + salată",
-  "fasole scăzută + salată + pâine",
-  "paste cu ton și legume",
-  "ciorbă cu carne și legume + pâine",
+  "omletă cu legume + o felie de pâine integrală",
+  "iaurt grecesc + ovăz + fructe + nuci",
+  "pește la cuptor + cartof + salată",
+  "tocăniță de pui cu legume + mămăligă",
+  "linte cu legume + salată",
+  "paste cu ton, roșii și legume",
 ];
 const MEAL_EXAMPLES_EN = [
-  "omelet + tomatoes/peppers + bread",
-  "fish + potato + salad",
-  "chicken stew + polenta + salad",
-  "stewed beans + salad + bread",
-  "pasta with tuna and vegetables",
-  "meat and vegetable soup + bread",
+  "vegetable omelet + a slice of whole-grain bread",
+  "Greek yogurt + oats + fruit + nuts",
+  "baked fish + potato + salad",
+  "chicken stew with vegetables + polenta",
+  "lentils with vegetables + salad",
+  "pasta with tuna, tomatoes and vegetables",
+];
+
+// ─── Educational macro-distribution example (15/55/30) -- a fixed,
+// illustrative example for a healthy, normal-weight adult, NOT derived from
+// or feeding back into any calculation. Deliberately uses a monochrome
+// green-opacity ramp (not PlateDiagram's green/blue/gold trio) so it reads
+// as visually unrelated to the 50/25/25 plate -- two different educational
+// concepts (energy-share-by-macro vs. meal-building-by-plate-area) must
+// never look like the same chart.
+const MACRO_EXAMPLE = [
+  { pct: 15, color: "hsl(141 33% 27%)", labelRo: "Proteine", labelEn: "Protein" },
+  { pct: 55, color: "hsl(141 33% 27% / 0.55)", labelRo: "Carbohidrați", labelEn: "Carbohydrates" },
+  { pct: 30, color: "hsl(141 33% 27% / 0.3)", labelRo: "Grăsimi", labelEn: "Fat" },
 ];
 
 // ─── BMI category labels (the 6 WHO categories, shown on the IMC badge) ─────
@@ -403,14 +418,19 @@ export default function Calculator() {
             {ro ? "Calculator educațional" : "Educational calculator"}
           </span>
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-            {ro ? "De cât am nevoie?" : "How much do I need?"}
+            {ro ? "Necesarul tău nutrițional, estimat" : "Your nutritional needs, estimated"}
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto mb-3">
             {ro
-              ? "Estimează necesarul zilnic de energie și câteva repere nutriționale pentru un adult sănătos."
-              : "Estimate your daily energy needs and a few basic nutrition reference points for a healthy adult."}
+              ? "Estimează necesarul zilnic de energie și câteva repere utile pentru alimentația de zi cu zi."
+              : "Estimate your daily energy needs and a few useful reference points for everyday eating."}
           </p>
-          <p className="text-sm text-muted-foreground max-w-xl mx-auto mb-8">
+          {/* Made visually secondary (smaller, lower-contrast) relative to
+              the main subtitle above -- was the same muted-foreground color
+              at only one step down in size (text-sm vs text-lg); now text-xs
+              at reduced opacity so it reads as a footnote-level caveat, not
+              a second subtitle. */}
+          <p className="text-xs text-muted-foreground/70 max-w-xl mx-auto mb-8">
             {ro
               ? "Rezultatele sunt orientative și nu înlocuiesc o evaluare nutrițională sau medicală individuală."
               : "The results are orientative and do not replace an individual nutrition or medical assessment."}
@@ -740,10 +760,16 @@ export default function Calculator() {
                   {result.weightRange.max.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{" "}
                   kg
                 </p>
+                {/* Expanded per explicit instruction: spells out exactly
+                    where the two numbers come from (BMI 18.5-24.9 x the
+                    entered height) before repeating the "not an automatic
+                    target" safeguard -- the old version asserted the
+                    safeguard without explaining the arithmetic, which read
+                    as arbitrary. Still never says "greutate ideală". */}
                 <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                   {ro
-                    ? "Acesta este un interval matematic de referință, nu o greutate-țintă personalizată. Compoziția corporală și starea de sănătate pot schimba obiectivul potrivit."
-                    : "This is a mathematical reference range, not a personalized target weight. Body composition and health status can change what the right goal is."}
+                    ? `Acest interval este calculat matematic pentru un IMC între ${BMI_REFERENCE_RANGE_MIN.toString().replace(".", ",")} și ${BMI_REFERENCE_RANGE_MAX.toString().replace(".", ",")}, folosind înălțimea introdusă. Nu reprezintă automat greutatea pe care ar trebui să o atingi. Un obiectiv potrivit se stabilește în funcție de contextul individual, compoziția corporală și starea de sănătate.`
+                    : `This range is calculated mathematically for a BMI between ${BMI_REFERENCE_RANGE_MIN} and ${BMI_REFERENCE_RANGE_MAX}, using the height you entered. It does not automatically represent the weight you should reach. An appropriate goal is set based on individual context, body composition, and health status.`}
                 </p>
               </div>
 
@@ -910,6 +936,19 @@ export default function Calculator() {
                         {ro
                           ? "Nevoile pot fi diferite în funcție de activitate, obiective, vârstă și stare de sănătate."
                           : "Needs can differ based on activity, goals, age, and health status."}
+                      </p>
+                      {/* New secondary energy-share line -- a static,
+                          general adult reference (10-15%), never derived
+                          from or feeding back into the gram-based result
+                          above, which stays the primary/only calculated
+                          protein output. Only shown alongside a real
+                          numeric result, never next to the "needs
+                          evaluation" panel (that branch returns before
+                          reaching this JSX entirely). */}
+                      <p className="text-xs text-muted-foreground mt-1.5 pt-1.5 border-t border-border/50">
+                        {ro
+                          ? "Ca reper general, proteinele pot reprezenta aproximativ 10–15% din aportul energetic zilnic la adulții sănătoși."
+                          : "As a general reference, protein can represent roughly 10-15% of daily energy intake for healthy adults."}
                       </p>
                     </>
                   )}
@@ -1100,29 +1139,28 @@ export default function Calculator() {
         {/* ── 17–20. Only shown once a real result exists ────────────────── */}
         {result.status === "ok" && (
           <>
-            {/* Exemple practice -- the 3 groups were identical utility
-                cards (bg-card/60 box + filled pill chips), reading like
-                three dashboard widgets. Now plain typography + spacing: a
-                top rule stands in for the card boundary, the category
-                label carries the hierarchy (small, bold, uppercase,
-                primary-colored), and foods are a light comma-separated
-                line (muted text, not filled tag shapes) -- same foods,
-                same grouping, curated-list feel instead of chip-picker
-                feel. */}
+            {/* Exemple practice -- heading/subheading rewritten this round
+                to frame the section as "recognize these in food", not
+                "here are numbers again". Category order is now Proteine /
+                Carbohidrați / Fibre (was Proteină / Fibre / Carbohidrați)
+                to match the order the categories are introduced elsewhere
+                on the page (energy card -> protein -> carbs -> fat -> fibre).
+                Card/chip treatment from the prior round (top rule, plain
+                comma-separated text) is unchanged. */}
             <div id="exemple-practice" className="scroll-mt-24 mt-12">
               <h2 className="text-2xl font-serif font-bold text-foreground text-center mb-2">
-                {ro ? "Ce înseamnă aceste cifre în viața reală?" : "What do these numbers mean in real life?"}
+                {ro ? "Cum se traduc aceste repere în alimentația de zi cu zi?" : "How do these reference points translate into everyday eating?"}
               </h2>
               <p className="text-sm text-muted-foreground text-center mb-8 max-w-lg mx-auto">
                 {ro
-                  ? "Doar exemple de alimente uzuale — nu un plan sau un meniu."
-                  : "Just examples of everyday foods — not a plan or a menu."}
+                  ? "Nu trebuie să transformi fiecare masă într-un calcul. Reperele sunt utile atunci când le poți recunoaște în alimente și mese obișnuite."
+                  : "You don't need to turn every meal into a calculation. Reference points are useful once you can recognize them in everyday foods and meals."}
               </p>
               <div className="grid sm:grid-cols-3 gap-8 sm:gap-6 max-w-3xl mx-auto">
                 {[
-                  { title: ro ? "Proteină" : "Protein", icon: Dumbbell, items: ro ? PROTEIN_FOODS : PROTEIN_FOODS_EN },
-                  { title: ro ? "Fibre" : "Fiber", icon: Leaf, items: ro ? FIBER_FOODS : FIBER_FOODS_EN },
+                  { title: ro ? "Proteine" : "Protein", icon: Dumbbell, items: ro ? PROTEIN_FOODS : PROTEIN_FOODS_EN },
                   { title: ro ? "Carbohidrați" : "Carbohydrates", icon: Wheat, items: ro ? CARB_FOODS : CARB_FOODS_EN },
+                  { title: ro ? "Fibre" : "Fiber", icon: Leaf, items: ro ? FIBER_FOODS : FIBER_FOODS_EN },
                 ].map((group) => (
                   <div key={group.title} className="border-t-2 border-primary/25 pt-4">
                     <div className="flex items-center gap-2 mb-3">
@@ -1134,6 +1172,45 @@ export default function Calculator() {
                     </p>
                   </div>
                 ))}
+              </div>
+
+              {/* New: 15/55/30 educational macro-distribution example (item
+                  6). A horizontal three-part bar, deliberately NOT a pie
+                  chart, so it can't be visually confused with PlateDiagram's
+                  circle below -- these are two different concepts (energy
+                  share vs. plate area). Monochrome green-opacity ramp, not
+                  PlateDiagram's 3-color scheme, for the same reason. Fixed,
+                  static numbers -- never read from or written into any
+                  calculation result. */}
+              <div className="max-w-xl mx-auto mt-10 pt-8 border-t border-border/60 text-center">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1.5">
+                  {ro ? "Exemplu orientativ" : "Illustrative example"}
+                </p>
+                <p className="font-serif font-bold text-lg text-foreground mb-4">
+                  {ro ? "Exemplu orientativ de distribuție a energiei" : "Illustrative example of energy distribution"}
+                </p>
+                <div className="flex h-3 rounded-full overflow-hidden mb-3" role="img" aria-label={
+                  ro
+                    ? "15% proteine, 55% carbohidrați, 30% grăsimi"
+                    : "15% protein, 55% carbohydrates, 30% fat"
+                }>
+                  {MACRO_EXAMPLE.map((seg) => (
+                    <div key={seg.labelRo} style={{ width: `${seg.pct}%`, backgroundColor: seg.color }} />
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 mb-4">
+                  {MACRO_EXAMPLE.map((seg) => (
+                    <span key={seg.labelRo} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
+                      <span className="font-semibold text-foreground">{seg.pct}%</span> {ro ? seg.labelRo : seg.labelEn}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
+                  {ro
+                    ? "Este doar un exemplu educațional pentru un adult sănătos, normoponderal. Distribuția potrivită poate varia în funcție de obiectiv, activitate, preferințe și context medical."
+                    : "This is only an educational example for a healthy, normal-weight adult. The right distribution can vary based on goal, activity, preferences, and medical context."}
+                </p>
               </div>
             </div>
 
@@ -1184,11 +1261,6 @@ export default function Calculator() {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground text-center mt-5 max-w-lg mx-auto">
-                {ro
-                  ? "Ingredientele nu trebuie să fie întotdeauna separate pe farfurie — ciorbele, tocănițele, pastele și preparatele la cuptor pot conține aceleași componente într-un singur preparat."
-                  : "Ingredients don't have to be physically separated on the plate — soups, stews, pastas and baked dishes can contain the same components in a single preparation."}
-              </p>
             </div>
 
             {/* Ce faci cu rezultatul -- was a full bg-card/60 box around a
