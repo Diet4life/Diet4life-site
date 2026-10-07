@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleShell, ArticleH2, ArticleP } from "@/components/nutrihub/ArticleShell";
+import { ArticleH2, ArticleP } from "@/components/nutrihub/ArticleShell";
+import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
 export default function NutritieEchilibrata() {
   const { language } = useLanguage();
@@ -21,7 +22,7 @@ export default function NutritieEchilibrata() {
   }
 
   return (
-    <ArticleShell
+    <ArticleShellPremium
       category="NUTRIȚIE ECHILIBRATĂ"
       title="Nutriție echilibrată: cum arată în viața reală?"
       related={[
@@ -41,7 +42,7 @@ export default function NutritieEchilibrata() {
         "Mavadiya HB, Roh D, Ly A, Lu Y. Whole Fruits Versus 100% Fruit Juice: Revisiting the Evidence and Its Implications for Healthy Dietary Recommendations. Nutrition Bulletin. 2025.",
       ]}
     >
-      <section>
+      <section id="sec-0">
         <ArticleP>„Trebuie să mănânci echilibrat” este unul dintre cele mai frecvente sfaturi pe care le auzim.</ArticleP>
         <ArticleP>Dar ce înseamnă, de fapt?</ArticleP>
         <ArticleP>
@@ -60,7 +61,7 @@ export default function NutritieEchilibrata() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-1">
         <ArticleH2>Nu un singur aliment face alimentația sănătoasă</ArticleH2>
         <ArticleP>
           Poate ai avut zile în care ai mâncat o salată și ai simțit că „ai mâncat sănătos”. Sau, dimpotrivă, ai mâncat
@@ -75,7 +76,7 @@ export default function NutritieEchilibrata() {
         <ArticleP>Asta este mult mai util decât să împărțim toate alimentele în „bune” și „rele”.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-2">
         <ArticleH2>Legumele: nu doar ceva pus lângă mâncare</ArticleH2>
         <ArticleP>Pentru mulți oameni, legumele sunt încă văzute ca o garnitură mică lângă felul principal.</ArticleP>
         <ArticleP>Într-o alimentație echilibrată, ar trebui să le privim altfel.</ArticleP>
@@ -97,7 +98,7 @@ export default function NutritieEchilibrata() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-3">
         <ArticleH2>Fructele întregi sau fresh-ul?</ArticleH2>
         <ArticleP>
           Poate ți se pare că un fresh este una dintre cele mai sănătoase alegeri, tocmai pentru că este făcut direct
@@ -122,7 +123,7 @@ export default function NutritieEchilibrata() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-4">
         <ArticleH2>Carbohidrații sunt mult mai mult decât pâine, orez și cartofi</ArticleH2>
         <ArticleP>Când auzi „carbohidrați”, este posibil să te gândești imediat la pâine, paste, orez sau cartofi.</ArticleP>
         <ArticleP>Dar carbohidrații se găsesc într-o gamă mult mai largă de alimente.</ArticleP>
@@ -160,7 +161,7 @@ export default function NutritieEchilibrata() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-5">
         <ArticleH2>Proteina: nu toate sursele sunt identice</ArticleH2>
         <ArticleP>Proteina poate proveni atât din alimente de origine animală, cât și vegetală.</ArticleP>
         <ArticleP>Dar sursele nu sunt identice.</ArticleP>
@@ -183,7 +184,7 @@ export default function NutritieEchilibrata() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-6">
         <ArticleH2>Grăsimile nu trebuie eliminate</ArticleH2>
         <ArticleP>Poate ai trecut și tu prin perioade în care ai încercat să alegi totul „fără grăsimi”.</ArticleP>
         <ArticleP>Dar grăsimile sunt nutrienți necesari.</ArticleP>
@@ -202,7 +203,7 @@ export default function NutritieEchilibrata() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-7">
         <ArticleH2>Dar zahărul și dulciurile?</ArticleH2>
         <ArticleP>O alimentație echilibrată presupune și limitarea zaharurilor libere.</ArticleP>
         <ArticleP>
@@ -232,7 +233,7 @@ export default function NutritieEchilibrata() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-8">
         <ArticleH2>Procesat și neprocesat: ce înseamnă în viața reală?</ArticleH2>
         <ArticleP>Cuvântul „procesat” a ajuns să fie folosit foarte des ca sinonim pentru „nesănătos”.</ArticleP>
         <ArticleP>Dar lucrurile nu sunt atât de simple.</ArticleP>
@@ -269,7 +270,7 @@ export default function NutritieEchilibrata() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-9">
         <ArticleH2>Dacă vrei să slăbești, principiile rămân, dar cantitățile se schimbă</ArticleH2>
         <ArticleP>Poți mânca alimente foarte nutritive și totuși să consumi mai multă energie decât ai nevoie.</ArticleP>
         <ArticleP>
@@ -289,7 +290,7 @@ export default function NutritieEchilibrata() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-10">
         <ArticleH2>Ce înseamnă, până la urmă, să mănânci echilibrat?</ArticleH2>
         <ArticleP>Nu înseamnă să mănânci perfect.</ArticleP>
         <ArticleP>Nu înseamnă să elimini carbohidrații.</ArticleP>
@@ -311,6 +312,6 @@ export default function NutritieEchilibrata() {
           păstra în viața reală.
         </ArticleP>
       </section>
-    </ArticleShell>
+    </ArticleShellPremium>
   );
 }
