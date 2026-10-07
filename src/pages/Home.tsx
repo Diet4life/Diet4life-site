@@ -20,11 +20,17 @@ import {
 // question that wraps to 3 lines otherwise, and for the last, slug-less
 // "coming soon" item so it reads as its own full-width row rather than
 // leaving an awkward single-cell gap next to it.
+// Audit follow-up: the disabled "coming soon" chip was first in the list,
+// i.e. the first clickable-looking element a visitor sees in the hero --
+// flagged as a trust/polish issue (a disabled chip shouldn't be the very
+// first interactive-looking thing on the page). Moved to last; icon stays
+// attached to its own question (Apple), per the earlier icon-mapping
+// decision -- only the item's position changed, not its content.
 const heroTopicLinks = [
-  { icon: Apple, ro: "Ce alimente ar trebui să aleg?", en: "What foods should I choose?", slug: null as string | null, wide: true },
   { icon: Minus, ro: "Cum arată o masă echilibrată?", en: "What does a balanced meal look like?", slug: "nutritie-echilibrata" },
   { icon: Heart, ro: "Câtă proteină am nevoie?", en: "How much protein do I need?", slug: "cata-proteina-am-nevoie" },
   { icon: Clock, ro: "De ce nu slăbesc deși mănânc puțin?", en: "Why am I not losing weight even though I eat little?", slug: "controlul-greutatii", wide: true },
+  { icon: Apple, ro: "Ce alimente ar trebui să aleg?", en: "What foods should I choose?", slug: null as string | null, wide: true },
 ];
 
 // Same outer column as the hero's own local wrapper (max-w-[1200px] +
@@ -44,17 +50,17 @@ export default function Home() {
     <div
       className="flex flex-col"
       style={{
-        // Page-scoped palette correction (approved hex direction), applied
-        // as local CSS custom-property overrides on Home only -- never
-        // touches the shared :root tokens, so Services/NutriHub/Calculator/
-        // checkout/header/footer are unaffected. Only --primary,
-        // --muted-foreground, --background and --card actually differed
-        // meaningfully from the approved values; --foreground and --rodie
-        // were already a near-exact match and are left alone.
-        "--background": "37 62% 96%", // #FBF6EE
-        "--card": "38 73% 97%", // #FDF9F2 -- "suprafețe deschise"
+        // Palette direction "C" from the visual audit, approved for Home
+        // only: white-dominant background, warm card surfaces kept (so the
+        // hero photo's feathered edge and the "De ce rodia?" caption still
+        // sit on a warm tone, not stark white), single green accent and
+        // warm-taupe secondary text unchanged. Local CSS custom-property
+        // override -- never touches the shared :root tokens, so Services/
+        // NutriHub/Calculator/checkout/header/footer are unaffected.
+        "--background": "0 0% 100%", // #FFFFFF -- was #FBF6EE (warm cream)
+        "--card": "38 73% 97%", // #FDF9F2 -- kept warm on purpose, "suprafețe deschise"
         "--primary": "141 33% 27%", // #2F5D3F
-        "--muted-foreground": "22 16% 41%", // #7A6559 -- was a cool sage-gray, now warm taupe
+        "--muted-foreground": "22 16% 41%", // #7A6559 -- warm taupe
       } as any}
     >
       {/* Hero -- background now comes from the page-scoped --background
@@ -76,7 +82,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="lg:col-start-1 lg:row-start-1 lg:self-start"
+              className="min-w-0 lg:col-start-1 lg:row-start-1 lg:self-start"
             >
               {/* Editorial kicker -- no pill/background/border, a thin rule
                   instead of a badge shape. */}
@@ -96,17 +102,27 @@ export default function Home() {
                   : "Understand what you eat, how you build your meals, and what choices fit your needs and goals."}
               </p>
 
-              <div className="flex flex-col min-[380px]:flex-row gap-2 lg:gap-3">
+              {/* Display-only fix: at 380-427px, the two buttons' own min-widths
+                  (200+180) plus gap (8px) need 388px, but available content width
+                  there is only 340-390px -- min-[380px]:flex-row forced them onto
+                  one row regardless, and the second button's right edge overflowed
+                  the hero section's own overflow-hidden by up to 18px (invisible to
+                  page-level scrollWidth checks, same root cause as the chip fix).
+                  flex-wrap lets the row fall back to one-button-per-line whenever
+                  it doesn't fit -- computed live by the browser, so it also holds
+                  under browser zoom, not just at the specific breakpoints tested.
+                  No change to text, font size, sizing, or link destinations. */}
+              <div className="flex flex-col min-[380px]:flex-row flex-wrap gap-2 lg:gap-3">
                 <Link
                   href="/nutrihub"
-                  className="inline-flex items-center justify-center min-[380px]:min-w-[200px] lg:min-w-[234px] h-[46px] lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white font-semibold text-[15px] lg:text-base transition-all whitespace-nowrap"
+                  className="inline-flex items-center justify-center min-[380px]:min-w-[200px] lg:min-w-[234px] min-h-[46px] lg:min-h-[52px] px-6 py-2 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-white font-semibold text-[15px] lg:text-base transition-all text-center"
                   data-testid="button-explore-nutrihub"
                 >
                   {ro ? "Explorează NutriHub" : "Explore NutriHub"}
                 </Link>
                 <Link
                   href="/services"
-                  className="inline-flex items-center justify-center min-[380px]:min-w-[180px] h-[46px] lg:h-[52px] px-6 rounded-[13px] border border-border bg-background hover:border-primary/30 hover:shadow-sm active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-foreground font-semibold text-[15px] lg:text-base transition-all whitespace-nowrap"
+                  className="inline-flex items-center justify-center min-[380px]:min-w-[180px] min-h-[46px] lg:min-h-[52px] px-6 py-2 rounded-[13px] border border-border bg-background hover:border-primary/30 hover:shadow-sm active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-foreground font-semibold text-[15px] lg:text-base transition-all text-center"
                   data-testid="button-see-services-hero"
                 >
                   {ro ? "Vezi serviciile" : "See services"}
@@ -123,7 +139,7 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-              className="mt-4 mb-7 lg:my-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-start"
+              className="min-w-0 mt-4 mb-7 lg:my-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-start"
             >
               {/* The source photo is a square (1086x1086) with the actual
                   pomegranate confined to roughly its bottom 89% / right 98%
@@ -168,13 +184,22 @@ export default function Home() {
               </div>
             </motion.div>
 
-            <div className="lg:col-start-1 lg:row-start-2">
+            <div className="min-w-0 lg:col-start-1 lg:row-start-2">
               <p className="text-[13px] lg:text-sm font-medium text-muted-foreground mb-2.5 lg:mb-[14px]">
                 {ro ? "Câteva întrebări de la care poți porni" : "A few questions to start with"}
               </p>
               <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-2 lg:gap-2.5">
                 {heroTopicLinks.map((q, i) => {
-                  const itemClassName = `${q.wide ? "col-span-2" : ""} min-h-11 lg:min-h-[42px] flex items-center gap-2 px-3 py-2.5 lg:px-[14px] rounded-xl border border-border transition-all text-left ${
+                  // Display-only fix: this grid item (and the Framer/flex row inside it)
+                  // had no min-w-0, so CSS defaults to min-width:auto -- a grid/flex item
+                  // refuses to shrink below its content's natural width. At the 380-479px
+                  // breakpoint cluster that pushed this "wide" chip's rendered box to
+                  // 408px against a 390px (or narrower) viewport, clipped invisibly by
+                  // the hero section's own overflow-hidden -- so the trailing "În curând"
+                  // badge got visually cut even though no page-level scrollbar ever
+                  // appeared. min-w-0 here + on the label span lets the label wrap onto a
+                  // second line instead, keeping the badge fully on-screen. No text changed.
+                  const itemClassName = `${q.wide ? "col-span-2" : ""} min-w-0 min-h-11 lg:min-h-[42px] flex items-center gap-2 px-3 py-2.5 lg:px-[14px] rounded-xl border border-border transition-all text-left ${
                     q.slug
                       ? "bg-background hover:border-primary/30 hover:shadow-sm active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                       : "bg-background/60 cursor-default"
@@ -182,7 +207,7 @@ export default function Home() {
                   const content = (
                     <>
                       <q.icon className="w-4 h-4 text-primary shrink-0" />
-                      <span className="text-sm lg:text-[15px] font-medium text-foreground">{ro ? q.ro : q.en}</span>
+                      <span className="min-w-0 flex-1 text-sm lg:text-[15px] font-medium text-foreground">{ro ? q.ro : q.en}</span>
                       {!q.slug && (
                         <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">
                           {ro ? "În curând" : "Soon"}
