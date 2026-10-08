@@ -407,14 +407,22 @@ export default function Calculator() {
     <div
       className="min-h-screen bg-background py-16 md:py-20"
       style={{
-        // Same page-scoped palette override as Home/About/Services (kept in
-        // sync by hand -- see those files' own comments for why this isn't
-        // imported). Brings /calculator into the same warm-cream visual
-        // family instead of the raw global :root tokens it used before.
-        "--background": "37 62% 96%", // #FBF6EE
-        "--card": "38 73% 97%", // #FDF9F2
-        "--primary": "141 33% 27%", // #2F5D3F
-        "--muted-foreground": "22 16% 41%", // #7A6559
+        // Premium palette override (same family as Home's Variant C and
+        // ArticleShellPremium): white page background, zinc-50 card
+        // surfaces, zinc-200 borders, zinc-900 foreground, zinc-600 muted
+        // text. Replaces the earlier warm-cream override -- warm tones
+        // (amber-50/amber-200/amber-900) are kept, but only on the
+        // advisory/caution panels further down, which already used literal
+        // Tailwind amber-* classes rather than these tokens, so this is a
+        // visual-only change: no JSX structure, logic, or copy touched.
+        "--background": "0 0% 100%", // #FFFFFF
+        "--card": "240 5% 98%", // zinc-50 #FAFAFA
+        "--border": "240 6% 90%", // zinc-200 #E4E4E7
+        "--foreground": "240 6% 10%", // zinc-900 #18181B
+        "--muted-foreground": "240 5% 34%", // zinc-600 #52525B
+        "--secondary": "240 5% 96%", // zinc-100 #F4F4F5
+        "--destructive": "355 45% 48%", // softer rose, less aggressive than the sitewide default red
+        "--primary": "141 33% 27%", // #2F5D3F -- unchanged, same dark green as Home/NutriHub
       } as any}
     >
       {/* Narrower than Home's PAGE_COLUMN on purpose -- this is a form page,
@@ -430,8 +438,10 @@ export default function Calculator() {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-5">
-            <Flame className="w-4 h-4" />
+          {/* Neutral zinc pill, not green -- a static label isn't an action
+              or an active state, so it no longer borrows the CTA color. */}
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary text-foreground text-sm font-medium mb-5">
+            <Flame className="w-4 h-4 text-muted-foreground" />
             {ro ? "Calculator educațional" : "Educational calculator"}
           </span>
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
@@ -459,11 +469,12 @@ export default function Calculator() {
 
         {/* ── 2–4. Form: personal data, activity, safety filter ─────────────── */}
         <div id="formular" className="scroll-mt-24">
-          {/* Plain flat surface instead of shadcn's Card (border + shadow) --
-              a thin border is kept so the form reads as a distinct input
-              area, but the heavy shadow is dropped per the "less SaaS-card"
-              visual direction. */}
-          <div className="rounded-2xl border border-border bg-card/60 p-6 md:p-8">
+          {/* Solid zinc-50 surface (was bg-card/60) + a fine border and a
+              diffuse shadow-sm -- under the new near-white page background,
+              a 60%-opacity card would have washed out to almost nothing.
+              Still no heavy shadow (shadow-sm only, same as the shared
+              Input/Button components already use elsewhere on the site). */}
+          <div className="rounded-2xl border border-border bg-card shadow-sm p-6 md:p-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
@@ -552,8 +563,10 @@ export default function Calculator() {
                     </div>
                   </div>
 
-                  {/* Nivel de activitate */}
-                  <div>
+                  {/* Nivel de activitate -- border-t makes the field-group
+                      boundary explicit (was just space-y-8's implicit gap),
+                      for clearer visual grouping between the 3 form sections. */}
+                  <div className="border-t border-border/70 pt-8">
                     <h2 className="text-lg font-serif font-bold text-foreground mb-4">
                       {ro ? "Nivelul de activitate" : "Activity level"}
                     </h2>
@@ -601,7 +614,7 @@ export default function Calculator() {
                     </button>
 
                     {showActivityHelp && (
-                      <div className="mt-3 rounded-xl bg-secondary/40 border border-border p-4 text-sm text-muted-foreground leading-relaxed">
+                      <div className="mt-3 rounded-xl bg-secondary border border-border p-4 text-sm text-muted-foreground leading-relaxed">
                         <p className="font-medium text-foreground mb-2">
                           {ro ? "Cum aleg nivelul de activitate?" : "How do I choose my activity level?"}
                         </p>
@@ -647,7 +660,7 @@ export default function Calculator() {
                       just more ordinary lifestyle options alongside age/
                       weight/activity. Logic/options/blocking behavior
                       unchanged -- visual grouping only. */}
-                  <div className="rounded-2xl bg-secondary/30 p-4 md:p-5">
+                  <div className="rounded-2xl bg-secondary p-4 md:p-5">
                     <h2 className="text-lg font-serif font-bold text-foreground mb-1.5">
                       {ro ? "Se aplică ceva dintre următoarele?" : "Does any of the following apply to you?"}
                     </h2>
@@ -712,16 +725,20 @@ export default function Calculator() {
           {result.status === "ok" && (
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="mt-10">
               {/* ── 8. IMC ─────────────────────────────────────────────────── */}
-              <div className="rounded-2xl bg-card/60 p-6 mb-4">
+              {/* Flatter "narrative" treatment (border only, no fill) to
+                  distinguish this and the next 2 interpretive cards from the
+                  nutrient-grid data tiles below -- avoids the "wall of
+                  identical cards" look while changing nothing functional. */}
+              <div className="rounded-2xl border border-border p-6 mb-4">
                 <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                  <Scale className="w-4 h-4 text-primary" />
+                  <Scale className="w-4 h-4" />
                   <p className="text-sm font-medium">{ro ? "IMC-ul tău" : "Your BMI"}</p>
                 </div>
                 <div className="flex items-baseline gap-3 flex-wrap">
                   <p className="text-3xl font-bold font-serif text-foreground" data-testid="text-bmi-value">
                     {result.bmi.toLocaleString(ro ? "ro-RO" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
                   </p>
-                  <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary" data-testid="text-bmi-category">
+                  <span className="text-sm font-medium px-3 py-1 rounded-full bg-secondary text-foreground" data-testid="text-bmi-category">
                     {ro ? BMI_CATEGORY_LABELS[result.bmiCategory].ro : BMI_CATEGORY_LABELS[result.bmiCategory].en}
                   </span>
                 </div>
@@ -733,9 +750,9 @@ export default function Calculator() {
               </div>
 
               {/* ── 9. Status actual + direcție orientativă ──────────────────── */}
-              <div className="rounded-2xl bg-card/60 p-6 mb-4">
+              <div className="rounded-2xl border border-border p-6 mb-4">
                 <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                  <Compass className="w-4 h-4 text-primary" />
+                  <Compass className="w-4 h-4" />
                   <p className="text-sm font-medium">
                     {ro
                       ? DIRECTION_COPY[result.directionBranch].directionRo
@@ -766,9 +783,9 @@ export default function Calculator() {
                   "ideal" target weight (the standing "never expose an
                   ideal-weight formula" rule), not generic repetition. */}
               {result.directionBranch === "overweight" || result.directionBranch === "obese" ? (
-                <div className="rounded-2xl bg-card/60 p-6 mb-4">
+                <div className="rounded-2xl border border-border p-6 mb-4">
                   <div className="flex items-center gap-2 mb-5 text-muted-foreground">
-                    <Scale className="w-4 h-4 text-primary" />
+                    <Scale className="w-4 h-4" />
                     <p className="text-sm font-medium">
                       {ro
                         ? "Unde ești acum și care poate fi următorul reper?"
@@ -836,9 +853,9 @@ export default function Calculator() {
                   </p>
                 </div>
               ) : (
-                <div className="rounded-2xl bg-card/60 p-6 mb-4">
+                <div className="rounded-2xl border border-border p-6 mb-4">
                   <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                    <Scale className="w-4 h-4 text-primary" />
+                    <Scale className="w-4 h-4" />
                     <p className="text-sm font-medium">
                       {ro
                         ? `Interval orientativ de greutate corespunzător unui IMC ${BMI_REFERENCE_RANGE_MIN.toString().replace(".", ",")}–${BMI_REFERENCE_RANGE_MAX.toString().replace(".", ",")}`
@@ -872,8 +889,8 @@ export default function Calculator() {
                   once, here, before the numbers -- not a card, just a plain
                   flat surface so it doesn't compete visually with the
                   actual results. */}
-              <div className="rounded-2xl bg-secondary/30 p-5 md:p-6 mb-8 flex items-start gap-3">
-                <Info className="w-4 h-4 text-primary shrink-0 mt-1" />
+              <div className="rounded-2xl bg-secondary p-5 md:p-6 mb-8 flex items-start gap-3">
+                <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
                 <div>
                   <p className="text-sm font-semibold text-foreground mb-1">
                     {ro ? "Cum să interpretezi rezultatul" : "How to read your result"}
@@ -992,16 +1009,20 @@ export default function Calculator() {
                   </div>
                 )}
 
-                {/* Proteină */}
+                {/* Proteină -- solid card + fine border + diffuse shadow
+                    (was bg-card/60, which washes out against the new
+                    near-white page background); the amber advisory variant
+                    is untouched, same warm-used-selectively treatment as
+                    every other caution panel on this page. */}
                 <div
                   className={
                     result.protein.kind === "needs_individual_evaluation"
                       ? "rounded-2xl border border-amber-200 bg-amber-50 p-5"
-                      : "rounded-2xl bg-card/60 p-5"
+                      : "rounded-2xl border border-border/60 bg-card shadow-sm p-5"
                   }
                 >
                   <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                    <Dumbbell className="w-4 h-4 text-primary" />
+                    <Dumbbell className="w-4 h-4" />
                     <p className="text-sm font-medium">{ro ? "Proteină" : "Protein"}</p>
                   </div>
                   {result.protein.kind === "needs_individual_evaluation" ? (
@@ -1076,7 +1097,7 @@ export default function Calculator() {
                 </div>
 
                 {/* Carbohidrați */}
-                <div className="rounded-2xl bg-card/60 p-5">
+                <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5">
                   <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                     <Wheat className="w-4 h-4 text-amber-600" />
                     <p className="text-sm font-medium">{ro ? "Carbohidrați" : "Carbohydrates"}</p>
@@ -1117,7 +1138,7 @@ export default function Calculator() {
                 </div>
 
                 {/* Grăsimi */}
-                <div className="rounded-2xl bg-card/60 p-5">
+                <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5">
                   <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                     <Droplet className="w-4 h-4 text-accent" />
                     <p className="text-sm font-medium">{ro ? "Grăsimi" : "Fat"}</p>
@@ -1155,9 +1176,9 @@ export default function Calculator() {
                 </div>
 
                 {/* Fibre */}
-                <div className="rounded-2xl bg-card/60 p-5">
+                <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5">
                   <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                    <Leaf className="w-4 h-4 text-primary" />
+                    <Leaf className="w-4 h-4" />
                     <p className="text-sm font-medium">{ro ? "Fibre" : "Fiber"}</p>
                   </div>
                   <p className="text-xl font-bold font-serif text-foreground">
@@ -1182,7 +1203,7 @@ export default function Calculator() {
               </div>
 
               {/* Apă — full width */}
-              <div className="rounded-2xl bg-card/60 p-5 mt-4">
+              <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 mt-4">
                 <div className="flex items-center gap-2 mb-2 text-muted-foreground">
                   <GlassWater className="w-4 h-4 text-accent" />
                   <p className="text-sm font-medium">{ro ? "Apă" : "Water"}</p>
@@ -1200,7 +1221,7 @@ export default function Calculator() {
                     ? "Poți avea nevoie de mai multă apă în perioadele călduroase, când faci efort fizic sau în alte situații specifice."
                     : "You may need more water in hot weather, during physical effort, or in other specific situations."}
                 </p>
-                <div className="mt-4 rounded-xl bg-secondary/40 p-3.5">
+                <div className="mt-4 rounded-xl bg-secondary p-3.5">
                   <p className="text-xs font-semibold text-foreground mb-1">
                     {ro ? "Uiți să bei apă?" : "Do you forget to drink water?"}
                   </p>
@@ -1217,7 +1238,7 @@ export default function Calculator() {
                   card -- plain text, per the "don't add another large
                   result card" instruction). */}
               <div className="mt-6 text-center">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                   {ro ? "Ce înseamnă acest rezultat" : "What this result means"}
                 </p>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -1283,9 +1304,9 @@ export default function Calculator() {
                   { title: ro ? "Carbohidrați" : "Carbohydrates", icon: Wheat, items: ro ? CARB_FOODS : CARB_FOODS_EN },
                   { title: ro ? "Fibre" : "Fiber", icon: Leaf, items: ro ? FIBER_FOODS : FIBER_FOODS_EN },
                 ].map((group) => (
-                  <div key={group.title} className="border-t-2 border-primary/25 pt-4">
+                  <div key={group.title} className="border-t-2 border-border pt-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <group.icon className="w-4 h-4 text-primary" strokeWidth={1.75} />
+                      <group.icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.75} />
                       <p className="text-xs font-semibold uppercase tracking-wide text-foreground">{group.title}</p>
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -1304,7 +1325,7 @@ export default function Calculator() {
                   static numbers -- never read from or written into any
                   calculation result. */}
               <div className="max-w-xl mx-auto mt-10 pt-8 border-t border-border/60 text-center">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
                   {ro ? "Exemplu orientativ" : "Illustrative example"}
                 </p>
                 <p className="font-serif font-bold text-lg text-foreground mb-4">
