@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleShell, ArticleH2, ArticleP, ArticleLead, ArticleList } from "@/components/nutrihub/ArticleShell";
+import { ArticleH2, ArticleP, ArticleLead, ArticleList } from "@/components/nutrihub/ArticleShell";
+import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
 export default function CataProteinaAmNevoie() {
   const { language } = useLanguage();
@@ -21,7 +22,7 @@ export default function CataProteinaAmNevoie() {
   }
 
   return (
-    <ArticleShell
+    <ArticleShellPremium
       category="MACRONUTRIENȚI"
       title="De ce este importantă proteina și de câtă avem nevoie?"
       related={[
@@ -41,7 +42,7 @@ export default function CataProteinaAmNevoie() {
         "Stenberg E, dos Reis Falcão LF, O'Kane M, et al. Guidelines for Perioperative Care in Bariatric Surgery: Enhanced Recovery After Surgery (ERAS) Society Recommendations: A 2021 Update. World Journal of Surgery. 2022;46:729–751.",
       ]}
     >
-      <section>
+      <section id="sec-0">
         <ArticleP>
           Tot mai des vedem pe rafturile magazinelor produse etichetate „high protein”: iaurturi, budinci, batoane
           sau alte produse îmbogățite cu proteină. Mesajul pe care îl primim este adesea simplu: mai multă proteină
@@ -53,7 +54,7 @@ export default function CataProteinaAmNevoie() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-1">
         <ArticleH2>De ce este importantă proteina?</ArticleH2>
         <ArticleP>
           Proteinele sunt alcătuite din aminoacizi. O parte dintre aceștia pot fi produși de organism, în timp ce
@@ -67,7 +68,7 @@ export default function CataProteinaAmNevoie() {
         <ArticleP>Cu alte cuvinte, proteina este necesară permanent organismului, nu doar persoanelor care fac sport.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-2">
         <ArticleH2>Proteina și sațietatea</ArticleH2>
         <ArticleP>
           Proteina este unul dintre macronutrienții care contribuie la senzația de sațietate. Studiile arată că un
@@ -88,7 +89,7 @@ export default function CataProteinaAmNevoie() {
         <ArticleP>Asta nu înseamnă că există proteine „bune” și proteine „rele”, ci că sursele alimentare diferă între ele.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-3">
         <ArticleH2>Proteina animală și proteina vegetală</ArticleH2>
         <ArticleP>
           Sursele animale de proteină, precum peștele, ouăle, carnea și produsele lactate, au în general o
@@ -118,7 +119,7 @@ export default function CataProteinaAmNevoie() {
         <ArticleP>Important nu este doar aportul total de proteină, ci și varietatea surselor din alimentație.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-4">
         <ArticleH2>Câtă proteină avem nevoie?</ArticleH2>
         <ArticleP>În această secțiune ne referim la adulți sănătoși, normoponderali.</ArticleP>
         <ArticleP>
@@ -137,7 +138,7 @@ export default function CataProteinaAmNevoie() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-5">
         <ArticleH2>Când necesarul de proteină poate fi diferit</ArticleH2>
         <ArticleP>
           Reperul de 0,83 g/kg/zi nu descrie toate situațiile. Necesarul poate fi mai mare sau poate necesita
@@ -165,7 +166,7 @@ export default function CataProteinaAmNevoie() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-6">
         <ArticleH2>Ce se întâmplă în suprapondere și obezitate?</ArticleH2>
         <ArticleP>
           La persoanele cu suprapondere sau obezitate, necesarul de proteină nu ar trebui estimat automat prin
@@ -183,7 +184,7 @@ export default function CataProteinaAmNevoie() {
         <ArticleP>În aceste situații, aportul trebuie stabilit individual.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-7">
         <ArticleH2>Mai multă proteină înseamnă automat mai bine?</ArticleH2>
         <ArticleP>
           Nu. Un aport mai mare decât necesarul nu înseamnă automat un beneficiu mai mare. Obiectivul nu este să
@@ -206,6 +207,6 @@ export default function CataProteinaAmNevoie() {
           surse alimentare variate.
         </ArticleLead>
       </section>
-    </ArticleShell>
+    </ArticleShellPremium>
   );
 }

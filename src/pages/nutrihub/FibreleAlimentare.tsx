@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleShell, ArticleH2, ArticleP, ArticleLead, ArticleList } from "@/components/nutrihub/ArticleShell";
+import { ArticleH2, ArticleP, ArticleLead, ArticleList } from "@/components/nutrihub/ArticleShell";
+import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
 export default function FibreleAlimentare() {
   const { language } = useLanguage();
@@ -21,7 +22,7 @@ export default function FibreleAlimentare() {
   }
 
   return (
-    <ArticleShell
+    <ArticleShellPremium
       category="FIBRE ALIMENTARE"
       title="Fibrele alimentare: de ce sunt importante"
       related={[
@@ -39,7 +40,7 @@ export default function FibreleAlimentare() {
         "Xie Y, et al. Effects of soluble fiber supplementation on glycemic control in adults with type 2 diabetes mellitus: a systematic review and meta-analysis of randomized controlled trials. Clin Nutr. 2021;40(4):1800–1810.",
       ]}
     >
-      <section>
+      <section id="sec-0">
         <ArticleP>
           Probabil ai auzit de multe ori că „ar trebui să mănânci mai multe fibre”, mai ales dacă ai probleme cu
           tranzitul intestinal.
@@ -59,7 +60,7 @@ export default function FibreleAlimentare() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-1">
         <ArticleH2>Ce fac fibrele în organism?</ArticleH2>
         <ArticleP>
           Cel mai cunoscut rol al fibrelor este legat de tranzitul intestinal. Ele pot contribui la formarea și
@@ -73,7 +74,7 @@ export default function FibreleAlimentare() {
         <ArticleP>Important este însă să nu punem toate fibrele în aceeași categorie. Nu toate au exact aceleași efecte.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-2">
         <ArticleH2>Sunt toate fibrele la fel?</ArticleH2>
         <ArticleP>Nu.</ArticleP>
         <ArticleP>
@@ -107,7 +108,7 @@ export default function FibreleAlimentare() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-3">
         <ArticleH2>Câtă fibră avem nevoie?</ArticleH2>
         <ArticleP>
           WHO recomandă adulților cel puțin 25 g de fibre alimentare pe zi, provenite în mod natural din alimente.
@@ -121,7 +122,7 @@ export default function FibreleAlimentare() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-4">
         <ArticleH2>Cum poate arăta practic o zi cu surse de fibre?</ArticleH2>
         <ArticleP>Nu este nevoie de produse speciale „high fibre” pentru a introduce fibre în alimentație.</ArticleP>
         <ArticleList
@@ -139,7 +140,7 @@ export default function FibreleAlimentare() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-5">
         <ArticleH2>De ce mă pot balona dacă încep să mănânc mai multe fibre?</ArticleH2>
         <ArticleP>Aceasta este una dintre cele mai frecvente situații.</ArticleP>
         <ArticleP>
@@ -165,7 +166,7 @@ export default function FibreleAlimentare() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-6">
         <ArticleH2>Fibrele și constipația</ArticleH2>
         <ArticleP>
           Fibrele pot fi utile în constipație, dar nici aici nu funcționează regula simplă „mai multe fibre =
@@ -197,7 +198,7 @@ export default function FibreleAlimentare() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-7">
         <ArticleH2>Mai multe fibre înseamnă mai bine?</ArticleH2>
         <ArticleP>Nu neapărat.</ArticleP>
         <ArticleP>
@@ -235,6 +236,6 @@ export default function FibreleAlimentare() {
           diferite de fibre, fiecare cu propriile caracteristici.
         </ArticleP>
       </section>
-    </ArticleShell>
+    </ArticleShellPremium>
   );
 }

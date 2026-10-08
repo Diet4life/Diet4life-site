@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleShell, ArticleH2, ArticleP } from "@/components/nutrihub/ArticleShell";
+import { ArticleH2, ArticleP } from "@/components/nutrihub/ArticleShell";
+import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
 export default function SuntToateCaloriileLaFel() {
   const { language } = useLanguage();
@@ -21,7 +22,7 @@ export default function SuntToateCaloriileLaFel() {
   }
 
   return (
-    <ArticleShell
+    <ArticleShellPremium
       category="ENERGIE ȘI ALEGERI ALIMENTARE"
       title="Sunt toate caloriile la fel?"
       related={[
@@ -39,14 +40,14 @@ export default function SuntToateCaloriileLaFel() {
         "Kohanmoo A, Faghih S, Akhlaghi M. Effect of short- and long-term protein consumption on appetite and appetite-regulating gastrointestinal hormones: a systematic review and meta-analysis of randomized controlled trials. Physiol Behav. 2020;226:113123. DOI: 10.1016/j.physbeh.2020.113123.",
       ]}
     >
-      <section>
+      <section id="sec-0">
         <ArticleP>Două alimente pot avea aceeași valoare energetică și totuși să arate complet diferit în farfurie.</ArticleP>
         <ArticleP>Unul poate însemna doar câteva înghițituri. Celălalt poate ocupa aproape toată farfuria.</ArticleP>
         <ArticleP>Ca unitate de energie, o calorie rămâne o calorie. Dar alimentul din care provine acea energie contează.</ArticleP>
         <ArticleP>Valoarea calorică nu îți spune singură cât de mare este porția, cât de sățios va fi alimentul sau ce nutrienți îți oferă.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-1">
         <ArticleH2>O calorie măsoară energia. Nu întreaga valoare a alimentului.</ArticleH2>
         <ArticleP>
           Pentru controlul greutății, aportul energetic este important. Dacă obiectivul este slăbirea, este nevoie
@@ -63,7 +64,7 @@ export default function SuntToateCaloriileLaFel() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-2">
         <ArticleH2>Diferența se vede adesea direct în farfurie</ArticleH2>
         <ArticleP>
           Unele alimente concentrează multă energie într-o cantitate mică. Altele conțin mai multă apă, fibre sau au
@@ -81,7 +82,7 @@ export default function SuntToateCaloriileLaFel() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-3">
         <ArticleH2>O masă bună ar trebui să îți ofere sațietate</ArticleH2>
         <ArticleP>Nu contează doar cât ai mâncat, ci și cât de sătul te simți după masă.</ArticleP>
         <ArticleP>Compoziția mesei contează: proteina, fibrele, volumul și structura alimentelor pot influența senzația de sațietate.</ArticleP>
@@ -91,7 +92,7 @@ export default function SuntToateCaloriileLaFel() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-4">
         <ArticleH2>Unele alimente sunt foarte ușor de consumat în exces</ArticleH2>
         <ArticleP>
           Un studiu realizat la NIH a comparat, în condiții controlate, o alimentație bogată în produse
@@ -116,7 +117,7 @@ export default function SuntToateCaloriileLaFel() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-5">
         <ArticleH2>Și alimentele nutritive au calorii</ArticleH2>
         <ArticleP>Există și extrema opusă: ideea că, dacă un aliment este considerat sănătos, cantitatea nu mai contează.</ArticleP>
         <ArticleP>
@@ -127,7 +128,7 @@ export default function SuntToateCaloriileLaFel() {
         <ArticleP>Nu trebuie să alegem între „contează doar caloriile” și „caloriile nu contează”. Ambele variante simplifică prea mult lucrurile.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-6">
         <ArticleH2>Ce contează, de fapt</ArticleH2>
         <ArticleP>Pentru greutate, energia totală contează.</ArticleP>
         <ArticleP>Pentru calitatea alimentației și pentru cât de ușor o poți menține, contează și sursa acelei energii.</ArticleP>
@@ -138,6 +139,6 @@ export default function SuntToateCaloriileLaFel() {
         </ArticleP>
         <ArticleP>Caloriile îți spun câtă energie conține alimentul. Nu îți spun întreaga lui poveste.</ArticleP>
       </section>
-    </ArticleShell>
+    </ArticleShellPremium>
   );
 }

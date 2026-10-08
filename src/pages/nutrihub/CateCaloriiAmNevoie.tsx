@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleShell, ArticleH2, ArticleP, ArticleLead } from "@/components/nutrihub/ArticleShell";
+import { ArticleH2, ArticleP, ArticleLead } from "@/components/nutrihub/ArticleShell";
+import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
 export default function CateCaloriiAmNevoie() {
   const { language } = useLanguage();
@@ -21,7 +22,7 @@ export default function CateCaloriiAmNevoie() {
   }
 
   return (
-    <ArticleShell
+    <ArticleShellPremium
       category="ENERGIE ȘI NECESAR CALORIC"
       title="Câte calorii am nevoie, de fapt?"
       related={[
@@ -40,7 +41,7 @@ export default function CateCaloriiAmNevoie() {
         "Liddle RA, Goldstein RB, Saxton J. Gallstone formation during weight-reduction dieting. Archives of Internal Medicine. 1989;149(8):1750-1753.",
       ]}
     >
-      <section>
+      <section id="sec-0">
         <ArticleP>
           Poate ai căutat măcar o dată pe internet „câte calorii trebuie să mănânc ca să slăbesc?” și ai primit un
           număr foarte precis.
@@ -53,7 +54,7 @@ export default function CateCaloriiAmNevoie() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-1">
         <ArticleH2>Pentru ce folosim energia?</ArticleH2>
         <ArticleP>Organismul consumă energie permanent, inclusiv atunci când dormim sau stăm nemișcați.</ArticleP>
         <ArticleP>
@@ -68,7 +69,7 @@ export default function CateCaloriiAmNevoie() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-2">
         <ArticleH2>Cum estimează un calculator necesarul caloric?</ArticleH2>
         <ArticleP>
           Calculatorul estimează mai întâi energia de care organismul are nevoie în repaus, folosind date precum
@@ -99,7 +100,7 @@ export default function CateCaloriiAmNevoie() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-3">
         <ArticleH2>Menținere, slăbire sau creștere în greutate?</ArticleH2>
         <ArticleP>
           În principiu, dacă aportul energetic este apropiat de energia pe care organismul o consumă, greutatea
@@ -117,7 +118,7 @@ export default function CateCaloriiAmNevoie() {
         <ArticleP>De aceea, rezultatul unui calculator trebuie privit ca un aport orientativ, nu ca o prescripție exactă.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-4">
         <ArticleH2>De ce nu înseamnă „mai puține calorii = rezultate mai bune”?</ArticleH2>
         <ArticleP>
           Este tentant să credem că, dacă un deficit energetic poate duce la scădere în greutate, atunci un aport
@@ -135,7 +136,7 @@ export default function CateCaloriiAmNevoie() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-5">
         <ArticleH2>Dar dietele de 800–1.200 kcal?</ArticleH2>
         <ArticleP>
           NICE clasifică aporturile de 800–1.200 kcal/zi drept low-energy diets, iar pe cele sub 800 kcal/zi drept
@@ -159,7 +160,7 @@ export default function CateCaloriiAmNevoie() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-6">
         <ArticleH2>De ce trebuie uneori recalculat necesarul?</ArticleH2>
         <ArticleP>
           Necesarul energetic nu rămâne neapărat identic în timp. Dacă greutatea corporală se modifică semnificativ,
@@ -189,6 +190,6 @@ export default function CateCaloriiAmNevoie() {
           fi menținut în viața reală.
         </ArticleP>
       </section>
-    </ArticleShell>
+    </ArticleShellPremium>
   );
 }

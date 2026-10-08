@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleShell, ArticleH2, ArticleP, ArticleLead, ArticleQuote } from "@/components/nutrihub/ArticleShell";
+import { ArticleH2, ArticleP, ArticleLead, ArticleQuote } from "@/components/nutrihub/ArticleShell";
+import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
 export default function ControlulGreutatii() {
   const { language } = useLanguage();
@@ -21,7 +22,7 @@ export default function ControlulGreutatii() {
   }
 
   return (
-    <ArticleShell
+    <ArticleShellPremium
       category="CONTROLUL GREUTĂȚII"
       title="Controlul greutății: de ce nu se reduce la „mănâncă mai puțin”"
       related={[
@@ -40,7 +41,7 @@ export default function ControlulGreutatii() {
         "van Baak MA, Mariman ECM. Obesity-induced and weight-loss-induced physiological factors affecting weight regain. Nature Reviews Endocrinology. 2023;19:655-670. DOI: 10.1038/s41574-023-00887-4.",
       ]}
     >
-      <section>
+      <section id="sec-0">
         <ArticleP>
           Poate ai auzit de multe ori recomandarea: „mănâncă mai puțin și mișcă-te mai mult”. Din punct de vedere
           energetic, pentru ca greutatea să scadă este nevoie ca, în timp, aportul de energie să fie mai mic decât
@@ -57,7 +58,7 @@ export default function ControlulGreutatii() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-1">
         <ArticleH2>Deficitul energetic contează, dar nu spune toată povestea</ArticleH2>
         <ArticleP>Pentru scădere ponderală este nevoie de un deficit energetic. Asta rămâne valabil.</ArticleP>
         <ArticleP>
@@ -72,7 +73,7 @@ export default function ControlulGreutatii() {
         <ArticleP>De aceea, controlul greutății nu poate fi redus la un calcul de calorii.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-2">
         <ArticleH2>Nu este suficient să știm ce mănânci</ArticleH2>
         <ArticleP>
           Un jurnal alimentar ne poate arăta ce și cât mănâncă o persoană. Dar uneori întrebarea mai importantă este:
@@ -98,7 +99,7 @@ export default function ControlulGreutatii() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-3">
         <ArticleH2>Nu există o singură dietă potrivită tuturor</ArticleH2>
         <ArticleP>
           Poate ai încercat în trecut mai multe variante: o dietă foarte strictă, o perioadă fără pâine, fără
@@ -119,7 +120,7 @@ export default function ControlulGreutatii() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-4">
         <ArticleH2>Contează și cum sunt construite mesele</ArticleH2>
         <ArticleP>Două mese cu același volum pot avea valori energetice foarte diferite.</ArticleP>
         <ArticleP>
@@ -155,7 +156,7 @@ export default function ControlulGreutatii() {
         </ArticleP>
       </section>
 
-      <section>
+      <section id="sec-5">
         <ArticleH2>De ce apare uneori un platou?</ArticleH2>
         <ArticleP>
           Poate ai trecut deja prin asta: la început greutatea scade, apoi, deși simți că faci aceleași lucruri,
@@ -174,7 +175,7 @@ export default function ControlulGreutatii() {
         <ArticleP>Un platou nu înseamnă automat că ai făcut ceva greșit. Înseamnă că situația trebuie reevaluată în ansamblu.</ArticleP>
       </section>
 
-      <section>
+      <section id="sec-6">
         <ArticleH2>Slăbitul și menținerea nu sunt același lucru</ArticleH2>
         <ArticleP>Pentru multe persoane, partea cea mai dificilă nu este doar să piardă în greutate, ci să mențină rezultatul.</ArticleP>
         <ArticleP>
@@ -216,6 +217,6 @@ export default function ControlulGreutatii() {
           înțeleagă și persoana care îl va urma.
         </ArticleLead>
       </section>
-    </ArticleShell>
+    </ArticleShellPremium>
   );
 }
