@@ -1,5 +1,5 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 
@@ -13,19 +13,29 @@ const PAGE_COLUMN = "max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8";
 export default function About() {
   const { language } = useLanguage();
   const ro = language === "ro";
+  const shouldReduceMotion = useReducedMotion();
+  // Entrance animations capped at 300ms (was 500-800ms) and skip their
+  // from-offset entirely when the OS requests reduced motion -- same
+  // pattern used for the duration value, reused here rather than a
+  // hand-rolled matchMedia hook since framer-motion ships its own.
+  const entranceTransition = { duration: shouldReduceMotion ? 0 : 0.3 };
 
   return (
     <div
       className="flex flex-col"
       style={{
-        // Same page-scoped palette override as Home.tsx (kept in sync by
-        // hand for the same reason as PAGE_COLUMN above) -- #FBF6EE /
-        // #FDF9F2 / #2F5D3F / #7A6559, never touching the shared :root
-        // tokens so other pages are unaffected.
-        "--background": "37 62% 96%", // #FBF6EE
-        "--card": "38 73% 97%", // #FDF9F2
-        "--primary": "141 33% 27%", // #2F5D3F
-        "--muted-foreground": "22 16% 41%", // #7A6559
+        // Premium palette override (same family as Home's Variant C,
+        // Calculator and ArticleShellPremium): white page background,
+        // zinc-50 card surfaces, zinc-200 borders, zinc-900 foreground,
+        // zinc-600 muted text. Replaces the earlier warm-cream override --
+        // visual-only, no JSX structure, logic, or copy touched by this
+        // change itself.
+        "--background": "0 0% 100%", // #FFFFFF
+        "--card": "240 5% 98%", // zinc-50 #FAFAFA
+        "--border": "240 6% 90%", // zinc-200 #E4E4E7
+        "--foreground": "240 6% 10%", // zinc-900 #18181B
+        "--muted-foreground": "240 5% 34%", // zinc-600 #52525B
+        "--primary": "141 33% 27%", // #2F5D3F -- unchanged, same dark green as Home/Calculator/NutriHub
       } as any}
     >
       {/* A. Hero -- cine sunt. Mobile order is now text-block then photo
@@ -34,9 +44,9 @@ export default function About() {
           unchanged, only the mechanism needed touching both children.
           Mobile-only tightened: less top/bottom section padding, smaller
           gap between the two blocks, a single consolidated hero paragraph
-          (the bariatric-experience sentence now lives only in "Experiență
-          clinică" below), and mobile-specific type sizes per this round's
-          spec (desktop sizes untouched). */}
+          (a separate detail sentence lives only in "Experiență clinică"
+          below), and mobile-specific type sizes per this round's spec
+          (desktop sizes untouched). */}
       <section className="pt-8 pb-8 md:pt-20 md:pb-20 bg-background">
         <div className={PAGE_COLUMN}>
           {/* Portrait no longer a bordered, fixed-fraction column -- a grid
@@ -56,12 +66,15 @@ export default function About() {
               not an approximate value, for the same reason. */}
           <div className="grid lg:grid-cols-[0.85fr_1fr] items-start gap-5 lg:gap-[68px]">
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={entranceTransition}
               className="order-2 lg:order-1 w-full"
             >
-              <div className="relative aspect-[900/1040] max-w-[380px] mx-auto lg:max-w-none rounded-2xl overflow-hidden">
+              {/* Discrete border added (didn't exist before) -- radius was
+                  already rounded-2xl, no change needed there. No hover-zoom:
+                  the portrait isn't an interactive element. */}
+              <div className="relative aspect-[900/1040] max-w-[380px] mx-auto lg:max-w-none rounded-2xl overflow-hidden border border-border">
                 <img
                   src="/images/portrait.png"
                   alt="Camelia Amuza"
@@ -71,9 +84,9 @@ export default function About() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.15 }}
+              transition={shouldReduceMotion ? entranceTransition : { ...entranceTransition, delay: 0.1 }}
               className="order-1 lg:order-2 w-full"
             >
               <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-3 md:mb-4">
@@ -88,7 +101,7 @@ export default function About() {
                 {ro ? "Nutriționist-dietetician autorizat" : "Licensed Dietitian-Nutritionist"}
               </p>
 
-              <div className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed lg:max-w-[560px]">
+              <div className="text-muted-foreground text-left max-lg:text-[17px] leading-[1.7] max-lg:max-w-[34rem] lg:text-lg lg:max-w-[560px]">
                 <p className="text-editorial">
                   {ro
                     ? "Lucrez în principal cu persoane care se confruntă cu obezitatea — o zonă a nutriției care presupune mai mult decât o listă de alimente permise și interzise. Pentru mine, nutriția înseamnă să înțeleg contextul fiecărei persoane și să găsim soluții care pot fi aplicate în viața de zi cu zi."
@@ -107,10 +120,10 @@ export default function About() {
               in here since it restated the same "understand why, not just
               follow a plan" idea in different words. */}
           <motion.section
-            initial={{ opacity: 0, y: 20 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            transition={entranceTransition}
           >
             <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
               {ro ? "Ce am învățat din practică" : "What I've learned in practice"}
@@ -121,7 +134,7 @@ export default function About() {
                 it. 680px keeps it within the same column as the cards (no
                 mx-auto re-centering needed) while giving prose a visibly
                 narrower measure. */}
-            <div className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed lg:max-w-[680px] space-y-4">
+            <div className="text-muted-foreground text-left max-lg:text-[17px] leading-[1.7] max-lg:max-w-[34rem] lg:text-lg lg:max-w-[680px] space-y-4">
               <p className="text-editorial">
                 {ro
                   ? "Oamenii nu au nevoie doar să știe ce au voie să mănânce. Au nevoie să înțeleagă de ce fac anumite alegeri, cum își pot organiza mesele și, mai ales, cum pot adapta recomandările la viața lor reală — nu la una ideală, care există doar în teorie."
@@ -136,20 +149,22 @@ export default function About() {
           </motion.section>
 
           {/* C. Studii și implicare profesională -- editorial blocks, no
-              icon circles, no shadcn Card -- border-border + bg-card/60,
-              same family as Home's "Din răspunsuri" cards. */}
+              icon circles, no shadcn Card -- border-border + bg-card with a
+              diffuse shadow-sm (was bg-card/60, which washed out against
+              the new near-white page background), same family as
+              Calculator's and NutriHub's own premium card treatment. */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            transition={entranceTransition}
           >
             <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div className="rounded-2xl border border-border bg-card/60 p-6">
+              <div className="rounded-2xl border border-border bg-card shadow-sm p-6">
                 <h3 className="font-serif font-semibold text-xl text-foreground mb-4">
                   {ro ? "Studii și formare" : "Education & training"}
                 </h3>
-                <ul className="space-y-3 max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed text-muted-foreground">
+                <ul className="space-y-3 max-lg:text-[17px] leading-[1.7] lg:text-sm text-muted-foreground">
                   <li className="flex items-start gap-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" aria-hidden="true" />
                     <span>
@@ -193,11 +208,11 @@ export default function About() {
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card/60 p-6">
+              <div className="rounded-2xl border border-border bg-card shadow-sm p-6">
                 <h3 className="font-serif font-semibold text-xl text-foreground mb-4">
                   {ro ? "Implicare profesională" : "Professional involvement"}
                 </h3>
-                <ul className="space-y-2.5 max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed text-muted-foreground mb-4">
+                <ul className="space-y-2.5 max-lg:text-[17px] leading-[1.7] lg:text-sm text-muted-foreground mb-4">
                   <li className="flex items-start gap-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" aria-hidden="true" />
                     <span>
@@ -223,7 +238,7 @@ export default function About() {
                     </span>
                   </li>
                 </ul>
-                <p className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed">
+                <p className="text-muted-foreground text-left max-lg:text-[17px] leading-[1.7] lg:text-sm">
                   {ro
                     ? "Fac parte din ESPEN pentru că recomandările pe care le găsești pe acest site pornesc chiar de la ghidurile acestei societăți — nu sunt doar opinii personale, ci informații verificate la nivel european."
                     : "I'm part of ESPEN because the recommendations you find on this site start from that society's own guidelines — not just personal opinions, but information verified at a European level."}
@@ -231,17 +246,15 @@ export default function About() {
               </div>
             </div>
 
-            {/* Scannable credibility line -- same bariatric-experience fact
-                as the hero paragraph, verbatim, but here as a short,
-                stand-alone editorial highlight rather than prose. */}
-            <div className="rounded-2xl border border-border bg-card/60 p-6">
+            {/* Scannable credibility line. */}
+            <div className="rounded-2xl border border-border bg-card shadow-sm p-6">
               <h3 className="font-serif font-semibold text-xl text-foreground mb-2">
                 {ro ? "Experiență clinică" : "Clinical experience"}
               </h3>
-              <p className="text-muted-foreground text-left max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed">
+              <p className="text-muted-foreground text-left max-lg:text-[17px] leading-[1.7] lg:text-sm">
                 {ro
-                  ? "Experiență în managementul nutrițional al pacienților bariatrici din 2021, cu monitorizarea și adaptarea alimentației în diferitele etape postoperatorii."
-                  : "Experience in the nutritional management of bariatric patients since 2021, monitoring and adjusting their diet across the different postoperative stages."}
+                  ? "Experiența acumulată în lucrul direct cu pacienți cu nevoi nutriționale complexe mă ajută să privesc fiecare recomandare în context: istoricul medical, obiectivele, stilul de viață și posibilitatea de a susține schimbările pe termen lung."
+                  : "Experience gained through working directly with patients with complex nutritional needs helps me view every recommendation in context: medical history, goals, lifestyle, and the feasibility of sustaining changes over time."}
               </p>
             </div>
           </motion.div>
@@ -249,17 +262,17 @@ export default function About() {
           {/* D. Filozofia mea -- kept distinct: sustainability/progress-not-
               perfection, doesn't restate B's "understand why" idea. */}
           <motion.section
-            initial={{ opacity: 0, y: 20 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            transition={entranceTransition}
           >
             <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-[1.15] md:leading-normal mb-4 md:mb-5 text-balance">
               {ro ? "Filozofia mea" : "My philosophy"}
             </h2>
             {/* Same reading-width cap as "Ce am învățat din practică" above,
                 for the same reason. */}
-            <p className="text-editorial text-muted-foreground max-lg:text-[17px] max-lg:leading-[1.55] max-lg:max-w-[34rem] lg:text-lg lg:leading-relaxed lg:max-w-[680px]">
+            <p className="text-editorial text-muted-foreground max-lg:text-[17px] leading-[1.7] max-lg:max-w-[34rem] lg:text-lg lg:max-w-[680px]">
               {ro
                 ? "Nu urmăresc alimentația perfectă. Mă interesează mult mai mult ca persoana din fața mea să ajungă la o variantă bună pentru sănătatea ei — una pe care o poate menține pe termen lung, nu doar câteva săptămâni."
                 : "I'm not chasing perfect eating. What matters far more to me is that the person in front of me reaches a version that's good for their health — one they can maintain long-term, not just for a few weeks."}
@@ -270,14 +283,14 @@ export default function About() {
               shadcn Button (which had different radius/height/weight). */}
           <motion.div
             className="text-center pt-2"
-            initial={{ opacity: 0, y: 20 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            transition={entranceTransition}
           >
             <Link
               href="/contact"
-              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-all"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 lg:h-[52px] px-6 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold text-[15px] lg:text-base transition-transform duration-150 ease-out"
               data-testid="button-about-cta"
             >
               {ro ? "Hai să ne cunoaștem" : "Let's get to know each other"}
