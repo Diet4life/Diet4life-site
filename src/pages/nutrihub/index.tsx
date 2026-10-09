@@ -3,11 +3,15 @@ import { Link } from "wouter";
 import { motion, useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-// Supplied separately by the user -- this path is wired up and ready, but
-// the file itself does not exist in public/images/nutrihub/ yet. The <img>
-// below fails silently (onError) and falls back to a text-only card until
-// the real asset is placed here, rather than showing a broken-image icon.
-const FEATURED_IMAGE_SRC = "/images/nutrihub/calorii-comparatie.webp";
+// Custom Diet4Life-branded photo, supplied directly by the user for this
+// exact slot (not Adobe Stock) -- replaces the earlier licensed Adobe Stock
+// asset 414109933 (omega-3 food sources), which must not be reused anywhere
+// else per her explicit instruction. Shows a varied flat-lay spanning every
+// food group (cereals, legumes, dairy, eggs, fish, vegetables, fruit, nuts)
+// -- supports this article's real message (source and nutritional profile
+// matter, not just the energy number) -- deliberately NOT a "treat vs.
+// perfect meal" opposition.
+const FEATURED_IMAGE_SRC = "/images/nutrihub/nutrihub-calorii-featured.webp";
 
 // Same outer column as Home/Despre mine/Servicii's own PAGE_COLUMN (kept in
 // sync by hand -- importing would require exporting it from one of those
@@ -33,9 +37,20 @@ const NUTRIHUB_PAGE_STYLE = {
   "--muted-foreground": "22 16% 41%", // #7A6559
 } as any;
 
+// Each image is a real, locally-saved photo -- no placeholders, no external
+// URLs. nutritie-echilibrata and cate-calorii-am-nevoie now use custom
+// Diet4Life-branded photos supplied directly by the user for these exact
+// slots (not Adobe Stock); the other 3 (controlul-greutatii, cata-proteina-
+// am-nevoie, fibrele-alimentare) are licensed Adobe Stock assets, cropped/
+// converted to WebP locally. The 2 Adobe Stock assets these branded photos
+// replaced (452259472 and 303927153) must not be reused anywhere else per
+// explicit instruction. Each image is a distinct composition -- no image or
+// crop is reused across two different articles.
 const ARTICLES = [
   {
     slug: "nutritie-echilibrata",
+    image: "/images/nutrihub/nutritie-echilibrata-masa-variata.webp",
+    imageAlt: "Masă variată cu legume, salată, cereale, leguminoase, pește, pâine și fructe",
     categoryRo: "NUTRIȚIE ECHILIBRATĂ",
     categoryEn: "Balanced nutrition",
     titleRo: "Nutriție echilibrată: cum arată în viața reală?",
@@ -45,6 +60,8 @@ const ARTICLES = [
   },
   {
     slug: "controlul-greutatii",
+    image: "/images/nutrihub/controlul-greutatii-jurnal-centimetru.webp",
+    imageAlt: "Jurnal alimentar deschis, un centimetru și legume proaspete pe o masă de lemn",
     categoryRo: "CONTROLUL GREUTĂȚII",
     categoryEn: "Weight control",
     titleRo: "Controlul greutății: de ce nu se reduce la „mănâncă mai puțin”",
@@ -54,6 +71,8 @@ const ARTICLES = [
   },
   {
     slug: "cata-proteina-am-nevoie",
+    image: "/images/nutrihub/proteina-surse-variate.webp",
+    imageAlt: "Surse variate de proteină: ouă fierte, brânză proaspătă, migdale, castraveți și fructe de pădure",
     categoryRo: "MACRONUTRIENȚI",
     categoryEn: "Macronutrients",
     titleRo: "De ce este importantă proteina și de câtă avem nevoie?",
@@ -63,6 +82,8 @@ const ARTICLES = [
   },
   {
     slug: "cate-calorii-am-nevoie",
+    image: "/images/nutrihub/necesar-caloric-masa-cotidiana.webp",
+    imageAlt: "Masă cotidiană cu paste, legume și chifteluțe, alături de apă și un fruct",
     categoryRo: "ENERGIE ȘI NECESAR CALORIC",
     categoryEn: "Energy & caloric needs",
     titleRo: "Câte calorii am nevoie, de fapt?",
@@ -72,6 +93,8 @@ const ARTICLES = [
   },
   {
     slug: "fibrele-alimentare",
+    image: "/images/nutrihub/fibre-alimentare-surse.webp",
+    imageAlt: "Surse de fibre alimentare: ovăz, leguminoase, pâine integrală, banane și legume cu frunze",
     categoryRo: "FIBRE ALIMENTARE",
     categoryEn: "Dietary fiber",
     titleRo: "Fibrele alimentare: de ce sunt importante",
@@ -119,32 +142,46 @@ export default function NutriHub() {
       </section>
 
       {/* Featured article -- editorial, visually distinct from the regular grid.
-          The image container's aspect ratio (4:3) matches the source photo's
-          own native ratio (1448x1086) exactly, at every breakpoint -- so
-          object-cover never actually crops anything, guaranteeing both
-          plates stay fully visible regardless of viewport width. onError
-          still falls back to a text-only layout if the file is ever missing. */}
+          The image container's aspect ratio (16:9) matches the sourced
+          photo's own native ratio (1600x900) exactly, so object-cover never
+          actually crops anything. This is the page's main/first large
+          visual, so it's eager-loaded (not lazy). onError still falls back
+          to a text-only layout if the file is ever missing.
+
+          overflow-hidden was removed from the Link itself -- it was clipping
+          the focus-visible ring (box-shadow-based) along with the image.
+          The image now carries its own corner rounding directly (border-
+          radius works natively on <img>, no wrapper/overflow-hidden needed
+          to clip it) -- same visual result, ring no longer clipped. */}
       <section className="pb-10 md:pb-14">
         <div className={PAGE_COLUMN}>
           <motion.div {...reveal(0.05)}>
             <Link
               href="/nutrihub/sunt-toate-caloriile-la-fel"
-              className="group grid md:grid-cols-[0.45fr_0.55fr] gap-0 rounded-2xl border border-border overflow-hidden hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 ease-out"
+              className="group grid md:grid-cols-[0.45fr_0.55fr] gap-0 rounded-2xl border border-border hover:-translate-y-0.5 active:scale-[0.98] transition-transform duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               style={{ backgroundColor: "#FDF9F2" }}
               data-testid="link-featured-article"
             >
               {!featuredImageFailed && (
-                <div className="order-1 md:order-2 aspect-[4/3]">
+                <div className="order-1 md:order-2 aspect-[16/9] min-w-0">
                   <img
                     src={FEATURED_IMAGE_SRC}
-                    alt={ro ? "Comparație vizuală: aceeași energie, farfurii diferite" : "Visual comparison: the same energy, different plates"}
-                    className="w-full h-full object-cover"
+                    alt={ro ? "Selecție variată de alimente: cereale, leguminoase, lactate, ouă, pește, legume, fructe și nuci" : "A varied selection of foods: grains, legumes, dairy, eggs, fish, vegetables, fruit and nuts"}
+                    width={1600}
+                    height={900}
+                    className="w-full h-full object-cover rounded-t-2xl md:rounded-t-none md:rounded-r-2xl"
+                    loading="eager"
+                    decoding="async"
                     onError={() => setFeaturedImageFailed(true)}
                   />
                 </div>
               )}
               <div className={`order-2 md:order-1 px-6 py-8 md:px-12 md:py-14 flex flex-col justify-center ${featuredImageFailed ? "md:col-span-2" : ""}`}>
-                <span className="text-xs font-semibold tracking-wide uppercase text-primary mb-3 block">
+                {/* Upgraded from a plain uppercase label to a pill badge --
+                    reuses the exact bg-primary/10 + text-primary + rounded-full
+                    recipe already used for the BMI category badge in
+                    Calculator.tsx, for stronger visual hierarchy. */}
+                <span className="inline-block w-fit text-xs font-semibold tracking-wide uppercase text-primary bg-primary/10 rounded-full px-3 py-1 mb-4">
                   {ro ? "Energie și alegeri alimentare" : "Energy & food choices"}
                 </span>
                 <h2 className="text-2xl md:text-[32px] font-serif font-bold text-foreground leading-tight mb-3 max-w-2xl text-balance">
@@ -179,24 +216,41 @@ export default function NutriHub() {
               <motion.div key={article.slug} {...reveal(0.05 + i * 0.05)}>
                 <Link
                   href={`/nutrihub/${article.slug}`}
-                  className="group flex flex-col h-full rounded-2xl border border-border bg-card px-6 py-6 md:px-7 md:py-7 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 ease-out"
+                  className="group flex flex-col h-full rounded-2xl border border-border bg-card hover:-translate-y-0.5 active:scale-[0.98] transition-transform duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   data-testid={`link-nutrihub-topic-${article.slug}`}
                 >
-                  <span className="text-xs font-semibold tracking-wide uppercase text-primary mb-2.5">
-                    {ro ? article.categoryRo : article.categoryEn}
-                  </span>
-                  <h3 className="font-serif font-bold text-foreground text-xl md:text-2xl leading-snug mb-2.5 text-balance">
-                    {ro ? article.titleRo : article.titleEn}
-                  </h3>
-                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed flex-1 line-clamp-3">
-                    {ro ? article.descriptionRo : article.descriptionEn}
-                  </p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
-                    {ro ? "Citește articolul" : "Read the article"}
-                    <span className="inline-block transition-transform duration-200 ease-out group-hover:translate-x-[3px]">
-                      →
+                  {/* Real, distinct, licensed photo per article -- below the
+                      fold on both desktop and mobile, so lazy-loaded.
+                      overflow-hidden removed from the Link (it was clipping
+                      the focus-visible ring); the image carries its own
+                      rounded-t-2xl directly instead, matching the card's
+                      own corner radius with the same visual result. */}
+                  <img
+                    src={article.image}
+                    alt={article.imageAlt}
+                    width={1600}
+                    height={900}
+                    className="w-full aspect-[16/9] object-cover rounded-t-2xl"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div className="flex flex-col flex-1 px-6 py-6 md:px-7 md:py-7">
+                    <span className="text-xs font-semibold tracking-wide uppercase text-primary mb-2.5">
+                      {ro ? article.categoryRo : article.categoryEn}
                     </span>
-                  </span>
+                    <h3 className="font-serif font-bold text-foreground text-xl md:text-2xl leading-snug mb-2.5 text-balance">
+                      {ro ? article.titleRo : article.titleEn}
+                    </h3>
+                    <p className="text-sm md:text-base text-muted-foreground leading-relaxed flex-1 line-clamp-3">
+                      {ro ? article.descriptionRo : article.descriptionEn}
+                    </p>
+                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                      {ro ? "Citește articolul" : "Read the article"}
+                      <span className="inline-block transition-transform duration-200 ease-out group-hover:translate-x-[3px]">
+                        →
+                      </span>
+                    </span>
+                  </div>
                 </Link>
               </motion.div>
             ))}

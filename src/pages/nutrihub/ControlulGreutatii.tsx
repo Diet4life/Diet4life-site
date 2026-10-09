@@ -1,7 +1,68 @@
 import { Link } from "wouter";
+import { Scale, Compass, RotateCcw, ArrowRight, Utensils, HeartPulse, Footprints, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArticleH2, ArticleP, ArticleLead, ArticleQuote } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
+
+// ─── "Mai mult decât un număr pe cântar" (was "Dincolo de cifră") +
+// "Semne de progres care nu apar pe cântar" (was "Ce mai merită urmărit?")
+// -- pilot visual modules, this article only (never touch
+// ArticleShellPremium.tsx, never add these to the other 5 articles). Both
+// titles were renamed off the reference mockup's own wording, per explicit
+// instruction -- grounded instead in this article's own repeated phrase
+// "cifra de pe cântar" (sec-5/sec-6). Every item's caption is a short
+// paraphrase of a sentence that already exists in this exact article's body
+// below -- see the mapping table presented to the user before this round's
+// implementation. No new facts, numbers, or claims. Visual recipe is
+// WeightFactorsGrid.tsx's own (unused elsewhere): bg-card border-border
+// tile + bg-primary/10 icon circle -- zero new tokens. Romanian-only, same
+// as every other string in this file (this page early-returns for any
+// other language, see below -- no English copy exists for this article).
+const BEYOND_THE_NUMBER = [
+  {
+    icon: Scale,
+    label: "Cifra",
+    note: "Greutatea de pe cântar nu reflectă doar țesutul adipos — poate varia temporar din alte motive.",
+  },
+  {
+    icon: Compass,
+    label: "Contextul",
+    note: "Contează și ce ți-a fost greu, programul tău și barierele reale din viața de zi cu zi.",
+  },
+  {
+    icon: RotateCcw,
+    label: "Interpretarea",
+    note: "Un platou nu înseamnă că ai greșit — înseamnă că situația trebuie reevaluată în ansamblu.",
+  },
+  {
+    icon: ArrowRight,
+    label: "Pasul următor",
+    note: "De la structura meselor până la organizare și recunoașterea foamei — pașii diferă de la persoană la persoană.",
+  },
+];
+
+const WHAT_ELSE_MATTERS = [
+  {
+    icon: Utensils,
+    label: "Comportamente alimentare",
+    note: "Cum alegi, organizezi și te raportezi la mese, nu doar ce mănânci.",
+  },
+  {
+    icon: HeartPulse,
+    label: "Sănătate",
+    note: "Starea generală de sănătate, nu doar cifra de pe cântar.",
+  },
+  {
+    icon: Footprints,
+    label: "Funcționalitate",
+    note: "Cât de bine te simți și funcționezi în activitățile zilnice.",
+  },
+  {
+    icon: Sparkles,
+    label: "Calitatea vieții",
+    note: "Cum influențează schimbările viața ta de zi cu zi, pe termen lung.",
+  },
+];
 
 export default function ControlulGreutatii() {
   const { language } = useLanguage();
@@ -41,6 +102,21 @@ export default function ControlulGreutatii() {
         "van Baak MA, Mariman ECM. Obesity-induced and weight-loss-induced physiological factors affecting weight regain. Nature Reviews Endocrinology. 2023;19:655-670. DOI: 10.1038/s41574-023-00887-4.",
       ]}
     >
+      {/* Editorial hero image -- real sourced photo (licensed Adobe Stock,
+          saved locally), replacing the earlier gray placeholder. Neutral
+          composition: notebook, pencil, measuring tape, fresh vegetables --
+          no scale, no person, no displayed numbers/weight. Eager-loaded
+          since it's the first large visual element on this page. */}
+      <img
+        src="/images/nutrihub/controlul-greutatii-jurnal-centimetru.webp"
+        alt="Jurnal alimentar deschis, un centimetru și legume proaspete pe o masă de lemn"
+        width={1600}
+        height={900}
+        className="w-full aspect-[16/9] object-cover rounded-2xl border border-border"
+        loading="eager"
+        decoding="async"
+      />
+
       <section id="sec-0">
         <ArticleP>
           Poate ai auzit de multe ori recomandarea: „mănâncă mai puțin și mișcă-te mai mult”. Din punct de vedere
@@ -57,6 +133,30 @@ export default function ControlulGreutatii() {
           în greutate, de ce îi este greu să slăbească sau de ce greutatea poate reveni.
         </ArticleP>
       </section>
+
+      {/* Module "Mai mult decât un număr pe cântar" (was "Dincolo de
+          cifră") -- repositioned here, after the intro paragraphs (sec-0)
+          and before sec-1, to match the mockup's real structural order
+          (image -> paragraphs -> module), per explicit instruction. Every
+          caption paraphrases a sentence that already exists further down in
+          this same article (sec-2, sec-5, sec-6). See the mapping shown
+          before implementation. */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Mai mult decât un număr pe cântar
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {BEYOND_THE_NUMBER.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <section id="sec-1">
         <ArticleH2>Deficitul energetic contează, dar nu spune toată povestea</ArticleH2>
@@ -217,6 +317,28 @@ export default function ControlulGreutatii() {
           înțeleagă și persoana care îl va urma.
         </ArticleLead>
       </section>
+
+      {/* Module "Semne de progres care nu apar pe cântar" (was "Ce mai
+          merită urmărit?") -- the 4 items are the exact 4 concepts named in
+          the article's own closing line above ("comportamentelor
+          alimentare, a sănătății, a funcționalității și a calității
+          vieții"), not invented. */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Semne de progres care nu apar pe cântar
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {WHAT_ELSE_MATTERS.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </ArticleShellPremium>
   );
 }
