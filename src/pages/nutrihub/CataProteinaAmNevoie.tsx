@@ -1,7 +1,64 @@
 import { Link } from "wouter";
+import { Puzzle, Gauge, BadgeCheck, Shuffle, Target, Tag, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArticleH2, ArticleP, ArticleLead, ArticleList } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
+
+// "Ce face proteina, de fapt" + "Dincolo de eticheta «high protein»" --
+// visual modules for this article only (never touch ArticleShellPremium.tsx,
+// never add these to the other 5 articles). Same visual recipe already used
+// in ControlulGreutatii.tsx / SuntToateCaloriileLaFel.tsx / NutritieEchilibrata.tsx
+// (bg-card border-border tile + bg-primary/10 icon circle) -- zero new
+// tokens, zero new global components. Every item's text is an exact quote
+// from this article's own body (sec-1, sec-2, sec-3, sec-7) -- approved
+// verbatim by the user, not paraphrased further here. No new facts, numbers,
+// or claims. DELIBERATELY excludes sec-4/sec-5/sec-6 entirely -- those
+// sections carry the g/kg figures and population-specific guidance
+// (healthy adults, athletes, elderly, post-bariatric, pregnancy, illness,
+// overweight/obesity), which must never be isolated into a standalone tile
+// per explicit instruction. The original article paragraphs (sec-0 through
+// sec-7) are untouched; these modules only redisplay existing sentences
+// separately.
+const WHAT_PROTEIN_ACTUALLY_DOES = [
+  {
+    icon: Puzzle,
+    label: "Rolul",
+    note: "Proteinele participă la formarea și menținerea țesuturilor și intră în structura multor enzime, hormoni și alte molecule cu rol important în funcționarea organismului.",
+  },
+  {
+    icon: Gauge,
+    label: "Sațietatea",
+    note: "Proteina este unul dintre macronutrienții care contribuie la senzația de sațietate.",
+  },
+  {
+    icon: BadgeCheck,
+    label: "Calitatea",
+    note: "Calitatea unei proteine depinde, printre altele, de profilul de aminoacizi esențiali și de digestibilitatea acesteia.",
+  },
+  {
+    icon: Shuffle,
+    label: "Varietatea",
+    note: "Important nu este doar aportul total de proteină, ci și varietatea surselor din alimentație.",
+  },
+];
+
+const BEYOND_THE_LABEL = [
+  {
+    icon: Target,
+    label: "Aportul potrivit",
+    note: "Obiectivul nu este să consumăm cât mai multă proteină, ci un aport potrivit nevoilor organismului și contextului individual.",
+  },
+  {
+    icon: Tag,
+    label: "Eticheta nu este suficientă",
+    note: "Faptul că un produs este etichetat „high protein” nu spune, de unul singur, dacă acel produs este necesar sau dacă are o valoare nutrițională mai bună.",
+  },
+  {
+    icon: Users,
+    label: "Nu doar pentru sport",
+    note: "Proteina este necesară permanent organismului, nu doar persoanelor care fac sport.",
+  },
+];
 
 export default function CataProteinaAmNevoie() {
   const { language } = useLanguage();
@@ -42,6 +99,20 @@ export default function CataProteinaAmNevoie() {
         "Stenberg E, dos Reis Falcão LF, O'Kane M, et al. Guidelines for Perioperative Care in Bariatric Surgery: Enhanced Recovery After Surgery (ERAS) Society Recommendations: A 2021 Update. World Journal of Surgery. 2022;46:729–751.",
       ]}
     >
+      {/* Hero image -- already-approved, already-local asset (also used as
+          this article's card image on the NutriHub hub), reused as-is, not
+          duplicated, not re-sourced. Same pattern as the hero images in the
+          other 3 implemented articles. */}
+      <img
+        src="/images/nutrihub/proteina-surse-variate.webp"
+        alt="Surse variate de proteină: ouă, lactate, nuci, semințe, legume și fructe"
+        width={1600}
+        height={900}
+        className="w-full aspect-[16/9] object-cover rounded-2xl border border-border"
+        loading="eager"
+        decoding="async"
+      />
+
       <section id="sec-0">
         <ArticleP>
           Tot mai des vedem pe rafturile magazinelor produse etichetate „high protein”: iaurturi, budinci, batoane
@@ -67,6 +138,29 @@ export default function CataProteinaAmNevoie() {
         </ArticleP>
         <ArticleP>Cu alte cuvinte, proteina este necesară permanent organismului, nu doar persoanelor care fac sport.</ArticleP>
       </section>
+
+      {/* Module "Ce face proteina, de fapt" -- positioned after sec-1,
+          before sec-2, same early-preview pattern already used in the other
+          3 implemented articles. Every caption redisplays a sentence that
+          already exists in this same article (sec-1, sec-2, sec-3) --
+          deliberately excludes sec-4/sec-5/sec-6's g/kg figures and
+          population-specific guidance. */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Ce face proteina, de fapt
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {WHAT_PROTEIN_ACTUALLY_DOES.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <section id="sec-2">
         <ArticleH2>Proteina și sațietatea</ArticleH2>
@@ -207,6 +301,29 @@ export default function CataProteinaAmNevoie() {
           surse alimentare variate.
         </ArticleLead>
       </section>
+
+      {/* Module "Dincolo de eticheta «high protein»" -- closing recap, same
+          position/pattern as the closing modules in the other 3 implemented
+          articles (after the last section, before the shell's own "Citește
+          și" block). Deliberately pulls from sec-7 and sec-1 only --
+          excludes the sec-7 ArticleLead directly above (avoids visual
+          duplication) and excludes all g/kg / population-specific content. */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Dincolo de eticheta «high protein»
+        </h2>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {BEYOND_THE_LABEL.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </ArticleShellPremium>
   );
 }
