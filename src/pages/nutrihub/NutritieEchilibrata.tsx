@@ -1,7 +1,63 @@
 import { Link } from "wouter";
+import { Carrot, Wheat, Egg, Droplet, Smile, Shuffle, CalendarDays } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleH2, ArticleP } from "@/components/nutrihub/ArticleShell";
+import { ArticleH2, ArticleP, ArticleLead } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
+
+// "Ce contribuie la echilibrul alimentației" + "Trei idei de reținut" --
+// visual modules for this article only (never touch ArticleShellPremium.tsx,
+// never add these to the other 5 articles). Same visual recipe already used
+// in ControlulGreutatii.tsx and SuntToateCaloriileLaFel.tsx (bg-card
+// border-border tile + bg-primary/10 icon circle) -- zero new tokens, zero
+// new global components. Every item's text is an exact quote (or, for the 2
+// items explicitly flagged, two consecutive sentences from the same
+// paragraph) from this article's own body (sec-2, sec-4, sec-5, sec-6,
+// sec-10) -- approved verbatim by the user, not paraphrased further here.
+// No new facts, numbers, or claims. The original article paragraphs
+// (sec-0 through sec-10) are untouched; these modules only redisplay
+// existing sentences separately.
+const WHAT_CONTRIBUTES_TO_BALANCE = [
+  {
+    icon: Carrot,
+    label: "Legume",
+    note: "Legumele aduc fibre, vitamine, minerale și o varietate de compuși bioactivi, iar diversitatea contează.",
+  },
+  {
+    icon: Wheat,
+    label: "Carbohidrați",
+    note: "Recomandările actuale încurajează ca sursele principale de carbohidrați să provină în principal din cereale integrale, legume, fructe și leguminoase.",
+  },
+  {
+    icon: Egg,
+    // Two consecutive sentences from sec-5, approved verbatim by the user.
+    label: "Proteină",
+    note: "Proteina poate proveni atât din alimente de origine animală, cât și vegetală. Dar sursele nu sunt identice.",
+  },
+  {
+    icon: Droplet,
+    // Two consecutive sentences from sec-6, approved verbatim by the user.
+    label: "Grăsimi",
+    note: "Grăsimile sunt nutrienți necesari. Contează însă ce tip de grăsimi consumi și în ce cantitate.",
+  },
+];
+
+const THREE_TAKEAWAYS = [
+  {
+    icon: Smile,
+    label: "Fără perfecțiune",
+    note: "Nu înseamnă să mănânci perfect.",
+  },
+  {
+    icon: Shuffle,
+    label: "Varietate",
+    note: "Este important și să existe varietate.",
+  },
+  {
+    icon: CalendarDays,
+    label: "Viața reală",
+    note: "Trebuie să construiești un mod de a mânca care îți asigură nutrienții de care ai nevoie și pe care îl poți păstra în viața reală.",
+  },
+];
 
 export default function NutritieEchilibrata() {
   const { language } = useLanguage();
@@ -42,8 +98,25 @@ export default function NutritieEchilibrata() {
         "Mavadiya HB, Roh D, Ly A, Lu Y. Whole Fruits Versus 100% Fruit Juice: Revisiting the Evidence and Its Implications for Healthy Dietary Recommendations. Nutrition Bulletin. 2025.",
       ]}
     >
+      {/* Hero image -- already-approved, already-local asset (also used as
+          this article's card image on the NutriHub hub), reused as-is, not
+          duplicated, not re-sourced. Same pattern as the hero images in
+          ControlulGreutatii.tsx and SuntToateCaloriileLaFel.tsx. */}
+      <img
+        src="/images/nutrihub/nutritie-echilibrata-masa-variata.webp"
+        alt="Masă variată cu legume, salată, cereale, leguminoase, pește, pâine și fructe"
+        width={1600}
+        height={900}
+        className="w-full aspect-[16/9] object-cover rounded-2xl border border-border"
+        loading="eager"
+        decoding="async"
+      />
+
       <section id="sec-0">
-        <ArticleP>„Trebuie să mănânci echilibrat” este unul dintre cele mai frecvente sfaturi pe care le auzim.</ArticleP>
+        {/* First sentence re-rendered via ArticleLead instead of ArticleP --
+            text is byte-identical to before, appears exactly once (not
+            duplicated into the module below), per explicit approval. */}
+        <ArticleLead>„Trebuie să mănânci echilibrat” este unul dintre cele mai frecvente sfaturi pe care le auzim.</ArticleLead>
         <ArticleP>Dar ce înseamnă, de fapt?</ArticleP>
         <ArticleP>
           Înseamnă să renunți la pâine? Să mănânci numai salate? Să nu mai atingi niciodată ceva dulce? Să cântărești tot
@@ -75,6 +148,28 @@ export default function NutritieEchilibrata() {
         </ArticleP>
         <ArticleP>Asta este mult mai util decât să împărțim toate alimentele în „bune” și „rele”.</ArticleP>
       </section>
+
+      {/* Module "Ce contribuie la echilibrul alimentației" -- positioned
+          after sec-1, before sec-2, same early-preview pattern already used
+          in ControlulGreutatii.tsx / SuntToateCaloriileLaFel.tsx. Every
+          caption redisplays a sentence that already exists further down in
+          this same article (sec-2, sec-4, sec-5, sec-6). */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Ce contribuie la echilibrul alimentației
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {WHAT_CONTRIBUTES_TO_BALANCE.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <section id="sec-2">
         <ArticleH2>Legumele: nu doar ceva pus lângă mâncare</ArticleH2>
@@ -312,6 +407,28 @@ export default function NutritieEchilibrata() {
           păstra în viața reală.
         </ArticleP>
       </section>
+
+      {/* Module "Trei idei de reținut" -- closing recap, same position/
+          pattern as the closing modules in ControlulGreutatii.tsx and
+          SuntToateCaloriileLaFel.tsx (after the last section, before the
+          shell's own "Citește și" block). The 3 items are the article's own
+          closing lines from sec-10, not invented. */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Trei idei de reținut
+        </h2>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {THREE_TAKEAWAYS.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </ArticleShellPremium>
   );
 }
