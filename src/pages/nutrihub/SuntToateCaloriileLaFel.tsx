@@ -1,7 +1,63 @@
 import { Link } from "wouter";
+import { Flame, Maximize2, Gauge, Layers, Leaf, SlidersHorizontal } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArticleH2, ArticleP } from "@/components/nutrihub/ArticleShell";
+import { ArticleH2, ArticleP, ArticleLead } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
+
+// "Ce nu spune cifra calorică" + "Trei repere pentru viața reală" -- visual
+// modules for this article only (never touch ArticleShellPremium.tsx, never
+// add these to the other 5 articles). Same visual recipe already used in
+// ControlulGreutatii.tsx (bg-card border-border tile + bg-primary/10 icon
+// circle) -- zero new tokens, zero new global components. Every item's text
+// is either an exact quote from this article's own body (sec-0, sec-2,
+// sec-3, sec-6) or, for the 2 items explicitly flagged below, a condensation
+// of two consecutive sentences from the same paragraph -- approved verbatim
+// by the user, not paraphrased further here. No new facts, numbers, or
+// claims. The original article paragraphs (sec-0 through sec-6) are
+// untouched; these modules only redisplay existing sentences separately.
+const WHAT_THE_NUMBER_DOESNT_SAY = [
+  {
+    icon: Flame,
+    label: "Energia",
+    note: "Ca unitate de energie, o calorie rămâne o calorie.",
+  },
+  {
+    icon: Maximize2,
+    label: "Volumul",
+    note: "Aceeași energie poate ocupa foarte puțin spațiu sau poate însemna o farfurie mult mai generoasă.",
+  },
+  {
+    icon: Gauge,
+    label: "Sațietatea",
+    note: "Proteina, fibrele, volumul și structura alimentelor pot influența senzația de sațietate.",
+  },
+  {
+    icon: Layers,
+    // Condensation of sec-5's two consecutive sentences, approved verbatim
+    // by the user -- not a further paraphrase of this file's own wording.
+    label: "Densitatea energetică",
+    note: "Nucile, semințele, avocado și uleiul de măsline pot face parte dintr-o alimentație echilibrată, dar au o densitate energetică ridicată. Când obiectivul este scăderea în greutate, porția rămâne importantă.",
+  },
+];
+
+const THREE_REAL_LIFE_POINTS = [
+  {
+    icon: Flame,
+    label: "Energia totală",
+    note: "Pentru greutate, energia totală contează.",
+  },
+  {
+    icon: Leaf,
+    label: "Sursa energiei",
+    note: "Pentru calitatea alimentației și pentru cât de ușor o poți menține, contează și sursa acelei energii.",
+  },
+  {
+    icon: SlidersHorizontal,
+    // Condensation of sec-6's own sentence, approved verbatim by the user.
+    label: "Adaptarea",
+    note: "O alimentație bine construită oferă suficienți nutrienți, permite mese satisfăcătoare și poate fi adaptată vieții reale.",
+  },
+];
 
 export default function SuntToateCaloriileLaFel() {
   const { language } = useLanguage();
@@ -40,12 +96,50 @@ export default function SuntToateCaloriileLaFel() {
         "Kohanmoo A, Faghih S, Akhlaghi M. Effect of short- and long-term protein consumption on appetite and appetite-regulating gastrointestinal hormones: a systematic review and meta-analysis of randomized controlled trials. Physiol Behav. 2020;226:113123. DOI: 10.1016/j.physbeh.2020.113123.",
       ]}
     >
+      {/* Hero image -- already-approved, already-local asset, reused as-is
+          (not duplicated, not re-sourced). Same pattern as the hero image
+          in ControlulGreutatii.tsx. */}
+      <img
+        src="/images/nutrihub/nutrihub-calorii-featured.webp"
+        alt="Selecție variată de alimente: cereale, leguminoase, lactate, ouă, pește, legume, fructe și nuci"
+        width={1600}
+        height={900}
+        className="w-full aspect-[16/9] object-cover rounded-2xl border border-border"
+        loading="eager"
+        decoding="async"
+      />
+
       <section id="sec-0">
-        <ArticleP>Două alimente pot avea aceeași valoare energetică și totuși să arate complet diferit în farfurie.</ArticleP>
+        {/* First sentence re-rendered via ArticleLead instead of ArticleP --
+            text is byte-identical to before, appears exactly once (not
+            duplicated into the module below), per explicit approval. */}
+        <ArticleLead>Două alimente pot avea aceeași valoare energetică și totuși să arate complet diferit în farfurie.</ArticleLead>
         <ArticleP>Unul poate însemna doar câteva înghițituri. Celălalt poate ocupa aproape toată farfuria.</ArticleP>
         <ArticleP>Ca unitate de energie, o calorie rămâne o calorie. Dar alimentul din care provine acea energie contează.</ArticleP>
         <ArticleP>Valoarea calorică nu îți spune singură cât de mare este porția, cât de sățios va fi alimentul sau ce nutrienți îți oferă.</ArticleP>
       </section>
+
+      {/* Module "Ce nu spune cifra calorică" -- positioned right after the
+          intro (sec-0), before sec-1, same early-preview pattern already
+          used in ControlulGreutatii.tsx. Every caption redisplays a sentence
+          that already exists further down in this same article (sec-0,
+          sec-2, sec-3, sec-5) -- see the mapping shown before implementation. */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Ce nu spune cifra calorică
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {WHAT_THE_NUMBER_DOESNT_SAY.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <section id="sec-1">
         <ArticleH2>O calorie măsoară energia. Nu întreaga valoare a alimentului.</ArticleH2>
@@ -139,6 +233,29 @@ export default function SuntToateCaloriileLaFel() {
         </ArticleP>
         <ArticleP>Caloriile îți spun câtă energie conține alimentul. Nu îți spun întreaga lui poveste.</ArticleP>
       </section>
+
+      {/* Module "Trei repere pentru viața reală" -- closing recap, same
+          position/pattern as ControlulGreutatii.tsx's second module (after
+          the last section, before the shell's own "Citește și" block). The
+          3 items are the article's own closing lines from sec-6, not
+          invented. 3 items -> sm:grid-cols-3 (not grid-cols-2, which would
+          leave an awkward lone item on its own row). */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Trei repere pentru viața reală
+        </h2>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {THREE_REAL_LIFE_POINTS.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </ArticleShellPremium>
   );
 }
