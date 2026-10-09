@@ -1,7 +1,64 @@
 import { Link } from "wouter";
+import { Flame, Fingerprint, Compass, Footprints, Navigation, RefreshCw, Minus } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArticleH2, ArticleP, ArticleLead } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
+
+// "Ce poate și ce nu poate estima un calculator" + "Un punct de plecare, nu
+// o regulă fixă" -- visual modules for this article only (never touch
+// ArticleShellPremium.tsx, never add these to the other 5 articles). Same
+// visual recipe already used in the other 4 implemented articles (bg-card
+// border-border tile + bg-primary/10 icon circle) -- zero new tokens, zero
+// new global components. Every item's text is an exact quote (or, for the 2
+// items explicitly flagged, the original sentence kept whole including its
+// lead-in, per explicit instruction) from this article's own body (sec-1,
+// sec-2, sec-6) -- approved verbatim by the user, not paraphrased further
+// here. No new facts, numbers, or claims. DELIBERATELY excludes sec-3/
+// sec-4/sec-5 entirely -- sec-5 in particular carries the 800-1.200 kcal/
+// sub-800 kcal NICE thresholds and gallstone-risk content, which must never
+// be isolated into a standalone tile per explicit instruction. The original
+// article paragraphs (sec-0 through sec-6) are untouched; these modules
+// only redisplay existing sentences separately.
+const WHAT_A_CALCULATOR_CAN_AND_CANT = [
+  {
+    icon: Flame,
+    label: "Energia de bază",
+    note: "Organismul consumă energie permanent, inclusiv atunci când dormim sau stăm nemișcați.",
+  },
+  {
+    icon: Fingerprint,
+    label: "Necesar individual",
+    note: "De aceea, două persoane cu aceeași greutate nu au automat același necesar caloric.",
+  },
+  {
+    icon: Compass,
+    label: "Estimare",
+    note: "Rezultatul este o estimare, nu o măsurătoare exactă.",
+  },
+  {
+    icon: Footprints,
+    label: "Activitatea fizică",
+    note: "Nivelul de activitate introdus într-un calculator trebuie privit ca o estimare, nu ca o măsurătoare exactă a consumului energetic.",
+  },
+];
+
+const A_STARTING_POINT_NOT_A_FIXED_RULE = [
+  {
+    icon: Navigation,
+    label: "Pentru orientare",
+    note: "Un calculator este util pentru orientare. Te poate ajuta să înțelegi ordinul de mărime al necesarului tău energetic și diferența dintre menținere și un aport orientativ pentru un anumit obiectiv.",
+  },
+  {
+    icon: RefreshCw,
+    label: "Adaptare în timp",
+    note: "De aceea, un aport calculat la începutul unui proces nu trebuie privit ca o cifră fixă pentru următoarele luni sau ani.",
+  },
+  {
+    icon: Minus,
+    label: "Deficit fără exagerare",
+    note: "Pentru scădere în greutate este necesar un deficit energetic, dar un deficit mai mare nu este automat mai bun.",
+  },
+];
 
 export default function CateCaloriiAmNevoie() {
   const { language } = useLanguage();
@@ -41,11 +98,30 @@ export default function CateCaloriiAmNevoie() {
         "Liddle RA, Goldstein RB, Saxton J. Gallstone formation during weight-reduction dieting. Archives of Internal Medicine. 1989;149(8):1750-1753.",
       ]}
     >
+      {/* Hero image -- already-approved, already-local asset (also used as
+          this article's card image on the NutriHub hub), reused as-is, not
+          duplicated, not re-sourced. Same pattern as the hero images in the
+          other 4 implemented articles. */}
+      <img
+        src="/images/nutrihub/necesar-caloric-masa-cotidiana.webp"
+        alt="Masă cotidiană cu paste, legume și chifteluțe, alături de apă și un fruct"
+        width={1600}
+        height={900}
+        className="w-full aspect-[16/9] object-cover rounded-2xl border border-border"
+        loading="eager"
+        decoding="async"
+      />
+
       <section id="sec-0">
-        <ArticleP>
+        {/* First sentence re-rendered via ArticleLead instead of ArticleP --
+            text is byte-identical to before, appears exactly once (not
+            duplicated into either module below), per explicit approval.
+            This article already had 3 ArticleLead instances (sec-2, sec-6
+            x2); this is the 4th, same internal pattern. */}
+        <ArticleLead>
           Poate ai căutat măcar o dată pe internet „câte calorii trebuie să mănânc ca să slăbesc?” și ai primit un
           număr foarte precis.
-        </ArticleP>
+        </ArticleLead>
         <ArticleP>
           Problema este că organismul nu funcționează după o formulă perfectă. Necesarul energetic poate fi estimat,
           dar un calculator online nu poate măsura exact câte calorii consumă corpul tău într-o zi. Vârsta, sexul,
@@ -99,6 +175,30 @@ export default function CateCaloriiAmNevoie() {
           măsurătoare exactă a consumului energetic.
         </ArticleP>
       </section>
+
+      {/* Module "Ce poate și ce nu poate estima un calculator" -- positioned
+          after sec-2, before sec-3, closing out the "how a calculator
+          estimates" theme before the article shifts to "what to do with the
+          result" (sec-3 onward). Every caption redisplays a sentence that
+          already exists in this same article (sec-1, sec-2). Deliberately
+          excludes sec-3/sec-4/sec-5 -- sec-5 in particular carries the
+          800-1.200 kcal NICE thresholds, which must never be isolated. */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Ce poate și ce nu poate estima un calculator
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {WHAT_A_CALCULATOR_CAN_AND_CANT.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <section id="sec-3">
         <ArticleH2>Menținere, slăbire sau creștere în greutate?</ArticleH2>
@@ -190,6 +290,29 @@ export default function CateCaloriiAmNevoie() {
           fi menținut în viața reală.
         </ArticleP>
       </section>
+
+      {/* Module "Un punct de plecare, nu o regulă fixă" -- closing recap,
+          same position/pattern as the closing modules in the other 4
+          implemented articles (after the last section, before the shell's
+          own "Citește și" block). Deliberately avoids the 2 ArticleLead
+          instances already in sec-6 directly above (no visual duplication)
+          and excludes all kcal values / sec-5 content entirely. */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Un punct de plecare, nu o regulă fixă
+        </h2>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {A_STARTING_POINT_NOT_A_FIXED_RULE.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </ArticleShellPremium>
   );
 }
