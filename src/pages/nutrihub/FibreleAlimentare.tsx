@@ -1,7 +1,59 @@
 import { Link } from "wouter";
+import { Leaf, Activity, Shuffle, Salad, Feather, TrendingUp, Layers } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArticleH2, ArticleP, ArticleLead, ArticleList } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
+
+// "O singură categorie, roluri diferite" + "Creștere treptată, adaptată
+// toleranței" -- visual modules for this article only (never touch
+// ArticleShellPremium.tsx, never add these to the other 5 articles). Same
+// visual recipe already used in the other 4 implemented articles (bg-card
+// border-border tile + bg-primary/10 icon circle) -- zero new tokens, zero
+// new global components. Every item's text is an exact quote from this
+// article's own body (sec-0, sec-1, sec-2, sec-7) -- approved verbatim by
+// the user, not paraphrased further here. No new facts, numbers, or claims.
+// Deliberately excludes the 25 g/zi value, the LDL/glycemic supplement-study
+// results, and any medical-condition-specific content from both modules.
+const ONE_CATEGORY_DIFFERENT_ROLES = [
+  {
+    icon: Leaf,
+    label: "Ce sunt fibrele",
+    note: "Fibrele alimentare sunt componente ale alimentelor vegetale pe care organismul nostru nu le digeră complet în intestinul subțire.",
+  },
+  {
+    icon: Activity,
+    label: "Rolul principal",
+    note: "Cel mai cunoscut rol al fibrelor este legat de tranzitul intestinal. Ele pot contribui la formarea și consistența normală a scaunului și pot fi utile în prevenirea sau gestionarea constipației.",
+  },
+  {
+    icon: Shuffle,
+    label: "Nu toate la fel",
+    note: "Important este însă să nu punem toate fibrele în aceeași categorie. Nu toate au exact aceleași efecte.",
+  },
+  {
+    icon: Salad,
+    label: "Sursele",
+    note: "O alimentație variată, care conține legume, fructe, cereale integrale, leguminoase, nuci și semințe, oferă în mod natural mai multe tipuri de fibre.",
+  },
+];
+
+const GRADUAL_INCREASE_ADAPTED_TO_TOLERANCE = [
+  {
+    icon: Feather,
+    label: "Fără complicații inutile",
+    note: "Fibrele sunt importante, dar nu trebuie complicate inutil.",
+  },
+  {
+    icon: TrendingUp,
+    label: "Introducere treptată",
+    note: "Dacă în prezent consumi puține fibre, introducerea lor treptată este de obicei mai ușor de tolerat decât o schimbare bruscă.",
+  },
+  {
+    icon: Layers,
+    label: "Nicio fibră «perfectă»",
+    note: "Și poate cel mai important: nu există o singură fibră „perfectă”. O alimentație variată aduce tipuri diferite de fibre, fiecare cu propriile caracteristici.",
+  },
+];
 
 export default function FibreleAlimentare() {
   const { language } = useLanguage();
@@ -38,13 +90,31 @@ export default function FibreleAlimentare() {
         "van der Schoot A, Drysdale C, Whelan K, Dimidi E. The Effect of Fiber Supplementation on Chronic Constipation in Adults: An Updated Systematic Review and Meta-Analysis of Randomized Controlled Trials. Am J Clin Nutr. 2022;116(4):953–969.",
         "Ghavami A, et al. Soluble Fiber Supplementation and Serum Lipid Profile: A Systematic Review and Dose-Response Meta-Analysis of Randomized Controlled Trials. Adv Nutr. 2023;14(3):465–474.",
         "Xie Y, et al. Effects of soluble fiber supplementation on glycemic control in adults with type 2 diabetes mellitus: a systematic review and meta-analysis of randomized controlled trials. Clin Nutr. 2021;40(4):1800–1810.",
+        "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central.",
       ]}
     >
+      {/* Hero image -- already-approved, already-local asset (also used as
+          this article's card image on the NutriHub hub), reused as-is, not
+          duplicated, not re-sourced. Same pattern as the hero images in the
+          other 4 implemented articles. */}
+      <img
+        src="/images/nutrihub/fibre-alimentare-surse.webp"
+        alt="Surse de fibre alimentare: ovăz, leguminoase, pâine integrală, banane și legume cu frunze"
+        width={1600}
+        height={900}
+        className="w-full aspect-[16/9] object-cover rounded-2xl border border-border"
+        loading="eager"
+        decoding="async"
+      />
+
       <section id="sec-0">
-        <ArticleP>
+        {/* First sentence re-rendered via ArticleLead instead of ArticleP --
+            text is byte-identical to before, appears exactly once (not
+            duplicated into either module below), per explicit approval. */}
+        <ArticleLead>
           Probabil ai auzit de multe ori că „ar trebui să mănânci mai multe fibre”, mai ales dacă ai probleme cu
           tranzitul intestinal.
-        </ArticleP>
+        </ArticleLead>
         <ArticleP>
           Dar ce sunt, de fapt, fibrele? Unde le găsim? Sunt toate la fel? Și de ce uneori, atunci când începem să
           mâncăm mai multe alimente bogate în fibre, pot apărea gaze sau balonare?
@@ -73,6 +143,28 @@ export default function FibreleAlimentare() {
         </ArticleP>
         <ArticleP>Important este însă să nu punem toate fibrele în aceeași categorie. Nu toate au exact aceleași efecte.</ArticleP>
       </section>
+
+      {/* Module "O singură categorie, roluri diferite" -- positioned after
+          sec-1, before sec-2. Every caption redisplays a sentence that
+          already exists in this same article (sec-0, sec-1, sec-2).
+          Deliberately excludes the 25 g/zi value and every LDL/glycemic/
+          constipation-study-result sentence. */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          O singură categorie, roluri diferite
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {ONE_CATEGORY_DIFFERENT_ROLES.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <section id="sec-2">
         <ArticleH2>Sunt toate fibrele la fel?</ArticleH2>
@@ -121,6 +213,38 @@ export default function FibreleAlimentare() {
           să te uiți la alimentația ta în ansamblu.
         </ArticleP>
       </section>
+
+      {/* New photo + short editorial module -- original photograph (not
+          stock, not a placeholder), saved locally, not yet used anywhere
+          else on the site. Deliberately not framed as a ranking ("cele mai
+          bogate fructe") since the article gives no comparable per-fruit
+          values -- framed instead as examples, with a note that fibre
+          content varies by variety/ripeness/portion. One new source
+          (USDA FoodData Central) added to the bibliography for this module
+          only; the article's own 5 existing sources are untouched. */}
+      <div>
+        <img
+          src="/images/nutrihub/fructe-cu-fibre.webp"
+          alt="Avocado întreg și tăiat în jumătate, zmeură, mure, pară cu coajă și kiwi tăiat, așezate pe un blat"
+          width={1600}
+          height={900}
+          className="w-full aspect-[16/9] object-cover rounded-2xl border border-border"
+          loading="lazy"
+          decoding="async"
+        />
+        <div className="mt-4 rounded-xl border border-border bg-card p-4">
+          <p className="text-sm font-semibold text-foreground leading-snug">
+            Fructe cu un conținut mai ridicat de fibre
+          </p>
+          <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+            Avocado, zmeura, murele, para cu coajă și kiwi sunt câteva exemple de fructe care pot contribui la
+            aportul de fibre.
+          </p>
+          <p className="text-xs text-muted-foreground mt-2 leading-snug">
+            Conținutul de fibre poate varia în funcție de soi, maturitate și porția consumată.
+          </p>
+        </div>
+      </div>
 
       <section id="sec-4">
         <ArticleH2>Cum poate arăta practic o zi cu surse de fibre?</ArticleH2>
@@ -236,6 +360,29 @@ export default function FibreleAlimentare() {
           diferite de fibre, fiecare cu propriile caracteristici.
         </ArticleP>
       </section>
+
+      {/* Module "Creștere treptată, adaptată toleranței" -- closing recap,
+          same position/pattern as the closing modules in the other 4
+          implemented articles (after the last section, before the shell's
+          own "Citește și" block). Every caption redisplays a sentence that
+          already exists in sec-7 above; excludes the 25 g/zi value and the
+          hydration/water-intake content entirely. */}
+      <div>
+        <h2 className="font-serif font-bold text-foreground text-xl md:text-2xl mb-4">
+          Creștere treptată, adaptată toleranței
+        </h2>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {GRADUAL_INCREASE_ADAPTED_TO_TOLERANCE.map((item) => (
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2.5">
+                <item.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-foreground leading-snug">{item.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </ArticleShellPremium>
   );
 }
