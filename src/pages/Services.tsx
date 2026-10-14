@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowRight, ChevronDown, ClipboardCheck } from "lucide-react";
+import { ArrowRight, ClipboardCheck } from "lucide-react";
 import { services as checkoutCatalog } from "@/lib/catalog/services";
 
 // Services.tsx is the single purchase entry point: each card's CTA links to
@@ -23,13 +21,18 @@ function serviceCtaHref(id: string): string {
 // by hand if Home's ever changes.
 const PAGE_COLUMN = "max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8";
 
+// periodRo/periodEn are optional this round: Consultație Nutrițională and
+// Monitorizare Nutrițională no longer carry any period badge at all, since
+// their only period was expressed in minutes ("45-60 minute" / "30 minute")
+// and that's exactly what was asked to be removed, with nothing put in its
+// place. Every period expressed in days/weeks/months is untouched.
 interface ServiceOffering {
   id: string;
   nameRo: string;
   nameEn: string;
   price: number;
-  periodRo: string;
-  periodEn: string;
+  periodRo?: string;
+  periodEn?: string;
   periodSubRo?: string;
   periodSubEn?: string;
   shortRo: string;
@@ -44,7 +47,7 @@ interface ServiceOffering {
   noteEn?: string;
 }
 
-const CTA_RO = "Alege acest serviciu";
+const CTA_RO = "Alege serviciul";
 const CTA_EN = "Choose this service";
 const SUB_CTA_RO = "Vei continua către plata securizată.";
 const SUB_CTA_EN = "You'll continue to secure checkout.";
@@ -56,9 +59,12 @@ const WHATSAPP_NOTE_RO =
 const WHATSAPP_NOTE_EN =
   "WhatsApp clarifications are not continuous monitoring and do not imply real-time replies.";
 
-// Prices, ids, and checkout logic are unchanged from before this round --
-// only copy (shortened per the editorial pass) and the removed per-card
-// "recommended" flag/badge.
+// Every card now shows exactly 4 benefits, always visible (no mobile
+// collapse, no accordion, no toggle) -- approved text, condensed from the
+// previous longer "include" lists. Only durations expressed in minutes were
+// removed ("45-60 minute", "30 minute", "de aproximativ 20 de minute");
+// every day/week/month period, every service name, every price, and the
+// number of check-ins (1, 3) are unchanged.
 const services: ServiceOffering[] = [
   {
     id: "primii-pasi",
@@ -76,20 +82,16 @@ const services: ServiceOffering[] = [
     includeLabelRo: "Cum se desfășoară",
     includeLabelEn: "How it works",
     includeRo: [
-      "jurnal alimentar timp de 7 zile;",
-      "analizarea alimentației actuale;",
-      "estimarea necesarului energetic și stabilirea unui aport orientativ;",
-      "primești recomandările pe WhatsApp;",
-      "timp de 14 zile aplici recomandările și continui jurnalul;",
-      "la final primești feedback și, dacă este necesar, ajustări.",
+      "Jurnal alimentar timp de 7 zile.",
+      "Analiza alimentației actuale și recomandări trimise pe WhatsApp.",
+      "14 zile de aplicare a recomandărilor, cu jurnalul continuat.",
+      "Feedback și, dacă este necesar, ajustări la final.",
     ],
     includeEn: [
-      "a 7-day food journal;",
-      "reviewing your current eating habits;",
-      "estimating your energy needs and setting an orientative intake;",
-      "you receive the recommendations on WhatsApp;",
-      "over 14 days you apply the recommendations and continue the journal;",
-      "at the end you receive feedback and, if needed, adjustments.",
+      "A 7-day food journal.",
+      "Reviewing your current eating habits and recommendations sent on WhatsApp.",
+      "14 days of applying the recommendations, continuing the journal.",
+      "Feedback and, if needed, adjustments at the end.",
     ],
     hasWhatsApp: true,
   },
@@ -98,8 +100,6 @@ const services: ServiceOffering[] = [
     nameRo: "Consultație Nutrițională",
     nameEn: "Nutrition Consultation",
     price: 300,
-    periodRo: "45–60 minute",
-    periodEn: "45–60 minutes",
     shortRo:
       "Pentru persoanele care au nevoie de o evaluare completă și de recomandări nutriționale adaptate nevoilor și obiectivelor lor.",
     shortEn:
@@ -107,18 +107,16 @@ const services: ServiceOffering[] = [
     includeLabelRo: "Include",
     includeLabelEn: "Includes",
     includeRo: [
-      "jurnal alimentar timp de 7 zile;",
-      "evaluarea alimentației actuale, a istoricului relevant și a principalelor dificultăți;",
-      "revizuirea analizelor medicale recente disponibile, atunci când sunt relevante pentru recomandările nutriționale;",
-      "estimarea necesarului energetic și stabilirea obiectivelor nutriționale;",
-      "recomandări nutriționale personalizate și plan alimentar orientativ pentru 7 zile.",
+      "Jurnal alimentar timp de 7 zile.",
+      "Evaluarea alimentației actuale, a istoricului și a principalelor dificultăți.",
+      "Revizuirea analizelor medicale relevante disponibile.",
+      "Recomandări personalizate și plan alimentar orientativ pentru 7 zile.",
     ],
     includeEn: [
-      "a 7-day food journal;",
-      "assessing your current eating habits, relevant history, and main difficulties;",
-      "reviewing your recent available medical test results, when relevant to the nutritional recommendations;",
-      "estimating your energy needs and setting your nutritional goals;",
-      "tailored nutritional recommendations and an orientative 7-day meal plan.",
+      "A 7-day food journal.",
+      "Reviewing your current eating habits, history, and main difficulties.",
+      "Reviewing your relevant available medical test results.",
+      "Tailored recommendations and an orientative 7-day meal plan.",
     ],
     showAnalysisLink: true,
     noteRo: "Consultația nu include monitorizare ulterioară.",
@@ -135,17 +133,19 @@ const services: ServiceOffering[] = [
       "Pentru persoanele care, pe lângă consultația inițială, au nevoie de o perioadă de ghidaj și de o reevaluare pe parcurs.",
     shortEn:
       "For people who need, beyond the initial consultation, a period of guidance and a check-in along the way.",
-    includeLabelRo: "Include Consultația Nutrițională, plus:",
-    includeLabelEn: "Includes the Nutrition Consultation, plus:",
+    includeLabelRo: "Include",
+    includeLabelEn: "Includes",
     includeRo: [
-      "o monitorizare de aproximativ 20 de minute;",
-      "ajustarea recomandărilor în funcție de evoluție;",
-      "clarificări punctuale pe WhatsApp pe durata programului.",
+      "Consultația Nutrițională completă.",
+      "O monitorizare a evoluției.",
+      "Ajustarea recomandărilor în funcție de evoluție.",
+      "Clarificări punctuale pe WhatsApp pe durata programului.",
     ],
     includeEn: [
-      "1 check-in of about 20 minutes;",
-      "adjusting recommendations based on your progress;",
-      "point-in-time clarifications on WhatsApp during the program.",
+      "The full Nutrition Consultation.",
+      "One check-in on your progress.",
+      "Adjusting recommendations based on your progress.",
+      "Point-in-time clarifications on WhatsApp during the program.",
     ],
     hasWhatsApp: true,
   },
@@ -160,80 +160,58 @@ const services: ServiceOffering[] = [
       "Pentru persoanele care au nevoie de urmărire pe o perioadă mai lungă, cu reevaluări și ajustări succesive.",
     shortEn:
       "For people who need longer-term follow-up, with successive check-ins and adjustments.",
-    includeLabelRo: "Include Consultația Nutrițională, plus:",
-    includeLabelEn: "Includes the Nutrition Consultation, plus:",
+    includeLabelRo: "Include",
+    includeLabelEn: "Includes",
     includeRo: [
-      "trei monitorizări de aproximativ 20 de minute, aproximativ una pe lună;",
-      "ajustarea recomandărilor pe parcurs;",
-      "feedback asupra progresului;",
-      "clarificări punctuale pe WhatsApp între monitorizări.",
+      "Consultația Nutrițională completă.",
+      "Trei monitorizări, aproximativ una pe lună.",
+      "Ajustarea recomandărilor și feedback asupra progresului.",
+      "Clarificări punctuale pe WhatsApp între monitorizări.",
     ],
     includeEn: [
-      "3 check-ins of about 20 minutes each, roughly one per month;",
-      "adjustments along the way;",
-      "feedback on your progress;",
-      "point-in-time clarifications on WhatsApp between check-ins.",
+      "The full Nutrition Consultation.",
+      "Three check-ins, roughly one per month.",
+      "Adjustments and feedback on your progress.",
+      "Point-in-time clarifications on WhatsApp between check-ins.",
     ],
     hasWhatsApp: true,
   },
 ];
 
 // Kept structurally separate from `services` (own section, own eyebrow),
-// per this round's explicit "must read as visually separate from the 4
+// per the earlier explicit "must read as visually separate from the 4
 // new-patient services" instruction -- not just a data-shape difference.
 const MONITORING: ServiceOffering = {
   id: "monitorizare-nutritionala",
   nameRo: "Monitorizare Nutrițională",
   nameEn: "Nutritional Monitoring",
   price: 200,
-  periodRo: "30 minute",
-  periodEn: "30 minutes",
   shortRo: "Pentru pacienții care au avut deja o consultație și au nevoie de o reevaluare punctuală a evoluției.",
   shortEn: "For patients who have already had a consultation and need a one-time reassessment of their progress.",
   includeLabelRo: "Include",
   includeLabelEn: "Includes",
   includeRo: [
-    "verificarea modului în care au fost aplicate recomandările stabilite anterior;",
-    "reevaluarea progresului și a eventualelor dificultăți apărute;",
-    "revizuirea planului alimentar, dacă este necesar;",
-    "recomandări scrise actualizate pentru perioada următoare.",
+    "Verificarea modului în care au fost aplicate recomandările anterioare.",
+    "Reevaluarea progresului și a dificultăților apărute.",
+    "Revizuirea planului alimentar, dacă este necesar.",
+    "Recomandări scrise actualizate pentru perioada următoare.",
   ],
   includeEn: [
-    "checking how the previously set recommendations were applied;",
-    "reassessing your progress and any difficulties that came up;",
-    "reviewing your meal plan, if needed;",
-    "updated written recommendations for the period ahead.",
+    "Checking how the previously set recommendations were applied.",
+    "Reassessing your progress and any difficulties that came up.",
+    "Reviewing your meal plan, if needed.",
+    "Updated written recommendations for the period ahead.",
   ],
 };
 
-const HOW_TO_CHOOSE = [
-  {
-    nameRo: "Primii Pași",
-    nameEn: "First Steps",
-    descRo: "ghidaj inițial, fără consultație completă",
-    descEn: "initial guidance, without a full consultation",
-  },
-  {
-    nameRo: "Consultație Nutrițională",
-    nameEn: "Nutrition Consultation",
-    descRo: "evaluare completă, punctuală, fără monitorizare inclusă",
-    descEn: "a complete, one-time assessment, without monitoring included",
-  },
-  {
-    nameRo: "Program 6 săptămâni",
-    nameEn: "6-Week Program",
-    descRo: "consultație + 1 monitorizare",
-    descEn: "consultation + 1 check-in",
-  },
-  {
-    nameRo: "Program 3 luni",
-    nameEn: "3-Month Program",
-    descRo: "consultație + 3 monitorizări",
-    descEn: "consultation + 3 check-ins",
-  },
-];
-
-const AFTER_PAYMENT_STEPS = [
+// Replaces the previous two separate blocks ("Cum alegi?", a definition
+// list above the cards, and "Ce se întâmplă după plată?", below them) with
+// one short "Cum funcționează" section. "Cum alegi?" is dropped outright --
+// its distinguishing info (name, price, who it's for, what's included) is
+// now directly visible on every card, so the separate list only duplicated
+// it. "Ce se întâmplă după plată?" is kept, renamed, content unchanged --
+// no new text was written for this section.
+const HOW_IT_WORKS_STEPS = [
   { ro: "Plata este confirmată.", en: "Your payment is confirmed." },
   { ro: "Primești indicațiile pentru pregătirea serviciului ales.", en: "You receive instructions for preparing your chosen service." },
   {
@@ -246,33 +224,16 @@ const AFTER_PAYMENT_STEPS = [
   },
 ];
 
-const MOBILE_VISIBLE_ITEMS = 3;
-
 // Shared visual language for every service card on this page (the 4 main
 // ones + Monitorizare) -- rounded-2xl border + bg-card/60, no shadow, no
 // icon circle, matching Home's "Din răspunsuri" / Despre mine's credibility
-// blocks instead of the old shadcn Card/Badge/Button + CheckCircle2 +
-// "Recomandat" badge treatment.
-function ServiceCard({
-  service,
-  ro,
-  expanded,
-  onToggle,
-}: {
-  service: ServiceOffering;
-  ro: boolean;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
+// blocks. All 4 benefits are always visible (no mobile collapse, no
+// accordion, no tabs) -- price and CTA are reachable with zero interaction
+// beyond landing on the card. `mt-auto` on the CTA block keeps the button
+// pinned to the bottom of the card regardless of how much text sits above
+// it, so cards sharing a grid row stay visually balanced.
+function ServiceCard({ service, ro }: { service: ServiceOffering; ro: boolean }) {
   const includeItems = ro ? service.includeRo : service.includeEn;
-  const visibleItems = includeItems.slice(0, MOBILE_VISIBLE_ITEMS);
-  const restItems = includeItems.slice(MOBILE_VISIBLE_ITEMS);
-  // On mobile, everything past the first few bullets (remaining items, the
-  // analysis link, the note) is collapsed behind a toggle. On desktop
-  // (lg+) it's always shown -- this class combo is the only thing
-  // controlling that.
-  const extraVisibilityClass = expanded ? "block" : "hidden lg:block";
-  const hasExtra = restItems.length > 0 || service.showAnalysisLink || (service.noteRo && service.noteEn);
 
   return (
     <div className="h-full min-w-0 flex flex-col rounded-2xl border border-border bg-card/60 p-6">
@@ -281,7 +242,9 @@ function ServiceCard({
       </h2>
       <p className="mb-1">
         <span className="text-2xl md:text-3xl font-bold text-primary">{service.price} lei</span>
-        <span className="text-muted-foreground"> · {ro ? service.periodRo : service.periodEn}</span>
+        {service.periodRo && service.periodEn && (
+          <span className="text-muted-foreground"> · {ro ? service.periodRo : service.periodEn}</span>
+        )}
       </p>
       {service.periodSubRo && service.periodSubEn && (
         <p className="text-xs text-muted-foreground mb-4">{ro ? service.periodSubRo : service.periodSubEn}</p>
@@ -297,8 +260,8 @@ function ServiceCard({
       <h3 className="text-sm font-semibold text-foreground mb-3">
         {ro ? service.includeLabelRo : service.includeLabelEn}
       </h3>
-      <ul className="space-y-2.5 max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed text-muted-foreground mb-2">
-        {visibleItems.map((item, j) => (
+      <ul className="space-y-2.5 max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed text-muted-foreground mb-6">
+        {includeItems.map((item, j) => (
           <li key={j} className="flex items-start gap-2.5">
             <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" aria-hidden="true" />
             <span>{item}</span>
@@ -306,43 +269,18 @@ function ServiceCard({
         ))}
       </ul>
 
-      <div className={extraVisibilityClass}>
-        {restItems.length > 0 && (
-          <ul className="space-y-2.5 max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed text-muted-foreground mb-2">
-            {restItems.map((item, j) => (
-              <li key={j} className="flex items-start gap-2.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" aria-hidden="true" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {service.showAnalysisLink && (
-          <Link
-            href="/consultatii#analize"
-            className="inline-flex items-center gap-1.5 text-xs text-primary underline underline-offset-2 mb-6 hover:no-underline"
-          >
-            <ClipboardCheck className="w-3.5 h-3.5 shrink-0" />
-            {ro ? "Vezi analizele recomandate înainte de consultație" : "See the recommended tests before your consultation"}
-          </Link>
-        )}
-        {!service.showAnalysisLink && <div className="mb-6" />}
-
-        {service.noteRo && service.noteEn && (
-          <p className="text-xs text-muted-foreground leading-relaxed mb-6">{ro ? service.noteRo : service.noteEn}</p>
-        )}
-      </div>
-
-      {hasExtra && (
-        <button
-          type="button"
-          onClick={onToggle}
-          className="lg:hidden flex items-center gap-1.5 text-xs font-semibold text-primary mb-6 -mt-2"
+      {service.showAnalysisLink && (
+        <Link
+          href="/consultatii#analize"
+          className="inline-flex items-center gap-1.5 text-xs text-primary underline underline-offset-2 mb-6 hover:no-underline"
         >
-          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} />
-          {expanded ? (ro ? "Ascunde detaliile" : "Hide details") : (ro ? "Vezi toate detaliile" : "See all details")}
-        </button>
+          <ClipboardCheck className="w-3.5 h-3.5 shrink-0" />
+          {ro ? "Vezi analizele recomandate înainte de consultație" : "See the recommended tests before your consultation"}
+        </Link>
+      )}
+
+      {service.noteRo && service.noteEn && (
+        <p className="text-xs text-muted-foreground leading-relaxed mb-6">{ro ? service.noteRo : service.noteEn}</p>
       )}
 
       <div className="mt-auto">
@@ -363,7 +301,6 @@ function ServiceCard({
 export default function Services() {
   const { language } = useLanguage();
   const ro = language === "ro";
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   return (
     <div
@@ -380,13 +317,10 @@ export default function Services() {
       } as any}
     >
       <div className={PAGE_COLUMN}>
-        {/* Header */}
-        <motion.div
-          className="max-w-2xl mx-auto text-center mb-10 md:mb-14"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55 }}
-        >
+        {/* Header -- rendered directly in its final state, no entry
+            animation. This page's commercial content must never depend on
+            JS/scroll-triggered animation to become visible or readable. */}
+        <div className="max-w-2xl mx-auto text-center mb-10 md:mb-14">
           <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
             <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
             {ro ? "Servicii" : "Services"}
@@ -399,55 +333,19 @@ export default function Services() {
               ? "De la un prim ghidaj până la monitorizare pe termen lung — fiecare serviciu are un nivel diferit de sprijin."
               : "From initial guidance to longer-term monitoring — each service offers a different level of support."}
           </p>
-        </motion.div>
+        </div>
 
-        {/* "Cum alegi?" -- short editorial block, not a table, not 4 more
-            cards -- just a scannable definition list before the services. */}
-        <motion.div
-          className="max-w-3xl mx-auto mb-12 md:mb-16 rounded-2xl border border-border bg-card/60 p-6"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="font-serif font-bold text-xl text-foreground mb-4">{ro ? "Cum alegi?" : "How do you choose?"}</h2>
-          <ul className="space-y-2.5">
-            {HOW_TO_CHOOSE.map((item, i) => (
-              <li
-                key={i}
-                className="max-lg:text-[17px] max-lg:leading-[1.55] lg:text-sm lg:leading-relaxed text-muted-foreground"
-              >
-                <span className="font-semibold text-foreground">{ro ? item.nameRo : item.nameEn}</span>
-                {" — "}
-                {ro ? item.descRo : item.descEn}
-              </li>
-            ))}
-          </ul>
-        </motion.div>
-
-        {/* Services grid: 2x2 on desktop, single column on mobile. */}
+        {/* Services grid: price, description and all 4 benefits visible
+            immediately, on every screen size -- 2x2 on desktop, single
+            column on mobile. No entry animation on the cards themselves. */}
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
-          {services.map((service, i) => (
-            <motion.div
-              key={service.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-            >
-              <ServiceCard
-                service={service}
-                ro={ro}
-                expanded={!!expanded[service.id]}
-                onToggle={() => setExpanded((prev) => ({ ...prev, [service.id]: !prev[service.id] }))}
-              />
-            </motion.div>
+          {services.map((service) => (
+            <ServiceCard key={service.id} service={service} ro={ro} />
           ))}
         </div>
 
         {/* Single shared WhatsApp note, after the services that mention
-            WhatsApp (Primii Pași, both Programs) -- was repeated near-
-            identically on up to 3 cards before. */}
+            WhatsApp (Primii Pași, both Programs). */}
         {services.some((s) => s.hasWhatsApp) && (
           <p className="max-w-5xl mx-auto text-xs text-muted-foreground text-center mt-6">{ro ? WHATSAPP_NOTE_RO : WHATSAPP_NOTE_EN}</p>
         )}
@@ -455,57 +353,36 @@ export default function Services() {
         {/* Monitorizare Nutrițională -- visually separate section for
             existing patients, not intercalated with the 4 new-patient
             services above. */}
-        <motion.div
-          className="max-w-5xl mx-auto mt-16 md:mt-20"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="max-w-5xl mx-auto mt-16 md:mt-20">
           <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase text-primary mb-4">
             <span className="inline-block w-4 h-px bg-primary" aria-hidden="true" />
             {ro ? "Pentru pacienții existenți" : "For existing patients"}
           </span>
           <div className="max-w-2xl">
-            <ServiceCard
-              service={MONITORING}
-              ro={ro}
-              expanded={!!expanded[MONITORING.id]}
-              onToggle={() => setExpanded((prev) => ({ ...prev, [MONITORING.id]: !prev[MONITORING.id] }))}
-            />
+            <ServiceCard service={MONITORING} ro={ro} />
           </div>
-        </motion.div>
+        </div>
 
-        {/* Ce se întâmplă după plată? */}
-        <motion.div
-          className="max-w-3xl mx-auto mt-16 md:mt-20"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
+        {/* Cum funcționează -- merges the previous "Cum alegi?" block (now
+            redundant: every card already shows price/for-whom/benefits) and
+            "Ce se întâmplă după plată?" into one short section. Step text
+            is unchanged from the previous "Ce se întâmplă după plată?". */}
+        <div className="max-w-3xl mx-auto mt-16 md:mt-20">
           <h2 className="font-serif font-bold text-xl md:text-2xl text-foreground mb-5 text-balance">
-            {ro ? "Ce se întâmplă după plată?" : "What happens after you pay?"}
+            {ro ? "Cum funcționează" : "How it works"}
           </h2>
           <ol className="max-lg:space-y-2 lg:space-y-3">
-            {AFTER_PAYMENT_STEPS.map((step, i) => (
+            {HOW_IT_WORKS_STEPS.map((step, i) => (
               <li key={i} className="flex items-start gap-3 max-lg:text-[17px] max-lg:leading-[1.55] lg:text-base lg:leading-relaxed text-muted-foreground">
                 <span className="font-semibold text-primary shrink-0">{i + 1}.</span>
                 <span>{ro ? step.ro : step.en}</span>
               </li>
             ))}
           </ol>
-        </motion.div>
+        </div>
 
-        {/* Bottom CTA -- restyled to match Home/Despre mine's calm final
-            section (no bordered/tinted box, plain centered text). */}
-        <motion.div
-          className="max-w-2xl mx-auto text-center mt-10 md:mt-20"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
+        {/* Bottom CTA -- unchanged content. */}
+        <div className="max-w-2xl mx-auto text-center mt-10 md:mt-20">
           <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-4 text-balance">
             {ro ? "Nu știi de unde să începi?" : "Not sure where to start?"}
           </h2>
@@ -522,7 +399,7 @@ export default function Services() {
             {ro ? "Contactează-ne" : "Contact us"}
             <ArrowRight className="w-4 h-4" />
           </Link>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
