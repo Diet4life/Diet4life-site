@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
-import { useParams } from "wouter";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useParams } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, RotateCw } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { BillingForm } from "@/components/checkout/BillingForm";
 import { PatientForm } from "@/components/checkout/PatientForm";
@@ -26,10 +27,16 @@ export default function Checkout() {
   // Matches the site's own lg breakpoint (1024px, e.g. Home.tsx's hero grid).
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
-  const [product, setProduct] = useState<Product | "loading" | "not-found">("loading");
+  // "error" (products-list itself failed -- network/5xx, a technical
+  // problem on our side) is now distinct from "not-found" (products-list
+  // answered fine, but no active product matches this slug). Before this
+  // round both collapsed into the same "not-found" message, which misread
+  // a connectivity/API problem as "this product doesn't exist" -- see the
+  // audit this round responds to.
+  const [product, setProduct] = useState<Product | "loading" | "not-found" | "error">("loading");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
+  const loadProduct = useCallback(() => {
     let cancelled = false;
     setProduct("loading");
     fetch("/.netlify/functions/products-list")
@@ -43,12 +50,14 @@ export default function Checkout() {
         setProduct(match ?? "not-found");
       })
       .catch(() => {
-        if (!cancelled) setProduct("not-found");
+        if (!cancelled) setProduct("error");
       });
     return () => {
       cancelled = true;
     };
   }, [slug]);
+
+  useEffect(() => loadProduct(), [loadProduct]);
 
   const form = useForm<CheckoutSubmissionInput>({
     resolver: zodResolver(checkoutSubmissionSchema),
@@ -86,17 +95,51 @@ export default function Checkout() {
     );
   }
 
+  // Technical failure: products-list itself did not answer correctly
+  // (network error, 5xx, bad JSON). Distinct from "not-found" below --
+  // this is a "try again" situation, not "this product doesn't exist".
+  if (product === "error") {
+    return (
+      <div className="py-24 min-h-screen flex flex-col items-center justify-center text-center px-4">
+        <h1 className="font-serif font-bold text-2xl text-foreground mb-3">
+          {ro ? "Nu am putut încărca serviciul" : "We couldn't load this service"}
+        </h1>
+        <p className="text-muted-foreground max-w-sm mb-6">
+          {ro
+            ? "A apărut o problemă temporară. Încearcă din nou sau revino la pagina Servicii."
+            : "A temporary problem occurred. Try again or go back to the Services page."}
+        </p>
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <Button onClick={() => loadProduct()} className="rounded-xl gap-2" data-testid="button-checkout-retry">
+            <RotateCw className="w-4 h-4" />
+            {ro ? "Încearcă din nou" : "Try again"}
+          </Button>
+          <Button asChild variant="outline" className="rounded-xl">
+            <Link href="/services" data-testid="link-checkout-back-to-services">
+              {ro ? "Înapoi la Servicii" : "Back to Services"}
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (product === "not-found") {
     return (
       <div className="py-24 min-h-screen flex flex-col items-center justify-center text-center px-4">
         <h1 className="font-serif font-bold text-2xl text-foreground mb-3">
           {ro ? "Acest produs nu este disponibil" : "This product is not available"}
         </h1>
-        <p className="text-muted-foreground max-w-sm">
+        <p className="text-muted-foreground max-w-sm mb-6">
           {ro
             ? "Este posibil să fi fost retras sau linkul nu mai este valabil."
             : "It may have been withdrawn, or the link is no longer valid."}
         </p>
+        <Button asChild variant="outline" className="rounded-xl">
+          <Link href="/services" data-testid="link-checkout-back-to-services">
+            {ro ? "Înapoi la Servicii" : "Back to Services"}
+          </Link>
+        </Button>
       </div>
     );
   }
