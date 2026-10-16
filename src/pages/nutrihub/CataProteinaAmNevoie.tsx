@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Puzzle, Gauge, BadgeCheck, Shuffle, Target, Tag, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { ArticleH2, ArticleP, ArticleLead, ArticleList } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
@@ -62,6 +63,14 @@ const BEYOND_THE_LABEL = [
 
 export default function CataProteinaAmNevoie() {
   const { language } = useLanguage();
+
+  useDocumentHead(
+    language === "ro" ? "De câtă proteină am nevoie? | NutriHub" : "How Much Protein Do I Need? | NutriHub",
+    language === "ro"
+      ? "Rolul proteinei în alimentație, reperele validate științific și de ce „high protein” nu înseamnă automat sănătos."
+      : "Protein's role in your diet, evidence-based benchmarks, and why \"high protein\" doesn't automatically mean healthy.",
+    { canonical: "https://diet4lifeconcept.ro/nutrihub/cata-proteina-am-nevoie" }
+  );
 
   if (language !== "ro") {
     return (

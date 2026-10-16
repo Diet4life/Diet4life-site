@@ -6,6 +6,14 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
+# Checkout/retur are transactional, templated pages with no evergreen search
+# value -- noindex via an HTTP header (not a JS-inserted meta tag) so it
+# applies even if a crawler never executes the page's JavaScript.
+[[headers]]
+  for = "/checkout/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, follow"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

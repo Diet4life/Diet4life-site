@@ -2,6 +2,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
+import { useDocumentHead } from "@/hooks/use-document-head";
 
 // Same outer column as Home's own PAGE_COLUMN (max-w-[1200px] + matching
 // padding) -- duplicated here rather than imported, since importing it
@@ -13,6 +14,15 @@ const PAGE_COLUMN = "max-w-[1200px] mx-auto px-[18px] min-[380px]:px-5 lg:px-8";
 export default function About() {
   const { language } = useLanguage();
   const ro = language === "ro";
+
+  useDocumentHead(
+    ro ? "Despre Camelia Amuza | Diet4Life Concept" : "About Camelia Amuza | Diet4Life Concept",
+    ro
+      ? "Nutriționist-dietetician autorizat. Află povestea, formarea și filosofia din spatele Diet4Life Concept."
+      : "Licensed dietitian-nutritionist. Learn about the story, training and philosophy behind Diet4Life Concept.",
+    { canonical: "https://diet4lifeconcept.ro/about" }
+  );
+
   const shouldReduceMotion = useReducedMotion();
   // Entrance animations capped at 300ms (was 500-800ms) and skip their
   // from-offset entirely when the OS requests reduced motion -- same

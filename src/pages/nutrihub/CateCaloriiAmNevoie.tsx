@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Flame, Fingerprint, Compass, Footprints, Navigation, RefreshCw, Minus } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { ArticleH2, ArticleP, ArticleLead } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
@@ -62,6 +63,14 @@ const A_STARTING_POINT_NOT_A_FIXED_RULE = [
 
 export default function CateCaloriiAmNevoie() {
   const { language } = useLanguage();
+
+  useDocumentHead(
+    language === "ro" ? "Câte calorii am nevoie, de fapt? | NutriHub" : "How Many Calories Do I Actually Need? | NutriHub",
+    language === "ro"
+      ? "Cum se estimează necesarul caloric și ce poate — dar mai ales ce nu poate — arăta un calculator online."
+      : "How caloric needs are estimated, and what an online calculator can — and can't — tell you.",
+    { canonical: "https://diet4lifeconcept.ro/nutrihub/cate-calorii-am-nevoie" }
+  );
 
   if (language !== "ro") {
     return (

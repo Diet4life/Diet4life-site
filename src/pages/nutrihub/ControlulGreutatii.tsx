@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Scale, Compass, RotateCcw, ArrowRight, Utensils, HeartPulse, Footprints, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { ArticleH2, ArticleP, ArticleLead, ArticleQuote } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
@@ -66,6 +67,14 @@ const WHAT_ELSE_MATTERS = [
 
 export default function ControlulGreutatii() {
   const { language } = useLanguage();
+
+  useDocumentHead(
+    language === "ro" ? "Controlul greutății: de ce nu e doar „mănâncă mai puțin” | NutriHub" : "Weight Management: Why It's Not Just About Eating Less | NutriHub",
+    language === "ro"
+      ? "Factorii reali care influențează greutatea corporală și de ce o abordare simplistă nu funcționează pe termen lung."
+      : "The real factors that influence body weight, and why a simplistic approach doesn't work long-term.",
+    { canonical: "https://diet4lifeconcept.ro/nutrihub/controlul-greutatii" }
+  );
 
   if (language !== "ro") {
     return (

@@ -1,4 +1,5 @@
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -322,6 +323,14 @@ function scrollToId(id: string) {
 export default function Calculator() {
   const { language } = useLanguage();
   const ro = language === "ro";
+
+  useDocumentHead(
+    ro ? "Calculator necesar caloric și nutrienți | Diet4Life Concept" : "Calorie & Nutrient Needs Calculator | Diet4Life Concept",
+    ro
+      ? "Estimează-ți necesarul energetic, de proteine, carbohidrați și grăsimi pe baza unor formule validate științific — orientativ, nu un diagnostic."
+      : "Estimate your energy, protein, carbohydrate and fat needs using evidence-based equations — for guidance only, not as a medical diagnosis.",
+    { canonical: "https://diet4lifeconcept.ro/calculator" }
+  );
 
   const [safety, setSafety] = useState<SafetySelections>({});
   const [result, setResult] = useState<ResultState>({ status: "idle" });

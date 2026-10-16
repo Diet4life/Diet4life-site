@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Leaf, Activity, Shuffle, Salad, Feather, TrendingUp, Layers } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { ArticleH2, ArticleP, ArticleLead, ArticleList } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
@@ -57,6 +58,14 @@ const GRADUAL_INCREASE_ADAPTED_TO_TOLERANCE = [
 
 export default function FibreleAlimentare() {
   const { language } = useLanguage();
+
+  useDocumentHead(
+    language === "ro" ? "Fibrele alimentare: de ce sunt importante | NutriHub" : "Dietary Fiber: Why It Matters | NutriHub",
+    language === "ro"
+      ? "Ce sunt fibrele, ce roluri diferite au în organism și cum le poți introduce treptat în alimentație."
+      : "What fiber is, the different roles it plays in the body, and how to introduce it gradually into your diet.",
+    { canonical: "https://diet4lifeconcept.ro/nutrihub/fibrele-alimentare" }
+  );
 
   if (language !== "ro") {
     return (

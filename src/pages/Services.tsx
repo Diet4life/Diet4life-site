@@ -2,6 +2,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import { ArrowRight, ClipboardCheck } from "lucide-react";
 import { services as checkoutCatalog } from "@/lib/catalog/services";
+import { useDocumentHead } from "@/hooks/use-document-head";
 
 // Services.tsx is the single purchase entry point: each card's CTA links to
 // real checkout (/checkout/:slug) when the matching catalog entry
@@ -301,6 +302,14 @@ function ServiceCard({ service, ro }: { service: ServiceOffering; ro: boolean })
 export default function Services() {
   const { language } = useLanguage();
   const ro = language === "ro";
+
+  useDocumentHead(
+    ro ? "Servicii și prețuri | Diet4Life Concept" : "Services & Pricing | Diet4Life Concept",
+    ro
+      ? "Evaluare nutrițională, monitorizare și ghidaj — alege nivelul de sprijin potrivit pentru tine, cu prețuri clare, afișate direct."
+      : "Nutrition assessment, monitoring and guidance — choose the right level of support for you, with clear, upfront pricing.",
+    { canonical: "https://diet4lifeconcept.ro/services" }
+  );
 
   return (
     <div

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Download, Loader2 } from "lucide-react";
@@ -17,6 +18,14 @@ function formatPrice(cents: number, currency: string) {
 export default function Products() {
   const { language } = useLanguage();
   const ro = language === "ro";
+
+  useDocumentHead(
+    ro ? "Produse | Diet4Life Concept" : "Products | Diet4Life Concept",
+    ro
+      ? "Ghiduri și resurse Diet4Life pentru o alimentație mai echilibrată, disponibile direct de pe site."
+      : "Diet4Life guides and resources for more balanced eating, available directly on the site.",
+    { canonical: "https://diet4lifeconcept.ro/products", noindex: true }
+  );
 
   const [products, setProducts] = useState<Product[] | "loading" | "error">("loading");
 

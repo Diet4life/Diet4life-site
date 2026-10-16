@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Carrot, Wheat, Egg, Droplet, Smile, Shuffle, CalendarDays } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { ArticleH2, ArticleP, ArticleLead } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
@@ -61,6 +62,14 @@ const THREE_TAKEAWAYS = [
 
 export default function NutritieEchilibrata() {
   const { language } = useLanguage();
+
+  useDocumentHead(
+    language === "ro" ? "Nutriție echilibrată: cum arată în viața reală? | NutriHub" : "Balanced Nutrition: What It Looks Like in Real Life | NutriHub",
+    language === "ro"
+      ? "Ce înseamnă de fapt o alimentație echilibrată, dincolo de reguli rigide — ghid practic, bazat pe dovezi."
+      : "What balanced eating actually means, beyond rigid rules — a practical, evidence-based guide.",
+    { canonical: "https://diet4lifeconcept.ro/nutrihub/nutritie-echilibrata" }
+  );
 
   if (language !== "ro") {
     return (

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://diet4lifeconcept.ro/sitemap.xml

@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Flame, Maximize2, Gauge, Layers, Leaf, SlidersHorizontal } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { ArticleH2, ArticleP, ArticleLead } from "@/components/nutrihub/ArticleShell";
 import { ArticleShellPremium } from "@/components/nutrihub/ArticleShellPremium";
 
@@ -61,6 +62,14 @@ const THREE_REAL_LIFE_POINTS = [
 
 export default function SuntToateCaloriileLaFel() {
   const { language } = useLanguage();
+
+  useDocumentHead(
+    language === "ro" ? "Sunt toate caloriile la fel? | NutriHub" : "Are All Calories Equal? | NutriHub",
+    language === "ro"
+      ? "De ce aceeași cantitate de energie poate arăta diferit în farfurie și cum sursa alimentelor influențează sațietatea și calitatea alimentației."
+      : "Why the same amount of energy can look different on the plate, and how food sources influence fullness and overall diet quality.",
+    { canonical: "https://diet4lifeconcept.ro/nutrihub/sunt-toate-caloriile-la-fel" }
+  );
 
   if (language !== "ro") {
     return (

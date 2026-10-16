@@ -1,4 +1,5 @@
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { DraftNotice } from "@/components/legal/DraftNotice";
 
 // Structural placeholder only -- created for the checkout flow to link to
@@ -7,6 +8,16 @@ import { DraftNotice } from "@/components/legal/DraftNotice";
 export default function Confidentialitate() {
   const { language } = useLanguage();
   const ro = language === "ro";
+
+  // noindex is temporary -- remove once the final, legally-approved text
+  // replaces this placeholder (see DraftNotice.tsx / LEGAL_COPY_APPROVED).
+  useDocumentHead(
+    ro ? "Politica de confidențialitate | Diet4Life Concept" : "Privacy Policy | Diet4Life Concept",
+    ro
+      ? "Ce date colectăm, în ce scop și cum le protejăm pe Diet4Life Concept."
+      : "What data we collect, for what purpose, and how we protect it on Diet4Life Concept.",
+    { canonical: "https://diet4lifeconcept.ro/confidentialitate", noindex: true }
+  );
 
   return (
     <div className="py-16 md:py-24 bg-background min-h-screen">

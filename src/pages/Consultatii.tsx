@@ -1,4 +1,5 @@
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -654,6 +655,14 @@ export default function Consultatii() {
   const { language } = useLanguage();
   const { toast } = useToast();
   const ro = language === "ro";
+
+  useDocumentHead(
+    ro ? "Pregătește-te pentru consultație | Diet4Life Concept" : "Preparing for Your Consultation | Diet4Life Concept",
+    ro
+      ? "Jurnal alimentar descărcabil, analize recomandate și pașii de urmat înainte de consultația ta nutrițională online."
+      : "A downloadable food journal, recommended tests, and the steps to take before your online nutrition consultation.",
+    { canonical: "https://diet4lifeconcept.ro/consultatii", noindex: true }
+  );
 
   const [activeTab, setActiveTab] = useState("info");
   const [patient, setPatient] = useState<PatientInfo>(loadPatientDraft);

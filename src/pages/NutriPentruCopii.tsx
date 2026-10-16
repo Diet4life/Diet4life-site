@@ -137,7 +137,8 @@ export default function NutriPentruCopii() {
       : "Nutri for Kids | Nutrition Education Through Play | Diet4Life Concept",
     ro
       ? "Descoperă Nutri, personajul Diet4Life creat pentru a-i ajuta pe copii să exploreze alimentele, culorile, grupele alimentare și nutriția prin joacă și activități."
-      : "Meet Nutri, the Diet4Life character created to help children explore food, colors, food groups, and nutrition through play and activities."
+      : "Meet Nutri, the Diet4Life character created to help children explore food, colors, food groups, and nutrition through play and activities.",
+    { canonical: "https://diet4lifeconcept.ro/nutri-pentru-copii" }
   );
 
   return (

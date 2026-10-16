@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { motion, useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 
 // Custom Diet4Life-branded photo, supplied directly by the user for this
 // exact slot (not Adobe Stock) -- replaces the earlier licensed Adobe Stock
@@ -107,6 +108,15 @@ const ARTICLES = [
 export default function NutriHub() {
   const { language } = useLanguage();
   const ro = language === "ro";
+
+  useDocumentHead(
+    ro ? "NutriHub — Educație nutrițională | Diet4Life Concept" : "NutriHub — Nutrition Education | Diet4Life Concept",
+    ro
+      ? "Articole bazate pe dovezi despre nutriție echilibrată, controlul greutății, proteine, calorii și fibre alimentare."
+      : "Evidence-based articles on balanced nutrition, weight management, protein, calories and dietary fiber.",
+    { canonical: "https://diet4lifeconcept.ro/nutrihub" }
+  );
+
   const prefersReducedMotion = useReducedMotion();
   const [featuredImageFailed, setFeaturedImageFailed] = useState(false);
 

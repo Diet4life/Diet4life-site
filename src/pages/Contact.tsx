@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDocumentHead } from "@/hooks/use-document-head";
 import { motion } from "framer-motion";
 import { Phone, Mail, Handshake, Video, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +15,15 @@ import { useToast } from "@/hooks/use-toast";
 export default function Contact() {
   const { language } = useLanguage();
   const ro = language === "ro";
+
+  useDocumentHead(
+    ro ? "Contact | Diet4Life Concept" : "Contact | Diet4Life Concept",
+    ro
+      ? "Programează o consultație nutrițională online sau trimite-ne un mesaj — îți răspundem prin email sau WhatsApp."
+      : "Book an online nutrition consultation or send us a message — we reply by email or WhatsApp.",
+    { canonical: "https://diet4lifeconcept.ro/contact" }
+  );
+
   const { toast } = useToast();
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   // Honeypot -- a real visitor never fills this; kept outside react-hook-form
