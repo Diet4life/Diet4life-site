@@ -22,9 +22,7 @@ const translations: Translations = {
 
   // Footer
   "footer.rights": { ro: "Toate drepturile rezervate.", en: "All rights reserved." },
-  "footer.tagline": { ro: "Diet4Life Concept - Consultanță nutrițională online", en: "Diet4Life Concept - Online Nutrition Consulting" },
-  "footer.description": { ro: "Nutriție explicată clar, bazată pe dovezi — consultanță 100% online.", en: "Nutrition explained clearly, evidence-based — 100% online consulting." },
-  "footer.navHeading": { ro: "Navigare", en: "Navigate" },
+  "footer.tagline": { ro: "Diet4Life Concept", en: "Diet4Life Concept" },
   "footer.legalHeading": { ro: "Legal", en: "Legal" },
   "footer.terms": { ro: "Termeni și condiții", en: "Terms and Conditions" },
   "footer.privacy": { ro: "Confidențialitate", en: "Privacy" }

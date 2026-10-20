@@ -108,37 +108,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <footer className="border-t bg-muted/30 py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_1fr_1fr] gap-8 sm:gap-6 text-center sm:text-left">
+          <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-start sm:justify-center sm:gap-24 text-center sm:text-left">
             <div className="flex flex-col items-center sm:items-start gap-3">
               <Logo className="grayscale opacity-60" />
-              <p className="text-sm text-muted-foreground max-w-[280px]">{t("footer.description")}</p>
             </div>
 
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70 mb-3">
-                {t("footer.navHeading")}
-              </p>
-              <nav className="flex flex-col gap-2">
-                <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  {t("nav.home")}
-                </Link>
-                <Link href="/services" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  {t("nav.services")}
-                </Link>
-                <Link href="/nutrihub" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  {t("nav.nutrihub")}
-                </Link>
-                <Link href="/calculator" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  {t("nav.calculator")}
-                </Link>
-              </nav>
-            </div>
-
-            <div>
+            <div className="flex flex-col items-center sm:items-start">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70 mb-3">
                 {t("footer.legalHeading")}
               </p>
-              <nav className="flex flex-col gap-2">
+              <nav className="flex flex-col items-center sm:items-start gap-2">
                 <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t("nav.contact")}
                 </Link>
@@ -152,7 +131,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <div className="mt-10 pt-6 border-t text-center sm:text-left">
+          <div className="mt-10 pt-6 border-t text-center">
             <p className="text-sm text-muted-foreground">
               &copy; {new Date().getFullYear()} {t("footer.tagline")}. {t("footer.rights")}
             </p>

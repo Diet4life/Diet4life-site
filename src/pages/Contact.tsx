@@ -199,19 +199,19 @@ export default function Contact() {
               {ro ? "Contactează-ne" : "Contact us"}
             </h2>
 
-            <div className="space-y-5 bg-secondary/30 p-8 rounded-2xl flex-1 border border-border">
+            <div className="space-y-4 sm:space-y-5 bg-secondary/30 p-4 sm:p-8 rounded-2xl flex-1 border border-border">
               <a
                 href="tel:0766572968"
-                className="flex items-center gap-4 group hover:bg-background rounded-xl p-4 transition-colors"
+                className="flex items-center gap-3 sm:gap-4 group hover:bg-background rounded-xl p-3 sm:p-4 transition-colors"
               >
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                   <Phone className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
                     {ro ? "Telefon" : "Phone"}
                   </p>
-                  <p className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                  <p className="text-base sm:text-lg font-semibold text-foreground group-hover:text-primary transition-colors break-words">
                     0766 572 968
                   </p>
                 </div>
@@ -219,27 +219,27 @@ export default function Contact() {
 
               <a
                 href="mailto:contact@diet4lifeconcept.ro"
-                className="flex items-center gap-4 group hover:bg-background rounded-xl p-4 transition-colors"
+                className="flex items-center gap-3 sm:gap-4 group hover:bg-background rounded-xl p-3 sm:p-4 transition-colors"
               >
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                   <Mail className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
                     Email
                   </p>
-                  <p className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-                    contact@diet4lifeconcept.ro
+                  <p className="text-base sm:text-lg font-semibold text-foreground group-hover:text-primary transition-colors break-words">
+                    contact@<wbr />diet4lifeconcept.ro
                   </p>
                 </div>
               </a>
 
               {/* Program */}
-              <div className="flex items-center gap-4 rounded-xl p-4">
+              <div className="flex items-center gap-3 sm:gap-4 rounded-xl p-3 sm:p-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
                   <Handshake className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
                     {ro ? "Program" : "Schedule"}
                   </p>
@@ -255,10 +255,10 @@ export default function Contact() {
               </div>
 
               {/* Divider */}
-              <div className="border-t border-border mx-4" />
+              <div className="border-t border-border mx-3 sm:mx-4" />
 
               {/* Online consultations */}
-              <div className="rounded-xl bg-primary/8 border border-primary/20 p-5">
+              <div className="rounded-xl bg-primary/8 border border-primary/20 p-4 sm:p-5">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground shrink-0">
                     <Video className="w-5 h-5" />

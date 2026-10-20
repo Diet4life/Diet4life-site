@@ -263,8 +263,8 @@ export default function About() {
               </h3>
               <p className="text-muted-foreground text-left max-lg:text-[17px] leading-[1.7] lg:text-sm">
                 {ro
-                  ? "Experiența acumulată în lucrul direct cu pacienți cu nevoi nutriționale complexe mă ajută să privesc fiecare recomandare în context: istoricul medical, obiectivele, stilul de viață și posibilitatea de a susține schimbările pe termen lung."
-                  : "Experience gained through working directly with patients with complex nutritional needs helps me view every recommendation in context: medical history, goals, lifestyle, and the feasibility of sustaining changes over time."}
+                  ? "Experiența clinică mă ajută să privesc fiecare persoană în ansamblu și să adaptez recomandările la istoricul medical, obiectivele, stilul de viață și schimbările pe care le poate susține pe termen lung."
+                  : "My clinical experience helps me consider each person as a whole and adapt recommendations to their medical history, goals, lifestyle and the changes they can realistically sustain over time."}
               </p>
             </div>
           </motion.div>
