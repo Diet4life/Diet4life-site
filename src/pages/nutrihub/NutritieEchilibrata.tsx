@@ -144,18 +144,18 @@ export default function NutritieEchilibrata() {
       </section>
 
       <section id="sec-1">
-        <ArticleH2>Nu un singur aliment face alimentația sănătoasă</ArticleH2>
+        <ArticleH2>O singură masă nu definește întreaga alimentație</ArticleH2>
         <ArticleP>
           Poate ai avut zile în care ai mâncat o salată și ai simțit că „ai mâncat sănătos”. Sau, dimpotrivă, ai mâncat
           ceva diferit de plan și ai avut impresia că ai stricat totul.
         </ArticleP>
         <ArticleP>În realitate, alimentația nu se judecă după o singură masă.</ArticleP>
         <ArticleP>
-          Contează mai mult ceea ce repeți în majoritatea zilelor: dacă ai varietate, dacă ai suficiente legume și
-          fructe, dacă incluzi surse potrivite de proteină, dacă ai fibre suficiente și dacă produsele foarte bogate în
-          zahăr, sare sau grăsimi nu ajung să ocupe cea mai mare parte din alimentație.
+          Contează mai ales alegerile pe care le faci în mod obișnuit: dacă ai o alimentație variată, dacă incluzi
+          suficiente legume și fructe, surse potrivite de proteine și fibre și dacă produsele bogate în zahăr, sare
+          sau grăsimi nu ocupă cea mai mare parte a alimentației.
         </ArticleP>
-        <ArticleP>Asta este mult mai util decât să împărțim toate alimentele în „bune” și „rele”.</ArticleP>
+        <ArticleP>Această perspectivă este mai utilă decât împărțirea alimentelor în „bune” și „rele”.</ArticleP>
       </section>
 
       {/* Module "Ce contribuie la echilibrul alimentației" -- positioned
@@ -376,7 +376,10 @@ export default function NutritieEchilibrata() {
 
       <section id="sec-9">
         <ArticleH2>Dacă vrei să slăbești, principiile rămân, dar cantitățile se schimbă</ArticleH2>
-        <ArticleP>Poți mânca alimente foarte nutritive și totuși să consumi mai multă energie decât ai nevoie.</ArticleP>
+        <ArticleP>
+          Pentru a slăbi, organismul trebuie să primească, în medie, mai puține calorii din alimentație decât
+          folosește. În același timp, mesele trebuie să rămână hrănitoare și echilibrate.
+        </ArticleP>
         <ArticleP>
           De aceea, atunci când obiectivul este scăderea în greutate, nu discutăm doar despre calitatea alimentelor,
           ci și despre cantitate și aport energetic.

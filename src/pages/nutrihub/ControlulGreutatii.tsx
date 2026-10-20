@@ -33,7 +33,7 @@ const BEYOND_THE_NUMBER = [
   {
     icon: RotateCcw,
     label: "Interpretarea",
-    note: "Un platou nu înseamnă că ai greșit — înseamnă că situația trebuie reevaluată în ansamblu.",
+    note: "O stagnare nu înseamnă că ai greșit — înseamnă că situația trebuie reevaluată în ansamblu.",
   },
   {
     icon: ArrowRight,
@@ -266,22 +266,26 @@ export default function ControlulGreutatii() {
       </section>
 
       <section id="sec-5">
-        <ArticleH2>De ce apare uneori un platou?</ArticleH2>
+        <ArticleH2>De ce apare stagnarea?</ArticleH2>
         <ArticleP>
-          Poate ai trecut deja prin asta: la început greutatea scade, apoi, deși simți că faci aceleași lucruri,
-          cântarul pare că se oprește.
+          Este posibil ca, la început, greutatea să scadă, iar după o perioadă cântarul să indice aproximativ
+          aceeași valoare, chiar dacă ai impresia că nu ai schimbat nimic.
         </ArticleP>
-        <ArticleP>Asta nu înseamnă automat că „ți s-a blocat metabolismul”.</ArticleP>
+        <ArticleP>Această stagnare nu înseamnă automat că „ți s-a blocat metabolismul”.</ArticleP>
         <ArticleP>
-          Pe măsură ce greutatea scade, un corp mai mic are nevoie de mai puțină energie. La unele persoane poate
-          apărea și o adaptare metabolică suplimentară, însă cercetările arată că amploarea acesteia este variabilă
-          și nu explică singură toate platourile ponderale.
+          Pe măsură ce slăbești, organismul poate avea nevoie de mai puține calorii, deoarece o greutate corporală
+          mai mică presupune, de obicei, un consum mai redus. La unele persoane poate apărea și o adaptare
+          metabolică, însă amploarea acesteia diferă de la o persoană la alta și nu explică singură toate perioadele
+          de stagnare.
         </ArticleP>
         <ArticleP>
-          În plus, greutatea de pe cântar nu reflectă doar țesutul adipos. Apa din organism, conținutul intestinal și
-          alte variații normale pot modifica temporar cifra pe care o vezi.
+          Cifra de pe cântar nu reflectă doar cantitatea de țesut adipos. Apa din organism, conținutul intestinal și
+          alte variații normale pot influența temporar greutatea.
         </ArticleP>
-        <ArticleP>Un platou nu înseamnă automat că ai făcut ceva greșit. Înseamnă că situația trebuie reevaluată în ansamblu.</ArticleP>
+        <ArticleP>
+          O perioadă de stagnare nu înseamnă neapărat că ai făcut ceva greșit. Este un semnal că alimentația,
+          activitatea fizică și contextul general trebuie reevaluate înainte de a face alte schimbări.
+        </ArticleP>
       </section>
 
       <section id="sec-6">

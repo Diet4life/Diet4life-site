@@ -248,7 +248,7 @@ export default function NutriPentruCopii() {
             className="max-w-3xl mx-auto"
           >
             <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground text-center leading-tight md:leading-normal mb-8 text-balance">
-              {ro ? "De ce am creat Nutri" : "Why I created Nutri"}
+              {ro ? "De ce am creat universul Nutri" : "Why I created the Nutri universe"}
             </h2>
             <div className="text-base md:text-lg text-muted-foreground leading-relaxed space-y-4 mb-10">
               <p className="text-editorial">
@@ -298,7 +298,7 @@ export default function NutriPentruCopii() {
             </div>
 
             <p className="text-center font-serif font-bold text-foreground text-lg">
-              {ro ? "Așa a apărut Nutri." : "That's how Nutri came to be."}
+              {ro ? "Așa a apărut universul Nutri." : "That's how the Nutri universe came to be."}
             </p>
           </motion.div>
         </div>
@@ -339,7 +339,7 @@ export default function NutriPentruCopii() {
         <div className={PAGE_COLUMN}>
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-[28px] md:text-4xl font-serif font-bold text-foreground leading-tight md:leading-normal mb-5 text-balance">
-              {ro ? "Filosofia Nutri" : "Nutri's Philosophy"}
+              {ro ? "Filosofia universului Nutri" : "The Nutri Universe's Philosophy"}
             </h2>
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto mb-10">
               {ro
@@ -384,8 +384,8 @@ export default function NutriPentruCopii() {
             </h2>
             <p className="text-base md:text-lg text-muted-foreground text-center max-w-xl mx-auto mb-12">
               {ro
-                ? "Fiecare resursă Nutri are un scop simplu: să îi ajute pe copii să învețe ceva util despre mâncare în timp ce se joacă și explorează."
-                : "Every Nutri resource has one simple goal: to help children learn something useful about food while they play and explore."}
+                ? "Fiecare resursă din universul Nutri are un scop simplu: să îi ajute pe copii să învețe ceva util despre mâncare în timp ce se joacă și explorează."
+                : "Every resource from the Nutri universe has one simple goal: to help children learn something useful about food while they play and explore."}
             </p>
             <div className="grid sm:grid-cols-2 gap-6">
               {NUTRI_PRODUCTS.map((product) => (
@@ -426,8 +426,8 @@ export default function NutriPentruCopii() {
             <div className="text-base md:text-lg text-muted-foreground leading-relaxed space-y-4 mb-8">
               <p>
                 {ro
-                  ? "Nutri este creat pentru copii, dar și pentru adulții care îi însoțesc."
-                  : "Nutri is made for children, but also for the adults who accompany them."}
+                  ? "Universul Nutri este creat pentru copii, dar și pentru adulții care îi însoțesc."
+                  : "The Nutri universe is made for children, but also for the adults who accompany them."}
               </p>
               <p>
                 {ro
@@ -461,7 +461,7 @@ export default function NutriPentruCopii() {
         <div className={PAGE_COLUMN}>
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-2xl md:text-[28px] font-serif font-bold text-foreground mb-6 text-balance">
-              {ro ? "Descoperă cărțile și activitățile Nutri" : "Discover Nutri's books and activities"}
+              {ro ? "Descoperă cărțile și activitățile din universul Nutri" : "Discover books and activities from the Nutri universe"}
             </h2>
             <button
               type="button"
@@ -469,7 +469,7 @@ export default function NutriPentruCopii() {
               className="inline-flex items-center justify-center gap-2 h-12 px-8 rounded-[13px] bg-primary hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 text-primary-foreground font-semibold transition-all"
               data-testid="button-explore-nutri-resources"
             >
-              {ro ? "Explorează resursele Nutri" : "Explore Nutri's resources"}
+              {ro ? "Explorează resursele universului Nutri" : "Explore the Nutri universe's resources"}
               <ArrowRight className="w-4 h-4" />
             </button>
             <p className="text-sm text-muted-foreground mt-5 tracking-wide">Learn • Explore • Understand • Choose</p>

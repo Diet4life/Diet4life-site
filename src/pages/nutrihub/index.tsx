@@ -137,15 +137,15 @@ export default function NutriHub() {
         <div className={PAGE_COLUMN}>
           <motion.div {...reveal()} className="max-w-2xl">
             <span className="text-xs font-semibold tracking-wide uppercase text-primary mb-4 block">
-              NUTRIHUB
+              {ro ? "EXPLOREAZĂ NUTRIHUB" : "EXPLORE NUTRIHUB"}
             </span>
             <h1 className="text-[34px] md:text-5xl font-serif font-bold text-foreground leading-[1.15] md:leading-tight mb-5 text-balance">
-              {ro ? "Nutriție explicată clar." : "Nutrition explained clearly."}
+              {ro ? "Informații despre nutriție, explicate clar" : "Nutrition information, clearly explained"}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
               {ro
-                ? "Informație nutrițională bazată pe dovezi, explicată pentru viața reală — fără mituri și fără reguli inutile."
-                : "Evidence-based nutrition information, explained for real life — no myths, no unnecessary rules."}
+                ? "Articole bazate pe dovezi, cu informații utile și ușor de aplicat în viața de zi cu zi."
+                : "Evidence-based articles with practical information that is easy to apply in everyday life."}
             </p>
           </motion.div>
         </div>
@@ -217,10 +217,6 @@ export default function NutriHub() {
       {/* Remaining articles */}
       <section className="pb-16 md:pb-24">
         <div className={PAGE_COLUMN}>
-          <motion.h2 {...reveal()} className="text-[28px] md:text-[32px] font-serif font-bold text-foreground mb-6 md:mb-8">
-            {ro ? "Explorează NutriHub" : "Explore NutriHub"}
-          </motion.h2>
-
           <div className="grid md:grid-cols-2 gap-5 md:gap-6">
             {ARTICLES.map((article, i) => (
               <motion.div key={article.slug} {...reveal(0.05 + i * 0.05)}>
