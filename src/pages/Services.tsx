@@ -74,25 +74,25 @@ const services: ServiceOffering[] = [
     price: 200,
     periodRo: "21 zile",
     periodEn: "21 days",
-    periodSubRo: "7 zile jurnal + 14 zile aplicare",
-    periodSubEn: "7 days journal + 14 days applying recommendations",
+    periodSubRo: "7 zile de jurnal + 14 zile de aplicare",
+    periodSubEn: "7 days of food diary + 14 days of implementation",
     shortRo:
-      "Pentru persoanele care vor să își înțeleagă mai bine alimentația actuală și să primească recomandări concrete, fără o consultație completă.",
+      "Pentru persoanele care vor să își înțeleagă mai bine alimentația actuală și să primească recomandări concrete.",
     shortEn:
-      "For people who want to better understand their current eating habits and get concrete recommendations, without a full consultation.",
+      "For people who want to better understand their current diet and receive clear, practical recommendations.",
     includeLabelRo: "Cum se desfășoară",
     includeLabelEn: "How it works",
     includeRo: [
-      "Jurnal alimentar timp de 7 zile.",
+      "Completarea unui jurnal alimentar timp de 7 zile.",
       "Analiza alimentației actuale și recomandări trimise pe WhatsApp.",
-      "14 zile de aplicare a recomandărilor, cu jurnalul continuat.",
+      "14 zile pentru aplicarea recomandărilor primite pe WhatsApp; în această perioadă, se recomandă continuarea jurnalului alimentar.",
       "Feedback și, dacă este necesar, ajustări la final.",
     ],
     includeEn: [
-      "A 7-day food journal.",
-      "Reviewing your current eating habits and recommendations sent on WhatsApp.",
-      "14 days of applying the recommendations, continuing the journal.",
-      "Feedback and, if needed, adjustments at the end.",
+      "Completing a food diary for 7 days.",
+      "Analysis of your current diet and recommendations sent via WhatsApp.",
+      "14 days to apply the recommendations received via WhatsApp; continuing the food diary during this period is recommended.",
+      "Feedback and, if necessary, final adjustments.",
     ],
     hasWhatsApp: true,
   },
@@ -108,13 +108,13 @@ const services: ServiceOffering[] = [
     includeLabelRo: "Include",
     includeLabelEn: "Includes",
     includeRo: [
-      "Jurnal alimentar timp de 7 zile.",
+      "Completarea unui jurnal alimentar timp de 7 zile, înaintea consultației.",
       "Evaluarea alimentației actuale, a istoricului și a principalelor dificultăți.",
       "Revizuirea analizelor medicale relevante disponibile.",
       "Recomandări personalizate și plan alimentar orientativ pentru 7 zile.",
     ],
     includeEn: [
-      "A 7-day food journal.",
+      "Completion of a 7-day food diary before the consultation.",
       "Reviewing your current eating habits, history, and main difficulties.",
       "Reviewing your relevant available medical test results.",
       "Tailored recommendations and an orientative 7-day meal plan.",
@@ -131,22 +131,24 @@ const services: ServiceOffering[] = [
     periodRo: "6 săptămâni",
     periodEn: "6 weeks",
     shortRo:
-      "Pentru persoanele care, pe lângă consultația inițială, au nevoie de o perioadă de ghidaj și de o reevaluare pe parcurs.",
+      "Pentru persoanele care, pe lângă consultația inițială, au nevoie de urmărirea evoluției și de ajustarea recomandărilor pe parcursul celor 6 săptămâni.",
     shortEn:
-      "For people who need, beyond the initial consultation, a period of guidance and a check-in along the way.",
+      "For people who, in addition to the initial consultation, need progress follow-up and adjustments to their recommendations throughout the six weeks.",
     includeLabelRo: "Include",
     includeLabelEn: "Includes",
     includeRo: [
-      "Consultația Nutrițională completă.",
-      "O monitorizare a evoluției.",
+      "Completarea unui jurnal alimentar timp de 7 zile, înaintea consultației inițiale.",
+      "Consultație nutrițională inițială, cu evaluarea jurnalului alimentar, a istoricului și a analizelor medicale relevante disponibile.",
+      "O monitorizare pentru evaluarea evoluției și a dificultăților întâmpinate.",
       "Ajustarea recomandărilor în funcție de evoluție.",
-      "Clarificări punctuale pe WhatsApp pe durata programului.",
+      "Clarificări punctuale pe WhatsApp pe parcursul celor 6 săptămâni.",
     ],
     includeEn: [
-      "The full Nutrition Consultation.",
-      "One check-in on your progress.",
-      "Adjusting recommendations based on your progress.",
-      "Point-in-time clarifications on WhatsApp during the program.",
+      "Completion of a 7-day food diary before the initial consultation.",
+      "Initial nutrition consultation, including a review of the food diary, medical history and relevant available medical test results.",
+      "One follow-up to assess progress and any difficulties encountered.",
+      "Adjustments to the recommendations based on progress.",
+      "Brief clarifications via WhatsApp throughout the six weeks.",
     ],
     hasWhatsApp: true,
   },
@@ -158,22 +160,24 @@ const services: ServiceOffering[] = [
     periodRo: "3 luni",
     periodEn: "3 months",
     shortRo:
-      "Pentru persoanele care au nevoie de urmărire pe o perioadă mai lungă, cu reevaluări și ajustări succesive.",
+      "Pentru persoanele care au nevoie de urmărirea evoluției pe o perioadă mai lungă, cu reevaluări periodice și ajustarea recomandărilor pe parcursul celor 3 luni.",
     shortEn:
-      "For people who need longer-term follow-up, with successive check-ins and adjustments.",
+      "For people who need longer-term progress follow-up, with regular reassessments and adjustments to their recommendations throughout the three months.",
     includeLabelRo: "Include",
     includeLabelEn: "Includes",
     includeRo: [
-      "Consultația Nutrițională completă.",
-      "Trei monitorizări, aproximativ una pe lună.",
-      "Ajustarea recomandărilor și feedback asupra progresului.",
+      "Completarea unui jurnal alimentar timp de 7 zile, înaintea consultației inițiale.",
+      "Consultație nutrițională inițială, cu evaluarea jurnalului alimentar, a istoricului și a analizelor medicale relevante disponibile.",
+      "Trei monitorizări pentru evaluarea evoluției și a dificultăților întâmpinate, aproximativ una pe lună.",
+      "Ajustarea recomandărilor după fiecare monitorizare, în funcție de evoluție.",
       "Clarificări punctuale pe WhatsApp între monitorizări.",
     ],
     includeEn: [
-      "The full Nutrition Consultation.",
-      "Three check-ins, roughly one per month.",
-      "Adjustments and feedback on your progress.",
-      "Point-in-time clarifications on WhatsApp between check-ins.",
+      "Completion of a 7-day food diary before the initial consultation.",
+      "Initial nutrition consultation, including a review of the food diary, medical history and relevant available medical test results.",
+      "Three follow-ups to assess progress and any difficulties encountered, approximately one per month.",
+      "Adjustments to the recommendations after each follow-up, based on progress.",
+      "Brief clarifications via WhatsApp between follow-ups.",
     ],
     hasWhatsApp: true,
   },
@@ -306,8 +310,8 @@ export default function Services() {
   useDocumentHead(
     ro ? "Servicii și prețuri | Diet4Life Concept" : "Services & Pricing | Diet4Life Concept",
     ro
-      ? "Evaluare nutrițională, monitorizare și ghidaj — alege nivelul de sprijin potrivit pentru tine, cu prețuri clare, afișate direct."
-      : "Nutrition assessment, monitoring and guidance — choose the right level of support for you, with clear, upfront pricing.",
+      ? "Evaluare nutrițională, monitorizare și sprijin — alege nivelul potrivit pentru tine, cu prețuri clare, afișate direct."
+      : "Nutrition assessment, monitoring and support — choose the right level for you, with clear, upfront pricing.",
     { canonical: "https://diet4lifeconcept.ro/services" }
   );
 
@@ -339,8 +343,8 @@ export default function Services() {
           </h1>
           <p className="text-muted-foreground max-lg:text-[17px] max-lg:leading-[1.55] lg:text-lg lg:leading-relaxed">
             {ro
-              ? "De la un prim ghidaj până la monitorizare pe termen lung — fiecare serviciu are un nivel diferit de sprijin."
-              : "From initial guidance to longer-term monitoring — each service offers a different level of support."}
+              ? "De la o primă evaluare până la urmărire pe termen lung — fiecare serviciu oferă un nivel diferit de sprijin."
+              : "From an initial assessment to longer-term follow-up — each service offers a different level of support."}
           </p>
         </div>
 
