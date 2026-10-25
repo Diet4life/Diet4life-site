@@ -10,8 +10,20 @@ export default defineConfig({
   // "dev") -- see src/lib/checkout/environment.ts. Not set here locally
   // (CONTEXT is undefined outside a Netlify build), so local dev/preview
   // builds correctly default to "dev".
+  //
+  // __D4L_SANDBOX_RELAY__ reuses the exact same server-side flag name
+  // (D4L_NETOPIA_SANDBOX_RELAY) already set, by hand, only on the dedicated
+  // NETOPIA sandbox relay site -- deliberately not a new/separate
+  // VITE_-prefixed variable. The flag means one thing ("is this the sandbox
+  // relay deploy") everywhere it's read, server and client alike; a second
+  // name for the same boolean would just be two things that could drift out
+  // of sync. Baked in as a plain boolean (not the raw string), same pattern
+  // as __NETLIFY_CONTEXT__ -- this value is not a secret (same category as
+  // CONTEXT itself), only NETOPIA_POS_SIGNATURE/NETOPIA_PUBLIC_KEY/
+  // NETLIFY_DB_URL are, and none of those are ever read here.
   define: {
     __NETLIFY_CONTEXT__: JSON.stringify(process.env.CONTEXT ?? "dev"),
+    __D4L_SANDBOX_RELAY__: JSON.stringify(process.env.D4L_NETOPIA_SANDBOX_RELAY === "true"),
   },
   resolve: {
     alias: {

@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "@/server/db/client";
 import { billingDetails, orders, patientDetails, payments, products } from "../../../db/schema";
 import { generateOrderNumber, generatePublicStatusToken } from "@/server/security/publicToken";
-import { isProductionContext } from "@/server/environment";
+import { isCheckoutAllowed, isProductionContext } from "@/server/environment";
 import { resolveMonotonicOrderStatus, type OrderStatus } from "./netopiaStatusMapping";
 import type { BillingInput, PatientInput } from "@/lib/checkout/schemas";
 
@@ -11,8 +11,12 @@ export class PatientDetailsRequiredError extends Error {}
 // Phase 1 has no real payment provider yet -- order creation is
 // intentionally refused in the production context so nobody can complete a
 // checkout that looks operational but never actually charges anything.
-// Deploy previews and local/dev keep working normally for testing. Remove
-// this guard once Phase 2 wires a real NETOPIA callback.
+// Deploy previews and local/dev keep working normally for testing. The one
+// exception is the dedicated NETOPIA sandbox relay site (isCheckoutAllowed()
+// in src/server/environment.ts) -- production there too, but with the one
+// explicit opt-out flag set, so real sandbox orders can be created and
+// tested end to end. Remove this guard entirely once Phase 2 wires a real
+// NETOPIA callback on Diet4Life's actual production site.
 export class CheckoutDisabledInProductionError extends Error {}
 
 function billingRow(orderId: number, billing: BillingInput) {
@@ -96,7 +100,7 @@ export interface CreateOrderInput {
 // The single place order prices are decided. The browser never supplies a
 // price -- it is always read fresh from the products table here.
 export async function createOrder(input: CreateOrderInput) {
-  if (isProductionContext()) {
+  if (!isCheckoutAllowed()) {
     throw new CheckoutDisabledInProductionError(
       "Online checkout is not yet available in production (no payment provider is wired up)",
     );

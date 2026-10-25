@@ -1,7 +1,7 @@
 import { Loader2, ShieldCheck, Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { isProductionBuild } from "@/lib/checkout/environment";
+import { isCheckoutDisabledInBuild } from "@/lib/checkout/environment";
 import type { Product } from "@/lib/checkout/types";
 
 function formatPrice(cents: number, currency: string) {
@@ -16,7 +16,9 @@ function formatPrice(cents: number, currency: string) {
 // In production this button doesn't render at all -- checkout would create
 // a "pending_payment" order with nothing behind it, which reads as a
 // working purchase flow to a real visitor. It stays fully functional in
-// deploy previews and local dev so the flow can keep being tested. The
+// deploy previews, local dev, and the one dedicated NETOPIA sandbox relay
+// site (isCheckoutDisabledInBuild() -- production there too, but with the
+// one explicit opt-out flag set) so the flow can keep being tested. The
 // authoritative block is server-side (orderService.ts's createOrder());
 // this is only the UI half of that same guard.
 export function PaymentButton({
@@ -29,7 +31,7 @@ export function PaymentButton({
   const { language } = useLanguage();
   const ro = language === "ro";
 
-  if (isProductionBuild()) {
+  if (isCheckoutDisabledInBuild()) {
     return (
       <div
         className="rounded-xl border border-border bg-secondary/30 px-5 py-4 text-center"

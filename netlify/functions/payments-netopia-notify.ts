@@ -2,7 +2,7 @@ import type { Handler } from "@netlify/functions";
 import { verifyNetopiaNotification } from "@/server/security/netopiaVerification";
 import { getOrderConfirmationContext, markConfirmationEmailStatus, recordNetopiaNotification } from "@/server/orders/orderService";
 import { mapNetopiaStatus } from "@/server/orders/netopiaStatusMapping";
-import { isProductionContext } from "@/server/environment";
+import { isCheckoutAllowed, isProductionContext, isSandboxRelayEnabled } from "@/server/environment";
 import { resolveConfirmationRecipient, sendOrderConfirmationEmail } from "@/server/email/orderConfirmationEmail";
 
 // Real NETOPIA v2 IPN/notify handler. See
@@ -85,25 +85,6 @@ function getHeader(headers: Record<string, string | undefined> | undefined | nul
 const ACK_OK = { statusCode: 200, headers: { "content-type": "application/json" }, body: JSON.stringify({ errorCode: 0 }) };
 const ACK_REJECT = { statusCode: 400, headers: { "content-type": "application/json" }, body: JSON.stringify({ errorCode: 1 }) };
 
-// The dedicated sandbox relay site (see resolveNotifyBaseUrl() in
-// payments-initiate.ts) is a SECOND Netlify site deployed from this same
-// repo/branch -- Netlify necessarily labels ITS own deploy "production"
-// (there is no other deploy context for a site's primary branch), which
-// would otherwise make the isProductionContext() guard below refuse to run
-// there at all. This flag is the one, narrow, explicit opt-out for that
-// specific site only -- it does NOT touch verifyNetopiaNotification() (the
-// RS256/issuer/audience/body-hash checks), recordNetopiaNotification()'s
-// idempotency/DB safeguards, or Diet4Life's own real production site (which
-// simply never has this variable set). Fails closed by design: only the
-// exact string "true" enables it -- unset, empty, "1", "yes", "TRUE", or
-// anything else leaves relay mode off and preserves today's 503 behavior.
-// Read only from process.env (server-side, hand-set in Netlify's dashboard)
-// -- never derived from a request header, query string, or any other
-// client-controllable input, so a forged request can never enable it.
-export function isSandboxRelayEnabled(): boolean {
-  return process.env.D4L_NETOPIA_SANDBOX_RELAY === "true";
-}
-
 // Fires the post-payment confirmation email exactly once, only on the
 // transition INTO "paid" (never on a duplicate/replayed notification, and
 // never for digital_product -- that product type keeps its own, unrelated
@@ -183,7 +164,7 @@ export const handler: Handler = async (event, context) => {
   //
   // Any non-production branch/preview deploy: productionContext=false ->
   // this guard is skipped regardless of the flag, unchanged from before.
-  if (productionContext && !sandboxRelayEnabled) {
+  if (!isCheckoutAllowed()) {
     return {
       statusCode: 503,
       headers: { "content-type": "application/json" },

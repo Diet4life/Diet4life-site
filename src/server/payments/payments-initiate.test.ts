@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   buildNetopiaRequestBody,
+  handler,
   isValidHttpsUrl,
   resolveNotifyBaseUrl,
   resolveSiteBaseUrl,
@@ -377,5 +378,43 @@ describe("safeHostname", () => {
     expect(safeHostname(undefined)).toBe("unset");
     expect(safeHostname("")).toBe("unset");
     expect(safeHostname("not a url at all, could be anything")).toBe("unparseable");
+  });
+});
+
+// The guard is the very first statement in the handler, before method/body
+// parsing or any order lookup -- so it's testable with a bare-minimum mock
+// event/context, the same way createOrder()'s guard is tested in
+// orderService.test.ts without a database.
+describe("handler -- production guard", () => {
+  afterEach(() => {
+    delete process.env.CONTEXT;
+    delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
+  });
+
+  const mockEvent = { httpMethod: "POST", headers: {}, body: null };
+  const mockContext = { awsRequestId: "req-guard-test" } as never;
+
+  it("Diet4Life's real production site (production, relay flag never set): refuses before parsing the request", async () => {
+    process.env.CONTEXT = "production";
+    delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
+    const result = await handler(mockEvent as never, mockContext, () => undefined);
+    expect(result).toMatchObject({ statusCode: 503 });
+    expect(JSON.parse((result as { body: string }).body)).toEqual({ error: "checkout_disabled" });
+  });
+
+  it("production with the relay flag at a near-miss value: still refuses -- fails closed", async () => {
+    process.env.CONTEXT = "production";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "yes";
+    const result = await handler(mockEvent as never, mockContext, () => undefined);
+    expect(result).toMatchObject({ statusCode: 503 });
+  });
+
+  it("dedicated sandbox relay site (production + D4L_NETOPIA_SANDBOX_RELAY=true): passes the guard, reaches method validation instead", async () => {
+    process.env.CONTEXT = "production";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    const result = await handler({ ...mockEvent, httpMethod: "GET" } as never, mockContext, () => undefined);
+    // Proves the 503 guard was skipped -- the next check (method_not_allowed)
+    // fired instead, not the production block.
+    expect(result).toMatchObject({ statusCode: 405 });
   });
 });

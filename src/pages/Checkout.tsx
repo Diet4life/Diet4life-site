@@ -16,7 +16,7 @@ import { ConsentSection } from "@/components/checkout/ConsentSection";
 import { PaymentButton } from "@/components/checkout/PaymentButton";
 import { checkoutSubmissionSchema, type CheckoutSubmissionInput } from "@/lib/checkout/schemas";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/checkout/countries";
-import { isProductionBuild } from "@/lib/checkout/environment";
+import { isCheckoutDisabledInBuild } from "@/lib/checkout/environment";
 import type { Product } from "@/lib/checkout/types";
 
 export default function Checkout() {
@@ -147,11 +147,13 @@ export default function Checkout() {
   const needsPatient = product.productType !== "digital_product";
 
   async function onSubmit(values: CheckoutSubmissionInput) {
-    // Defense in depth -- PaymentButton doesn't render a submit control in
-    // production at all, but this keeps onSubmit itself from ever calling
-    // orders-create there (e.g. an Enter-key submit). The real, always-on
-    // guard is server-side in orderService.ts's createOrder().
-    if (isProductionBuild()) {
+    // Defense in depth -- PaymentButton doesn't render a submit control
+    // when checkout is disabled for this build, but this keeps onSubmit
+    // itself from ever calling orders-create there (e.g. an Enter-key
+    // submit). The real, always-on guard is server-side in orderService.ts's
+    // createOrder(). Mirrors PaymentButton.tsx's own isCheckoutDisabledInBuild()
+    // check exactly -- including on the dedicated NETOPIA sandbox relay site.
+    if (isCheckoutDisabledInBuild()) {
       toast({
         title: ro ? "Plățile online nu sunt încă disponibile" : "Online payments aren't available yet",
         description: ro

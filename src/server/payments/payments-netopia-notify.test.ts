@@ -19,7 +19,7 @@ vi.mock("@/server/orders/orderService", () => ({
   markConfirmationEmailStatus: (...args: unknown[]) => markConfirmationEmailStatus(...args),
 }));
 
-import { extractNotificationFields, handler, isSandboxRelayEnabled } from "../../../netlify/functions/payments-netopia-notify";
+import { extractNotificationFields, handler } from "../../../netlify/functions/payments-netopia-notify";
 import { hashRequestBody } from "@/server/security/netopiaVerification";
 
 const { publicKey, privateKey } = generateKeyPairSync("rsa", {
@@ -357,28 +357,5 @@ describe("extractNotificationFields", () => {
       code: undefined,
       amountCents: 0,
     });
-  });
-});
-
-describe("isSandboxRelayEnabled", () => {
-  afterEach(() => {
-    delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
-  });
-
-  it("is true only for the exact string \"true\"", () => {
-    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
-    expect(isSandboxRelayEnabled()).toBe(true);
-  });
-
-  it("is false when unset", () => {
-    delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
-    expect(isSandboxRelayEnabled()).toBe(false);
-  });
-
-  it("is false for every near-miss value -- fails closed, never guesses truthiness", () => {
-    for (const value of ["1", "yes", "TRUE", "True", "on", "false", ""]) {
-      process.env.D4L_NETOPIA_SANDBOX_RELAY = value;
-      expect(isSandboxRelayEnabled()).toBe(false);
-    }
   });
 });

@@ -1,6 +1,6 @@
 import type { Handler } from "@netlify/functions";
 import { getOrderForPaymentInitiation } from "@/server/orders/orderService";
-import { isProductionContext } from "@/server/environment";
+import { isCheckoutAllowed, isProductionContext } from "@/server/environment";
 import { getCountryName, getCountryNumericCode } from "@/lib/checkout/countries";
 
 // Step 1 of NETOPIA Payments API v2 integration: initiate a card payment in
@@ -334,8 +334,10 @@ export const handler: Handler = async (event, context) => {
   const requestId = context.awsRequestId;
 
   // Mirrors orders-create.ts's guard: NETOPIA is sandbox-only for now,
-  // never reachable from a production request, regardless of order state.
-  if (isProductionContext()) {
+  // never reachable from a production request, regardless of order state --
+  // except the one dedicated sandbox relay site, same isCheckoutAllowed()
+  // opt-out used everywhere else (src/server/environment.ts).
+  if (!isCheckoutAllowed()) {
     return { statusCode: 503, body: JSON.stringify({ error: "checkout_disabled" }) };
   }
 
