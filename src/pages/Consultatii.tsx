@@ -165,7 +165,13 @@ function preloadFonts(): Promise<void> {
       ]);
       (window as any).__diet4lifeFontCache = { interRegular, interSemiBold, playfairSemiBold };
       fontsLoaded = true;
-    })();
+    })().catch((err) => {
+      // Don't cache a failed fetch (e.g. a flaky mobile connection on page
+      // mount) -- otherwise every later click re-awaits the same rejected
+      // promise and the download keeps failing until a full page reload.
+      fontsLoadPromise = null;
+      throw err;
+    });
   }
   return fontsLoadPromise;
 }
@@ -340,7 +346,7 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[], reflecti
   doc.setFontSize(9);
   const instrWrapped1 = doc.splitTextToSize(instrText1, pageW - 2 * margin - 10);
   const instrLineH = 4.2;
-  const instrBoxHeight = 7 + instrWrapped1.length * instrLineH;
+  const instrBoxHeight = 9 + instrWrapped1.length * instrLineH;
   doc.setFillColor(...COLOR_INSTR_BG);
   doc.setDrawColor(...COLOR_BORDER);
   doc.setLineWidth(LINE_WIDTH_THIN);
@@ -508,7 +514,11 @@ async function generatePDF(patient: PatientInfo, journal: JournalDay[], reflecti
       head: [["Masă", "Ora", "Ce am mâncat / băut", "Cantitate", "Foame / sațietate\n(1–5)", "De ce ai mâncat?"]],
       body: rows,
       theme: "grid",
-      headStyles: { fillColor: COLOR_GREEN, textColor: 255, fontSize: 8.2, fontStyle: "bold", halign: "center" },
+      // minCellHeight 26 is meant for the writing rows only -- the header
+      // would otherwise inherit it too and render as a ~26mm mostly-empty
+      // green block. The space saved flows into the notes box below, which
+      // already stretches down to dayPageBottom.
+      headStyles: { fillColor: COLOR_GREEN, textColor: 255, fontSize: 8.2, fontStyle: "bold", halign: "center", valign: "middle", minCellHeight: 10 },
       styles: { fontSize: 8.75, cellPadding: 2.5, minCellHeight: 26, font: "Inter", textColor: COLOR_TEXT, lineColor: COLOR_BORDER, lineWidth: LINE_WIDTH_THIN },
       columnStyles: {
         0: { cellWidth: 26, fontStyle: "bold", fillColor: COLOR_SURFACE },
