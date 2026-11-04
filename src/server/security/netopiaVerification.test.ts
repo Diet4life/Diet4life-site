@@ -1,9 +1,9 @@
 import { generateKeyPairSync, createSign } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { hashRequestBody, verifyNetopiaNotification, verifyRs256Jwt } from "./netopiaVerification";
+import { hashRequestBody, verifyNetopiaNotification, verifyRsaJwt } from "./netopiaVerification";
 
 // A real RSA keypair generated once for this test file -- lets us build
-// genuinely RS256-signed JWTs and prove verifyRs256Jwt() actually verifies
+// genuinely RS256-signed JWTs and prove verifyRsaJwt() actually verifies
 // a real signature (not just "any 3-part string"), without needing
 // NETOPIA's real key (a merchant credential this session cannot obtain).
 const { publicKey, privateKey } = generateKeyPairSync("rsa", {
@@ -19,7 +19,7 @@ function base64url(input: Buffer | string): string {
 function signJwt(payload: Record<string, unknown>, signingKey: string, alg = "RS256"): string {
   const header = base64url(JSON.stringify({ alg, typ: "JWT" }));
   const body = base64url(JSON.stringify(payload));
-  const signer = createSign("RSA-SHA256");
+  const signer = createSign(alg === "RS512" ? "RSA-SHA512" : "RSA-SHA256");
   signer.update(`${header}.${body}`);
   signer.end();
   const signature = signer.sign(signingKey).toString("base64url");
@@ -33,10 +33,10 @@ function validPayload() {
   return { iss: "NETOPIA Payments", aud: AUDIENCE, sub: hashRequestBody(RAW_BODY) };
 }
 
-describe("verifyRs256Jwt", () => {
+describe("verifyRsaJwt", () => {
   it("verifies a genuinely RS256-signed token against the matching public key", () => {
     const token = signJwt(validPayload(), privateKey);
-    expect(verifyRs256Jwt(token, publicKey)).toEqual(validPayload());
+    expect(verifyRsaJwt(token, publicKey)).toEqual(validPayload());
   });
 
   it("rejects a token signed with a different key", () => {
@@ -46,7 +46,7 @@ describe("verifyRs256Jwt", () => {
       privateKeyEncoding: { type: "pkcs8", format: "pem" },
     });
     const token = signJwt(validPayload(), otherPrivateKey);
-    expect(verifyRs256Jwt(token, publicKey)).toBeNull();
+    expect(verifyRsaJwt(token, publicKey)).toBeNull();
   });
 
   it("rejects a tampered payload even though the original signature is valid-looking", () => {
@@ -54,28 +54,39 @@ describe("verifyRs256Jwt", () => {
     const [header, , signature] = token.split(".");
     const tamperedPayload = base64url(JSON.stringify({ ...validPayload(), sub: "attacker-controlled-hash" }));
     const tampered = `${header}.${tamperedPayload}.${signature}`;
-    expect(verifyRs256Jwt(tampered, publicKey)).toBeNull();
+    expect(verifyRsaJwt(tampered, publicKey)).toBeNull();
+  });
+
+  it("verifies an RS512-signed token -- the algorithm NETOPIA actually uses for IPN Verification-token", () => {
+    const token = signJwt(validPayload(), privateKey, "RS512");
+    expect(verifyRsaJwt(token, publicKey)).toEqual(validPayload());
+  });
+
+  it("rejects an RS512 header over an RS256 signature (algorithm and signature must match)", () => {
+    const [, body, sig] = signJwt(validPayload(), privateKey, "RS256").split(".");
+    const header = base64url(JSON.stringify({ alg: "RS512", typ: "JWT" }));
+    expect(verifyRsaJwt(`${header}.${body}.${sig}`, publicKey)).toBeNull();
   });
 
   it("rejects alg-confusion attempts -- a token claiming a different algorithm is never trusted to pick verification behavior", () => {
     const token = signJwt(validPayload(), privateKey, "HS256");
-    expect(verifyRs256Jwt(token, publicKey)).toBeNull();
+    expect(verifyRsaJwt(token, publicKey)).toBeNull();
     const noneToken = signJwt(validPayload(), privateKey, "none");
-    expect(verifyRs256Jwt(noneToken, publicKey)).toBeNull();
+    expect(verifyRsaJwt(noneToken, publicKey)).toBeNull();
   });
 
   it("rejects malformed tokens without throwing", () => {
-    expect(verifyRs256Jwt("not-a-jwt", publicKey)).toBeNull();
-    expect(verifyRs256Jwt("a.b", publicKey)).toBeNull();
-    expect(verifyRs256Jwt("a.b.c.d", publicKey)).toBeNull();
-    expect(verifyRs256Jwt("", publicKey)).toBeNull();
-    expect(() => verifyRs256Jwt("garbage.garbage.garbage", publicKey)).not.toThrow();
+    expect(verifyRsaJwt("not-a-jwt", publicKey)).toBeNull();
+    expect(verifyRsaJwt("a.b", publicKey)).toBeNull();
+    expect(verifyRsaJwt("a.b.c.d", publicKey)).toBeNull();
+    expect(verifyRsaJwt("", publicKey)).toBeNull();
+    expect(() => verifyRsaJwt("garbage.garbage.garbage", publicKey)).not.toThrow();
   });
 
   it("rejects a well-formed but garbage public key without throwing", () => {
     const token = signJwt(validPayload(), privateKey);
-    expect(() => verifyRs256Jwt(token, "not a real pem key")).not.toThrow();
-    expect(verifyRs256Jwt(token, "not a real pem key")).toBeNull();
+    expect(() => verifyRsaJwt(token, "not a real pem key")).not.toThrow();
+    expect(verifyRsaJwt(token, "not a real pem key")).toBeNull();
   });
 });
 
@@ -111,6 +122,24 @@ describe("verifyNetopiaNotification", () => {
     const token = signJwt({ ...validPayload(), iss: "Some Other Issuer" }, privateKey);
     const result = verifyNetopiaNotification({ ...baseParams(), verificationToken: token });
     expect(result).toEqual({ ok: false, reason: "invalid_issuer" });
+  });
+
+  it("accepts an RS512 token whose aud is an array containing our POS signature (NETOPIA's real shape)", () => {
+    const token = signJwt({ ...validPayload(), aud: [AUDIENCE] }, privateKey, "RS512");
+    const result = verifyNetopiaNotification({ rawBody: RAW_BODY, verificationToken: token, publicKeyPem: publicKey, expectedAudience: AUDIENCE });
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects an aud array that does not contain our POS signature", () => {
+    const token = signJwt({ ...validPayload(), aud: ["SOMEONE-ELSE"] }, privateKey, "RS512");
+    const result = verifyNetopiaNotification({ rawBody: RAW_BODY, verificationToken: token, publicKeyPem: publicKey, expectedAudience: AUDIENCE });
+    expect(result).toEqual({ ok: false, reason: "invalid_audience" });
+  });
+
+  it("rejects when our own POS signature is unset, even if aud is empty too", () => {
+    const token = signJwt({ ...validPayload(), aud: "" }, privateKey, "RS512");
+    const result = verifyNetopiaNotification({ rawBody: RAW_BODY, verificationToken: token, publicKeyPem: publicKey, expectedAudience: "" });
+    expect(result).toEqual({ ok: false, reason: "invalid_audience" });
   });
 
   it("rejects a JWT with the wrong audience -- a token issued for a different merchant/POS", () => {

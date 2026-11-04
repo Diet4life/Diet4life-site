@@ -21,11 +21,18 @@ export type OrderStatus = (typeof orderStatusEnum.enumValues)[number];
 // the user before relying on this further if NETOPIA sends other status
 // codes in practice -- see the notify handler's diagnostic logging, which
 // records the raw numeric status/code on every notification.
+//
+// Update 2026-11-04: NETOPIA's official OpenAPI spec (PaymentNotify.status,
+// read directly from https://secure.sandbox.netopia-payments.com/spec)
+// lists "5 = confirmed, 3 = paid, 12 = invalid account", with 5 as its own
+// notification example. Both 3 and 5 are successful payments, so both map
+// to "paid"; everything else is unchanged.
 const NETOPIA_STATUS_PAID = 3;
+const NETOPIA_STATUS_CONFIRMED = 5;
 const NETOPIA_STATUS_DECLINED = 12;
 
 export function mapNetopiaStatus(status: unknown): "paid" | "payment_failed" | "payment_processing" {
-  if (status === NETOPIA_STATUS_PAID) return "paid";
+  if (status === NETOPIA_STATUS_PAID || status === NETOPIA_STATUS_CONFIRMED) return "paid";
   if (status === NETOPIA_STATUS_DECLINED) return "payment_failed";
   return "payment_processing";
 }

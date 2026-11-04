@@ -6,6 +6,10 @@ describe("mapNetopiaStatus", () => {
     expect(mapNetopiaStatus(3)).toBe("paid");
   });
 
+  it("maps status 5 (confirmed, per NETOPIA's official spec) to paid", () => {
+    expect(mapNetopiaStatus(5)).toBe("paid");
+  });
+
   it("maps status 12 to payment_failed", () => {
     expect(mapNetopiaStatus(12)).toBe("payment_failed");
   });

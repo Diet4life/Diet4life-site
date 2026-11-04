@@ -35,16 +35,16 @@ function base64url(input: Buffer | string): string {
 }
 
 function signJwt(payload: Record<string, unknown>, signingKey: string): string {
-  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const header = base64url(JSON.stringify({ alg: "RS512", typ: "JWT" }));
   const body = base64url(JSON.stringify(payload));
-  const signer = createSign("RSA-SHA256");
+  const signer = createSign("RSA-SHA512");
   signer.update(`${header}.${body}`);
   signer.end();
   return `${header}.${body}.${signer.sign(signingKey).toString("base64url")}`;
 }
 
 function validJwtFor(rawBody: string, overrides: Record<string, unknown> = {}): string {
-  return signJwt({ iss: "NETOPIA Payments", aud: POS_SIGNATURE, sub: hashRequestBody(rawBody), ...overrides }, privateKey);
+  return signJwt({ iss: "NETOPIA Payments", aud: [POS_SIGNATURE], sub: hashRequestBody(rawBody), ...overrides }, privateKey);
 }
 
 function buildEvent(body: string, token: string | undefined, queryStringParameters: Record<string, string> | null = null) {
@@ -114,6 +114,22 @@ describe("payments-netopia-notify handler", () => {
       mappedStatus: "paid",
       amountCents: 30000,
     });
+  });
+
+  it("NETOPIA's real shape (RS512 token, aud array, payment.status 5 = confirmed) is verified and marks the order paid", async () => {
+    const body = JSON.stringify({ order: { orderID: "D4L-2026-012F7470" }, payment: { ntpID: "ntp-5", status: 5, code: "00", amount: 300 } });
+    recordNetopiaNotification.mockResolvedValue({ outcome: "processed", previousStatus: "pending_payment", newStatus: "paid" });
+    const res = await handler(buildEvent(body, validJwtFor(body)), { awsRequestId: "req-5" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 200, body: JSON.stringify({ errorCode: 0 }) });
+    expect(recordNetopiaNotification).toHaveBeenCalledWith(expect.objectContaining({ orderNumber: "D4L-2026-012F7470", mappedStatus: "paid" }));
+  });
+
+  it("an unsigned (alg none) token claiming success cannot mark anything paid", async () => {
+    const header = base64url(JSON.stringify({ alg: "none", typ: "JWT" }));
+    const payload = base64url(JSON.stringify({ iss: "NETOPIA Payments", aud: [POS_SIGNATURE], sub: hashRequestBody(VALID_BODY) }));
+    const res = await handler(buildEvent(VALID_BODY, `${header}.${payload}.`), { awsRequestId: "req-none" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 400, body: JSON.stringify({ errorCode: 1 }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
   });
 
   it("an invalid/unverified notification (wrong issuer) cannot mark anything paid -- recordNetopiaNotification is never called", async () => {
@@ -311,6 +327,21 @@ describe("payments-netopia-notify handler", () => {
     expect(res).toMatchObject({ statusCode: 200 });
     expect(markConfirmationEmailStatus).toHaveBeenCalledWith("D4L-2026-77354A78", "sent");
     fetchSpy.mockRestore();
+  });
+
+  it("sends the confirmation email exactly once: first paid transition sends, NETOPIA's retry of the same notification does not", async () => {
+    process.env.RESEND_API_KEY = "test-key";
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 200 }));
+    recordNetopiaNotification
+      .mockResolvedValueOnce({ outcome: "processed", previousStatus: "pending_payment", newStatus: "paid" })
+      .mockResolvedValueOnce({ outcome: "duplicate" });
+    await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-once-1" } as never, undefined as never);
+    await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-once-2" } as never, undefined as never);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(markConfirmationEmailStatus).toHaveBeenCalledTimes(1);
+    expect(markConfirmationEmailStatus).toHaveBeenCalledWith("D4L-2026-77354A78", "sent");
+    fetchSpy.mockRestore();
+    delete process.env.RESEND_API_KEY;
   });
 
   it("an exception while building/sending the confirmation email never turns the ACK into a rejection", async () => {

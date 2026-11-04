@@ -249,7 +249,17 @@ function describeNetopiaFailure(parsedBody: Record<string, unknown> | null, rawB
 // base URL entered with a trailing slash (an easy copy-paste mistake when
 // setting D4L_SITE_BASE_URL by hand in Netlify's dashboard) would otherwise
 // produce a double slash in both notifyUrl and redirectUrl.
-export function resolveSiteBaseUrl(): string {
+//
+// Update 2026-11-04: real logs showed CONTEXT, DEPLOY_URL and
+// DEPLOY_PRIME_URL are all unset at Function runtime, so on a Deploy
+// Preview this fell back to URL -- the site's *production* alias. NETOPIA
+// then returned the browser to a different deploy with a different
+// database branch than the one holding the order. When D4L_SITE_BASE_URL
+// isn't set, the host this request actually arrived on is now used --
+// but only if it is the site's own URL host or one of its Netlify deploy
+// subdomains (`<anything>--<URL host>`). Any other Host header value is
+// ignored, so this can't be turned into an open redirect.
+export function resolveSiteBaseUrl(requestHost?: string): string {
   if (isProductionContext()) {
     return stripTrailingSlash(process.env.URL ?? "");
   }
@@ -257,7 +267,32 @@ export function resolveSiteBaseUrl(): string {
   if (custom && isValidHttpsUrl(custom)) {
     return stripTrailingSlash(custom);
   }
+  const deployHost = resolveOwnDeployHost(requestHost, process.env.URL);
+  if (deployHost) {
+    return `https://${deployHost}`;
+  }
   return stripTrailingSlash(process.env.URL ?? "");
+}
+
+// Returns requestHost (lower-cased, no port) only when it is the site's
+// own URL host or a Netlify deploy subdomain of it, e.g.
+// "agent-abc--my-site.netlify.app" for URL "https://my-site.netlify.app".
+// Anything else -- including look-alikes such as "my-site.netlify.app.evil.com"
+// or "evil-my-site.netlify.app" -- returns undefined. Never throws.
+export function resolveOwnDeployHost(requestHost: string | undefined, siteUrl: string | undefined): string | undefined {
+  if (!requestHost || !siteUrl) return undefined;
+  let siteHost: string;
+  try {
+    siteHost = new URL(siteUrl).hostname.toLowerCase();
+  } catch {
+    return undefined;
+  }
+  const host = requestHost.trim().toLowerCase().replace(/:\d+$/, "");
+  if (!siteHost || !/^[a-z0-9.-]+$/.test(host)) return undefined;
+  if (host === siteHost) return host;
+  const suffix = `--${siteHost}`;
+  if (host.endsWith(suffix) && /^[a-z0-9-]+$/.test(host.slice(0, -suffix.length))) return host;
+  return undefined;
 }
 
 export function stripTrailingSlash(url: string): string {
@@ -292,7 +327,7 @@ export function stripTrailingSlash(url: string): string {
 // variable existed, so leaving it unset changes nothing. Production is
 // pinned to URL unconditionally, exactly like resolveSiteBaseUrl(), and
 // never reads this variable at all.
-export function resolveNotifyBaseUrl(): string {
+export function resolveNotifyBaseUrl(requestHost?: string): string {
   if (isProductionContext()) {
     return stripTrailingSlash(process.env.URL ?? "");
   }
@@ -300,7 +335,7 @@ export function resolveNotifyBaseUrl(): string {
   if (custom && isValidHttpsUrl(custom)) {
     return stripTrailingSlash(custom);
   }
-  return resolveSiteBaseUrl();
+  return resolveSiteBaseUrl(requestHost);
 }
 
 // HTTPS-only, well-formed-URL validation for D4L_SITE_BASE_URL. Rejects
@@ -328,6 +363,14 @@ export function safeHostname(value: string | undefined): string {
   } catch {
     return "unparseable";
   }
+}
+
+function getRequestHost(headers: Record<string, string | undefined> | null | undefined): string | undefined {
+  if (!headers) return undefined;
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() === "host" && value) return value;
+  }
+  return undefined;
 }
 
 export const handler: Handler = async (event, context) => {
@@ -390,8 +433,9 @@ export const handler: Handler = async (event, context) => {
     return { statusCode: 500, body: JSON.stringify({ error: "invalid_order_amount" }) };
   }
 
-  const siteUrl = resolveSiteBaseUrl();
-  const notifyBaseUrl = resolveNotifyBaseUrl();
+  const requestHost = getRequestHost(event.headers);
+  const siteUrl = resolveSiteBaseUrl(requestHost);
+  const notifyBaseUrl = resolveNotifyBaseUrl(requestHost);
   // TEMPORARY diagnostics (remove once the branch-deploy redirectUrl fix is
   // confirmed against real logs) -- hostnames only, no secrets, no paths,
   // no query strings, no full URLs. context/deployUrlHost/deployPrimeUrlHost
@@ -444,7 +488,7 @@ export const handler: Handler = async (event, context) => {
     const payment = parsedBody?.payment as { paymentURL?: string; ntpID?: string } | undefined;
     const paymentURL = payment?.paymentURL;
     if (netopiaRes.ok && paymentURL) {
-      console.log(`payments-initiate[${requestId}] success order=${order.orderNumber}`);
+      console.log(`payments-initiate[${requestId}] success order=${order.orderNumber} paymentUrlHost=${safeHostname(paymentURL)}`);
       // Deliberately minimal: only what the browser needs to redirect.
       // Never echoes the full NETOPIA response back to the client.
       return {

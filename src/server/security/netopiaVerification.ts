@@ -28,20 +28,30 @@
 //                                       isn't enough, since NETOPIA's
 //                                       signature format is otherwise
 //                                       payload-independent metadata
-// delivered in a "Verification-token" request header, RS256-signed with
+// delivered in a "Verification-token" request header, signed with
 // NETOPIA's private key. All four checks (signature, iss, aud, sub) must
 // pass for a notification to be trusted.
+//
+// NETOPIA signs these tokens with RS512 (RSA + SHA-512) -- the default `alg`
+// in NETOPIA's own SDKs, and confirmed by a real sandbox notification on
+// 2026-11-04 that was rejected as invalid_signature while this file still
+// accepted RS256 only. RS256 stays accepted too; both are RSA public-key
+// algorithms, so neither can be abused for alg-confusion. `aud` may arrive
+// as a string or as an array containing our POS signature.
 
 import { createHash, createVerify } from "node:crypto";
 
-// RS256-verifies a JWT against the given RSA public key (PEM). Hardcodes
-// the expected algorithm rather than trusting the token's own "alg"
-// header claim to select verification behavior -- trusting that claim is
-// a well-known JWT vulnerability class (alg-confusion / signature-
-// stripping attacks, e.g. a forged token claiming alg:"none"). Returns
-// the decoded payload only if the signature verifies against RS256;
-// never throws.
-export function verifyRs256Jwt(token: string, publicKeyPem: string): Record<string, unknown> | null {
+// Verifies an RS512/RS256 JWT against the given RSA public key (PEM). The
+// token's "alg" header only selects between these two RSA algorithms from
+// a fixed allowlist -- anything else (HS256, "none", ...) is rejected, so
+// the classic alg-confusion / signature-stripping attacks don't apply.
+// Returns the decoded payload only if the signature verifies; never throws.
+const ALLOWED_JWT_ALGORITHMS: Record<string, string> = {
+  RS512: "RSA-SHA512",
+  RS256: "RSA-SHA256",
+};
+
+export function verifyRsaJwt(token: string, publicKeyPem: string): Record<string, unknown> | null {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   const [headerB64, payloadB64, signatureB64] = parts;
@@ -52,9 +62,9 @@ export function verifyRs256Jwt(token: string, publicKeyPem: string): Record<stri
   } catch {
     return null;
   }
-  if (!header || typeof header !== "object" || (header as Record<string, unknown>).alg !== "RS256") {
-    return null;
-  }
+  const alg = header && typeof header === "object" ? (header as Record<string, unknown>).alg : undefined;
+  const digest = typeof alg === "string" && Object.prototype.hasOwnProperty.call(ALLOWED_JWT_ALGORITHMS, alg) ? ALLOWED_JWT_ALGORITHMS[alg] : undefined;
+  if (!digest) return null;
 
   let signature: Buffer;
   try {
@@ -66,7 +76,7 @@ export function verifyRs256Jwt(token: string, publicKeyPem: string): Record<stri
 
   let signatureValid = false;
   try {
-    const verifier = createVerify("RSA-SHA256");
+    const verifier = createVerify(digest);
     verifier.update(`${headerB64}.${payloadB64}`);
     verifier.end();
     signatureValid = verifier.verify(publicKeyPem, signature);
@@ -109,11 +119,15 @@ export function verifyNetopiaNotification(params: NetopiaVerificationParams): Ne
   if (!params.publicKeyPem) return { ok: false, reason: "public_key_not_configured" };
   if (!params.verificationToken) return { ok: false, reason: "missing_verification_token" };
 
-  const payload = verifyRs256Jwt(params.verificationToken, params.publicKeyPem);
+  const payload = verifyRsaJwt(params.verificationToken, params.publicKeyPem);
   if (!payload) return { ok: false, reason: "invalid_signature" };
 
   if (payload.iss !== EXPECTED_ISSUER) return { ok: false, reason: "invalid_issuer" };
-  if (payload.aud !== params.expectedAudience) return { ok: false, reason: "invalid_audience" };
+  const aud = payload.aud;
+  const audienceMatches =
+    !!params.expectedAudience &&
+    (aud === params.expectedAudience || (Array.isArray(aud) && aud.includes(params.expectedAudience)));
+  if (!audienceMatches) return { ok: false, reason: "invalid_audience" };
 
   const expectedSub = hashRequestBody(params.rawBody);
   if (payload.sub !== expectedSub) return { ok: false, reason: "body_hash_mismatch" };

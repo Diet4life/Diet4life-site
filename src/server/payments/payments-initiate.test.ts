@@ -4,6 +4,7 @@ import {
   handler,
   isValidHttpsUrl,
   resolveNotifyBaseUrl,
+  resolveOwnDeployHost,
   resolveSiteBaseUrl,
   safeHostname,
   stripTrailingSlash,
@@ -190,7 +191,7 @@ describe("isValidHttpsUrl", () => {
 });
 
 describe("resolveSiteBaseUrl", () => {
-  const ENV_KEYS = ["CONTEXT", "URL", "D4L_SITE_BASE_URL"] as const;
+  const ENV_KEYS = ["CONTEXT", "URL", "D4L_SITE_BASE_URL", "D4L_NETOPIA_NOTIFY_BASE_URL"] as const;
   const saved: Record<string, string | undefined> = {};
 
   afterEach(() => {
@@ -209,8 +210,42 @@ describe("resolveSiteBaseUrl", () => {
     }
   }
 
-  it("takes no arguments -- there is no way to pass a browser-supplied Host/Origin into it (no open-redirect surface)", () => {
-    expect(resolveSiteBaseUrl.length).toBe(0);
+  it("Deploy Preview with no D4L_SITE_BASE_URL: uses the preview's own host (same deploy + DB branch as the order), not the production alias", () => {
+    setEnv({ CONTEXT: undefined, URL: "https://diet4life-netopia-sandbox-relay.netlify.app", D4L_SITE_BASE_URL: undefined, D4L_NETOPIA_NOTIFY_BASE_URL: undefined });
+    const host = "agent-6aeb886ba--diet4life-netopia-sandbox-relay.netlify.app";
+    expect(resolveSiteBaseUrl(host)).toBe(`https://${host}`);
+    expect(resolveNotifyBaseUrl(host)).toBe(`https://${host}`);
+  });
+
+  it("ignores a request Host that isn't this site or one of its deploy subdomains (no open redirect)", () => {
+    setEnv({ CONTEXT: undefined, URL: "https://diet4life-netopia-sandbox-relay.netlify.app", D4L_SITE_BASE_URL: undefined });
+    for (const host of [
+      "evil.example.com",
+      "diet4life-netopia-sandbox-relay.netlify.app.evil.com",
+      "evil-diet4life-netopia-sandbox-relay.netlify.app",
+      "a.b--diet4life-netopia-sandbox-relay.netlify.app",
+      "x--diet4life-netopia-sandbox-relay.netlify.app/path",
+    ]) {
+      expect(resolveSiteBaseUrl(host)).toBe("https://diet4life-netopia-sandbox-relay.netlify.app");
+    }
+  });
+
+  it("production context still ignores the request Host entirely and uses URL", () => {
+    setEnv({ CONTEXT: "production", URL: "https://diet4lifeconcept.ro", D4L_SITE_BASE_URL: undefined });
+    expect(resolveSiteBaseUrl("agent-x--diet4lifeconcept.ro")).toBe("https://diet4lifeconcept.ro");
+  });
+
+  it("an explicit D4L_SITE_BASE_URL still wins over the request Host", () => {
+    setEnv({ CONTEXT: undefined, URL: "https://site.netlify.app", D4L_SITE_BASE_URL: "https://custom.example.org" });
+    expect(resolveSiteBaseUrl("agent-x--site.netlify.app")).toBe("https://custom.example.org");
+  });
+
+  it("resolveOwnDeployHost accepts the site host and deploy subdomains only, case/port-insensitive", () => {
+    expect(resolveOwnDeployHost("SITE.netlify.app:443", "https://site.netlify.app")).toBe("site.netlify.app");
+    expect(resolveOwnDeployHost("deploy-preview-3--site.netlify.app", "https://site.netlify.app")).toBe("deploy-preview-3--site.netlify.app");
+    expect(resolveOwnDeployHost("other.netlify.app", "https://site.netlify.app")).toBeUndefined();
+    expect(resolveOwnDeployHost(undefined, "https://site.netlify.app")).toBeUndefined();
+    expect(resolveOwnDeployHost("site.netlify.app", undefined)).toBeUndefined();
   });
 
   it("production: ignores D4L_SITE_BASE_URL entirely and uses URL, even if D4L_SITE_BASE_URL is set to something else", () => {
@@ -292,9 +327,6 @@ describe("resolveNotifyBaseUrl", () => {
     }
   }
 
-  it("takes no arguments -- same no-open-redirect-surface guarantee as resolveSiteBaseUrl", () => {
-    expect(resolveNotifyBaseUrl.length).toBe(0);
-  });
 
   it("production: ignores D4L_NETOPIA_NOTIFY_BASE_URL entirely and uses URL", () => {
     setEnv({
