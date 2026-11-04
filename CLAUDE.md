@@ -1919,3 +1919,13 @@ products.sql` run first, then a real click-through on her side.
   (no Netlify auth here) — `NETLIFY_DB_URL` etc. will be injected automatically
   by Netlify once the site is deployed with `@netlify/database` in
   `package.json`; nothing to configure by hand.
+
+## NETOPIA sandbox post-payment fix (2026-11-04)
+
+Real sandbox payment D4L-2026-012F7470 succeeded on NETOPIA but stayed pending. Causes found from logs + NETOPIA's official spec (`https://secure.sandbox.netopia-payments.com/spec`, reachable now):
+- Notify verification only accepted RS256; NETOPIA signs `Verification-token` with **RS512** and may send `aud` as an array → every real IPN was `invalid_signature`. Fixed in `netopiaVerification.ts` (allowlist RS512/RS256, aud string-or-array).
+- `payment.status` **5 = confirmed** (spec) was mapped to processing; now 5 and 3 both map to paid.
+- `CONTEXT`/`DEPLOY_URL` are unset at Function runtime, so on Deploy Previews notify/redirect URLs resolved to the site's *production* alias (different deploy + different DB branch). `resolveSiteBaseUrl()` now uses the request Host when it's the site's own host or a `<x>--<site host>` deploy subdomain.
+- `/checkout/retur` now polls `orders-status` (bounded, 10×3 s) and the pending copy no longer says "Nu a fost efectuată nicio plată".
+- **Open**: Deploy Previews of the relay site are SSO-protected (401), so NETOPIA can't deliver notify to a preview. End-to-end notify only works on a publicly reachable deploy whose DB holds the order (the relay's production deploy), or if preview visitor access is relaxed.
+- **Open, not fixed**: because `CONTEXT` is unset at Function runtime, `isProductionContext()` is false on every deploy — server-side production guards don't actually fire; only the build-time UI guard and missing NETOPIA keys protect real production.

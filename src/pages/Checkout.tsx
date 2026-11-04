@@ -17,6 +17,7 @@ import { PaymentButton } from "@/components/checkout/PaymentButton";
 import { checkoutSubmissionSchema, type CheckoutSubmissionInput } from "@/lib/checkout/schemas";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/checkout/countries";
 import { isCheckoutDisabledInBuild } from "@/lib/checkout/environment";
+import { submitCheckout } from "@/lib/checkout/submitCheckout";
 import type { Product } from "@/lib/checkout/types";
 
 export default function Checkout() {
@@ -147,68 +148,57 @@ export default function Checkout() {
   const needsPatient = product.productType !== "digital_product";
 
   async function onSubmit(values: CheckoutSubmissionInput) {
-    // Defense in depth -- PaymentButton doesn't render a submit control
-    // when checkout is disabled for this build, but this keeps onSubmit
-    // itself from ever calling orders-create there (e.g. an Enter-key
-    // submit). The real, always-on guard is server-side in orderService.ts's
-    // createOrder(). Mirrors PaymentButton.tsx's own isCheckoutDisabledInBuild()
-    // check exactly -- including on the dedicated NETOPIA sandbox relay site.
-    if (isCheckoutDisabledInBuild()) {
-      toast({
-        title: ro ? "Plățile online nu sunt încă disponibile" : "Online payments aren't available yet",
-        description: ro
-          ? "Revino în curând sau contactează-ne pentru a finaliza comanda."
-          : "Please check back soon, or contact us to complete your order.",
-      });
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const payload = {
+    // The whole flow (build guard -> orders-create -> payments-initiate ->
+    // NETOPIA sandbox redirect) lives in submitCheckout() so it can be
+    // tested directly. The build guard mirrors PaymentButton.tsx's own
+    // isCheckoutDisabledInBuild() check (defense in depth -- e.g. an
+    // Enter-key submit); the real, always-on guard is server-side.
+    const checkoutDisabled = isCheckoutDisabledInBuild();
+    if (!checkoutDisabled) setSubmitting(true);
+    const result = await submitCheckout(
+      {
         productSlug: values.productSlug,
         billing: values.billing,
         patient: needsPatient ? values.patient : undefined,
         consent: values.consent,
-      };
-      const res = await fetch("/.netlify/functions/orders-create", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        throw new Error("order_create_failed");
-      }
-      const data = (await res.json()) as { publicStatusToken: string };
+      },
+      { fetch: window.fetch.bind(window), checkoutDisabled },
+    );
 
-      // Order exists now (pending_payment) -- try to start a NETOPIA sandbox
-      // payment and send the browser to the hosted page. If this step fails
-      // for any reason, the order itself is not lost: fall back to the
-      // existing status page, which already handles "pending_payment"
-      // correctly (see StatusStates.tsx) rather than showing a dead-end error.
-      try {
-        const initiateRes = await fetch("/.netlify/functions/payments-initiate", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ publicStatusToken: data.publicStatusToken }),
+    switch (result.kind) {
+      case "redirect":
+        window.location.href = result.url;
+        return;
+      case "disabled":
+        toast({
+          title: ro ? "Plățile online nu sunt încă disponibile" : "Online payments aren't available yet",
+          description: ro
+            ? "Revino în curând sau contactează-ne pentru a finaliza comanda."
+            : "Please check back soon, or contact us to complete your order.",
         });
-        if (initiateRes.ok) {
-          const initiateData = (await initiateRes.json()) as { paymentURL: string };
-          window.location.href = initiateData.paymentURL;
-          return;
-        }
-      } catch {
-        // fall through to the safe redirect below
-      }
-      window.location.href = `/checkout/retur?token=${encodeURIComponent(data.publicStatusToken)}`;
-    } catch {
-      toast({
-        title: ro ? "A apărut o problemă" : "Something went wrong",
-        description: ro
-          ? "Comanda nu a putut fi înregistrată. Te rugăm să încerci din nou."
-          : "The order could not be registered. Please try again.",
-        variant: "destructive",
-      });
-      setSubmitting(false);
+        return;
+      case "initiate_failed":
+        // The order exists, but payment could not start. Shown as an
+        // error -- never as the "registered, pending" status page.
+        toast({
+          title: ro ? "Plata nu a putut fi inițiată" : "The payment could not be started",
+          description: ro
+            ? "Nu a fost efectuată nicio plată. Te rugăm să încerci din nou sau să ne contactezi."
+            : "No payment was made. Please try again or contact us.",
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      case "order_failed":
+        toast({
+          title: ro ? "A apărut o problemă" : "Something went wrong",
+          description: ro
+            ? "Comanda nu a putut fi înregistrată. Te rugăm să încerci din nou."
+            : "The order could not be registered. Please try again.",
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
     }
   }
 

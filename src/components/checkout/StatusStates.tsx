@@ -55,14 +55,23 @@ function StatusCard({
   );
 }
 
-// Phase 1: status will realistically stay "pending_payment" forever (no
-// payment provider is wired up yet -- see PaymentButton.tsx). This renders
-// every state the architecture defines so the structural flow can be
-// reviewed end to end; "paid" only ever appears once Phase 2 adds a real,
-// verified NETOPIA callback -- never inferred from the browser alone, and
-// the pending-state copy is deliberately explicit that no payment exists
-// yet, so it can never read as a confirmed purchase.
-export function StatusStates({ order }: { order: PublicOrderStatus }) {
+// Renders every order state. "paid" only ever comes from the database,
+// set by the verified NETOPIA notify callback -- never inferred from the
+// browser or the redirect URL.
+// `confirmation` only matters for pending_payment / payment_processing:
+// "checking" while CheckoutReturn.tsx's bounded refresh is still re-reading
+// the order, "delayed" once it gave up without a settled status. Neither
+// state ever claims that no payment was made -- the visitor may well have
+// paid on NETOPIA's page and the verified callback simply hasn't landed yet.
+export function StatusStates({
+  order,
+  confirmation = "delayed",
+  onRefresh,
+}: {
+  order: PublicOrderStatus;
+  confirmation?: "checking" | "delayed";
+  onRefresh?: () => void;
+}) {
   const { language } = useLanguage();
   const ro = language === "ro";
 
@@ -142,9 +151,10 @@ export function StatusStates({ order }: { order: PublicOrderStatus }) {
     );
   }
 
-  // pending_payment | payment_processing -- Phase 1's only realistic state.
-  // Copy is deliberately explicit and literal: no payment exists, none was
-  // taken. Never "Plata a fost efectuată" / "Comanda este confirmată".
+  // pending_payment | payment_processing -- waiting for NETOPIA's verified
+  // notify callback. Never "Plata a fost efectuată" (not confirmed yet), and
+  // never "Nu a fost efectuată nicio plată" (it may already have been made).
+  const checking = confirmation === "checking";
   return (
     <StatusCard
       icon={Clock}
@@ -156,14 +166,27 @@ export function StatusStates({ order }: { order: PublicOrderStatus }) {
       productName={order.productName}
       amountLabel={formatPrice(order.totalCents, order.currency)}
       explanation={
-        ro
-          ? "Plata online nu este activă în această versiune de test. Nu a fost efectuată nicio plată."
-          : "Online payment is not active in this test version. No payment has been made."
+        checking
+          ? ro
+            ? "Așteptăm confirmarea plății de la NETOPIA. Pagina se actualizează automat."
+            : "We're waiting for NETOPIA to confirm the payment. This page updates automatically."
+          : ro
+            ? "Încă nu am primit confirmarea plății de la NETOPIA. Dacă ai finalizat plata, nu o repeta — confirmarea poate întârzia câteva minute."
+            : "We haven't received NETOPIA's payment confirmation yet. If you completed the payment, don't repeat it — confirmation can take a few minutes."
       }
     >
-      <Button asChild variant="outline" className="rounded-xl">
-        <Link href="/contact">{ro ? "Contactează-ne" : "Contact us"}</Link>
-      </Button>
+      {!checking && (
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          {onRefresh && (
+            <Button onClick={onRefresh} className="rounded-xl" data-testid="button-status-refresh">
+              {ro ? "Verifică din nou" : "Check again"}
+            </Button>
+          )}
+          <Button asChild variant="outline" className="rounded-xl">
+            <Link href="/contact">{ro ? "Contactează-ne" : "Contact us"}</Link>
+          </Button>
+        </div>
+      )}
     </StatusCard>
   );
 }
