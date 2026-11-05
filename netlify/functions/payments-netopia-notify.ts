@@ -2,7 +2,7 @@ import type { Handler } from "@netlify/functions";
 import { verifyNetopiaNotification } from "@/server/security/netopiaVerification";
 import { getOrderConfirmationContext, markConfirmationEmailStatus, recordNetopiaNotification } from "@/server/orders/orderService";
 import { mapNetopiaStatus } from "@/server/orders/netopiaStatusMapping";
-import { isCheckoutAllowed, isProductionContext, isSandboxRelayEnabled } from "@/server/environment";
+import { isCheckoutAllowed, isDiet4LifeProductionSite, isProductionContext, isSandboxRelayEnabled } from "@/server/environment";
 import { resolveConfirmationRecipient, sendOrderConfirmationEmail } from "@/server/email/orderConfirmationEmail";
 
 // Real NETOPIA v2 IPN/notify handler. See
@@ -131,7 +131,15 @@ async function maybeSendOrderConfirmationEmail(orderNumber: string, requestId: s
 export const handler: Handler = async (event, context) => {
   const requestId = context.awsRequestId;
 
+  // 2026-11-04: a real sandbox notification showed isProduction=false (from
+  // CONTEXT) even on this relay site's own "production" deploy -- CONTEXT is
+  // confirmed unreliable at Functions runtime on this project. The guard
+  // below (isCheckoutAllowed()) no longer depends on it at all; it's logged
+  // here only as a secondary, informational data point, alongside the
+  // reliable, URL-hostname-based check (isSiteIsDiet4LifeProduction) that the
+  // guard actually uses now.
   const productionContext = isProductionContext();
+  const isRealProductionSite = isDiet4LifeProductionSite();
   const sandboxRelayEnabled = isSandboxRelayEnabled();
 
   // Safe diagnostics -- booleans only, never a header, body, token, or env
@@ -140,7 +148,8 @@ export const handler: Handler = async (event, context) => {
   // var" is worth being able to confirm from real logs, the same way the
   // D4L_SITE_BASE_URL diagnostics in payments-initiate.ts already are.
   console.log(
-    `payments-netopia-notify[${requestId}] diag isProduction=${productionContext} sandboxRelayEnabled=${sandboxRelayEnabled}`,
+    `payments-netopia-notify[${requestId}] diag isProductionContext(unreliable)=${productionContext} ` +
+      `isDiet4LifeProductionSite=${isRealProductionSite} sandboxRelayEnabled=${sandboxRelayEnabled}`,
   );
 
   // Defense-in-depth, checked first, before anything else (mirrors
@@ -149,21 +158,24 @@ export const handler: Handler = async (event, context) => {
   // NETOPIA_PUBLIC_KEY being unset there -- a config omission, not a
   // structural block.
   //
-  // Diet4Life's own real production site: productionContext=true,
-  // sandboxRelayEnabled=false (the variable is never set there) -> still
-  // refuses, exactly as before this round.
+  // Diet4Life's own real production site (matched by its reliable
+  // process.env.URL hostname, not CONTEXT): isCheckoutAllowed() vetoes it
+  // unconditionally, regardless of any flag -- still refuses, exactly as
+  // before this round, but now for a reliable reason.
   //
-  // The dedicated sandbox relay site: productionContext=true (Netlify's own
-  // label for that site's primary branch deploy), sandboxRelayEnabled=true
-  // (set by hand, only on that site) -> falls through to the real
-  // verification/DB logic below, completely unmodified. Everything past
-  // this point -- signature/issuer/audience/body-hash verification, order
-  // lookup, idempotency, status transitions -- is exactly the same code
-  // path a non-production branch-deploy request already goes through; this
-  // flag only ever changes whether that path is reached, never what it does.
+  // The dedicated sandbox relay site: not the real production hostname, and
+  // sandboxRelayEnabled=true (set by hand, only on that site) -> falls
+  // through to the real verification/DB logic below, completely unmodified.
+  // Everything past this point -- signature/issuer/audience/body-hash
+  // verification, order lookup, idempotency, status transitions -- is
+  // exactly the same code path a non-production branch-deploy request
+  // already goes through; this flag only ever changes whether that path is
+  // reached, never what it does.
   //
-  // Any non-production branch/preview deploy: productionContext=false ->
-  // this guard is skipped regardless of the flag, unchanged from before.
+  // Any other deploy (branch/preview/local) without the flag set to exactly
+  // "true": blocked -- this is now fail-closed by default (previously any
+  // non-production CONTEXT was permissive; see environment.ts's header
+  // comment for why that changed).
   if (!isCheckoutAllowed()) {
     return {
       statusCode: 503,

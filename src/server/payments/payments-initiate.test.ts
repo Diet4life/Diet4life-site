@@ -417,36 +417,74 @@ describe("safeHostname", () => {
 // parsing or any order lookup -- so it's testable with a bare-minimum mock
 // event/context, the same way createOrder()'s guard is tested in
 // orderService.test.ts without a database.
+// 2026-11-04: isCheckoutAllowed() no longer reads CONTEXT (confirmed
+// unreliable at Functions runtime) -- it decides from process.env.URL's
+// hostname instead. These tests use URL, not CONTEXT, to match.
 describe("handler -- production guard", () => {
   afterEach(() => {
     delete process.env.CONTEXT;
+    delete process.env.URL;
     delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
   });
 
   const mockEvent = { httpMethod: "POST", headers: {}, body: null };
   const mockContext = { awsRequestId: "req-guard-test" } as never;
 
-  it("Diet4Life's real production site (production, relay flag never set): refuses before parsing the request", async () => {
-    process.env.CONTEXT = "production";
+  it("Diet4Life's real production site (URL=diet4lifeconcept.ro, relay flag never set): refuses before parsing the request", async () => {
+    process.env.URL = "https://diet4lifeconcept.ro";
     delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
     const result = await handler(mockEvent as never, mockContext, () => undefined);
     expect(result).toMatchObject({ statusCode: 503 });
     expect(JSON.parse((result as { body: string }).body)).toEqual({ error: "checkout_disabled" });
   });
 
-  it("production with the relay flag at a near-miss value: still refuses -- fails closed", async () => {
-    process.env.CONTEXT = "production";
+  it("the real production hostname with the relay flag at a near-miss value: still refuses -- fails closed", async () => {
+    process.env.URL = "https://diet4lifeconcept.ro";
     process.env.D4L_NETOPIA_SANDBOX_RELAY = "yes";
     const result = await handler(mockEvent as never, mockContext, () => undefined);
     expect(result).toMatchObject({ statusCode: 503 });
   });
 
-  it("dedicated sandbox relay site (production + D4L_NETOPIA_SANDBOX_RELAY=true): passes the guard, reaches method validation instead", async () => {
+  it("the real production hostname is an absolute veto even if the relay flag is set to exactly \"true\" there by mistake", async () => {
+    process.env.URL = "https://diet4lifeconcept.ro";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    const result = await handler(mockEvent as never, mockContext, () => undefined);
+    expect(result).toMatchObject({ statusCode: 503 });
+  });
+
+  it("any deploy without URL set and without the relay flag: also refuses -- fails closed by default now", async () => {
+    delete process.env.URL;
+    delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
+    const result = await handler(mockEvent as never, mockContext, () => undefined);
+    expect(result).toMatchObject({ statusCode: 503 });
+  });
+
+  it("dedicated sandbox relay site (its own URL + D4L_NETOPIA_SANDBOX_RELAY=true, even though Netlify's own CONTEXT there is \"production\"): passes the guard, reaches method validation instead", async () => {
+    process.env.URL = "https://diet4life-netopia-sandbox-relay.netlify.app";
     process.env.CONTEXT = "production";
     process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
     const result = await handler({ ...mockEvent, httpMethod: "GET" } as never, mockContext, () => undefined);
     // Proves the 503 guard was skipped -- the next check (method_not_allowed)
     // fired instead, not the production block.
     expect(result).toMatchObject({ statusCode: 405 });
+  });
+
+  // 2026-11-05: isCheckoutAllowed() is now an explicit allowlist (exact
+  // relay hostname + exact flag), shared verbatim by orders-create.ts,
+  // payments-initiate.ts (here), and payments-netopia-notify.ts -- these
+  // two cases prove this handler enforces that same allowlist, not just
+  // "not the production hostname".
+  it("www.diet4lifeconcept.ro + flag=true: still refuses -- not an exact match on either the production or the relay hostname", async () => {
+    process.env.URL = "https://www.diet4lifeconcept.ro";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    const result = await handler(mockEvent as never, mockContext, () => undefined);
+    expect(result).toMatchObject({ statusCode: 503 });
+  });
+
+  it("an unrelated/unknown Netlify project + flag=true: still refuses -- the allowlist matches only the one named relay hostname", async () => {
+    process.env.URL = "https://some-other-project.netlify.app";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    const result = await handler(mockEvent as never, mockContext, () => undefined);
+    expect(result).toMatchObject({ statusCode: 503 });
   });
 });

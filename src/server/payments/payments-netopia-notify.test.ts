@@ -57,7 +57,7 @@ function buildEvent(body: string, token: string | undefined, queryStringParamete
   } as never;
 }
 
-const ENV_KEYS = ["NETOPIA_PUBLIC_KEY", "NETOPIA_POS_SIGNATURE", "CONTEXT", "D4L_NETOPIA_SANDBOX_RELAY", "RESEND_API_KEY"] as const;
+const ENV_KEYS = ["NETOPIA_PUBLIC_KEY", "NETOPIA_POS_SIGNATURE", "CONTEXT", "URL", "D4L_NETOPIA_SANDBOX_RELAY", "RESEND_API_KEY"] as const;
 const saved: Record<string, string | undefined> = {};
 
 const DIGITAL_ORDER_CONTEXT = {
@@ -89,7 +89,14 @@ beforeEach(() => {
   process.env.NETOPIA_PUBLIC_KEY = publicKey;
   process.env.NETOPIA_POS_SIGNATURE = POS_SIGNATURE;
   delete process.env.CONTEXT;
-  delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
+  // 2026-11-05: isCheckoutAllowed() is now an explicit allowlist -- exact
+  // relay hostname AND exact flag, both required. These tests are about
+  // verification behavior, not the guard itself, so the default fixture
+  // state sets both to make the guard a non-issue for them. The dedicated
+  // "production guard" tests below explicitly override all three env vars
+  // (URL/CONTEXT/the flag) to exercise the guard itself.
+  process.env.URL = "https://diet4life-netopia-sandbox-relay.netlify.app";
+  process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
   delete process.env.RESEND_API_KEY;
 });
 
@@ -206,24 +213,32 @@ describe("payments-netopia-notify handler", () => {
     expect(recordNetopiaNotification).toHaveBeenCalledWith(expect.objectContaining({ orderNumber: "D4L-2026-77354A78", mappedStatus: "paid" }));
   });
 
-  it("Diet4Life's own production, no relay flag set: refuses to run at all, even with an otherwise fully valid, verified notification", async () => {
-    process.env.CONTEXT = "production";
+  // 2026-11-04: isCheckoutAllowed() no longer reads CONTEXT at all (a real
+  // sandbox notification's own logs showed it unreliable at Functions
+  // runtime -- see environment.ts's header comment). The production veto
+  // now comes from process.env.URL's hostname; these tests set URL, not
+  // CONTEXT, to exercise it. CONTEXT is still set in a couple of cases below
+  // specifically to prove it's now irrelevant to the outcome.
+
+  it("Diet4Life's own production site (URL=diet4lifeconcept.ro), no relay flag set: refuses to run at all, even with an otherwise fully valid, verified notification", async () => {
+    process.env.URL = "https://diet4lifeconcept.ro";
+    delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
     const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-prod-1" } as never, undefined as never);
     expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
     expect(recordNetopiaNotification).not.toHaveBeenCalled();
   });
 
-  it("production + D4L_NETOPIA_SANDBOX_RELAY=false: still refuses -- the flag must be exactly \"true\" to enable relay mode", async () => {
-    process.env.CONTEXT = "production";
+  it("the real production hostname + D4L_NETOPIA_SANDBOX_RELAY=false: still refuses -- the flag must be exactly \"true\" to enable relay mode", async () => {
+    process.env.URL = "https://diet4lifeconcept.ro";
     process.env.D4L_NETOPIA_SANDBOX_RELAY = "false";
     const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-prod-2" } as never, undefined as never);
     expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
     expect(recordNetopiaNotification).not.toHaveBeenCalled();
   });
 
-  it("production + D4L_NETOPIA_SANDBOX_RELAY set to a near-miss value (\"1\", \"yes\", \"TRUE\", empty): still refuses -- fails closed on anything but the exact string \"true\"", async () => {
+  it("the real production hostname + D4L_NETOPIA_SANDBOX_RELAY set to a near-miss value (\"1\", \"yes\", \"TRUE\", empty): still refuses -- fails closed on anything but the exact string \"true\"", async () => {
     for (const nearMiss of ["1", "yes", "TRUE", "True", ""]) {
-      process.env.CONTEXT = "production";
+      process.env.URL = "https://diet4lifeconcept.ro";
       process.env.D4L_NETOPIA_SANDBOX_RELAY = nearMiss;
       const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: `req-nearmiss-${nearMiss}` } as never, undefined as never);
       expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
@@ -231,7 +246,33 @@ describe("payments-netopia-notify handler", () => {
     expect(recordNetopiaNotification).not.toHaveBeenCalled();
   });
 
-  it("dedicated sandbox relay site (production + D4L_NETOPIA_SANDBOX_RELAY=true): proceeds to the normal verification/DB path for a genuinely valid notification", async () => {
+  it("the real production hostname is an absolute veto even with D4L_NETOPIA_SANDBOX_RELAY=true set there by mistake", async () => {
+    process.env.URL = "https://diet4lifeconcept.ro";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-prod-veto" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
+  it("the real production hostname is still vetoed even when CONTEXT (unreliable) claims a non-production deploy -- URL, not CONTEXT, is what's trusted now", async () => {
+    process.env.URL = "https://diet4lifeconcept.ro";
+    process.env.CONTEXT = "branch-deploy";
+    delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-prod-context-lie" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
+  it("any deploy without URL set and without the relay flag refuses too -- fails closed by default now (previously permissive under any non-production CONTEXT)", async () => {
+    delete process.env.URL;
+    delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-default-closed" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
+  it("dedicated sandbox relay site (its own URL + D4L_NETOPIA_SANDBOX_RELAY=true, even though Netlify's own CONTEXT there is \"production\"): proceeds to the normal verification/DB path for a genuinely valid notification", async () => {
+    process.env.URL = "https://diet4life-netopia-sandbox-relay.netlify.app";
     process.env.CONTEXT = "production";
     process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
     recordNetopiaNotification.mockResolvedValue({ outcome: "processed", previousStatus: "pending_payment", newStatus: "paid" });
@@ -246,8 +287,37 @@ describe("payments-netopia-notify handler", () => {
     });
   });
 
+  // 2026-11-05: isCheckoutAllowed() is now an explicit allowlist (exact
+  // relay hostname + exact flag), shared verbatim across orders-create.ts,
+  // payments-initiate.ts, and this handler -- these two cases prove this
+  // handler enforces that same allowlist, not just "not the production
+  // hostname".
+  it("www.diet4lifeconcept.ro + flag=true: still refuses -- not an exact match on either the production or the relay hostname", async () => {
+    process.env.URL = "https://www.diet4lifeconcept.ro";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-www" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
+  it("an unrelated/unknown Netlify project + flag=true: still refuses -- the allowlist matches only the one named relay hostname", async () => {
+    process.env.URL = "https://some-other-project.netlify.app";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-unknown-project" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
+  it("a deploy-preview hostname of the relay site + flag=true: still refuses -- the allowlist requires an exact hostname match, never a subdomain/prefix of it", async () => {
+    process.env.URL = "https://deploy-preview-12--diet4life-netopia-sandbox-relay.netlify.app";
+    process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
+    const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-preview" } as never, undefined as never);
+    expect(res).toMatchObject({ statusCode: 503, body: JSON.stringify({ error: "notify_disabled" }) });
+    expect(recordNetopiaNotification).not.toHaveBeenCalled();
+  });
+
   it("relay mode does NOT bypass signature verification -- an invalid/forged notification is still rejected even with the relay flag on", async () => {
-    process.env.CONTEXT = "production";
+    process.env.URL = "https://diet4life-netopia-sandbox-relay.netlify.app";
     process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
     const forgedToken = signJwt({ iss: "Not NETOPIA", aud: POS_SIGNATURE, sub: hashRequestBody(VALID_BODY) }, privateKey);
     const res = await handler(buildEvent(VALID_BODY, forgedToken), { awsRequestId: "req-relay-forged" } as never, undefined as never);
@@ -256,7 +326,7 @@ describe("payments-netopia-notify handler", () => {
   });
 
   it("relay mode still fails closed when NETOPIA_PUBLIC_KEY is unconfigured -- the flag doesn't substitute for real verification config", async () => {
-    process.env.CONTEXT = "production";
+    process.env.URL = "https://diet4life-netopia-sandbox-relay.netlify.app";
     process.env.D4L_NETOPIA_SANDBOX_RELAY = "true";
     delete process.env.NETOPIA_PUBLIC_KEY;
     const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: "req-relay-nokey" } as never, undefined as never);
@@ -264,12 +334,12 @@ describe("payments-netopia-notify handler", () => {
     expect(recordNetopiaNotification).not.toHaveBeenCalled();
   });
 
-  it("non-production behavior is unaffected by the relay flag either way", async () => {
+  it("a non-production deploy (not the real production hostname) with the relay flag on behaves identically regardless of CONTEXT", async () => {
     recordNetopiaNotification.mockResolvedValue({ outcome: "processed", previousStatus: "pending_payment", newStatus: "paid" });
-    for (const relay of [undefined, "true", "false"]) {
-      if (relay === undefined) delete process.env.D4L_NETOPIA_SANDBOX_RELAY;
-      else process.env.D4L_NETOPIA_SANDBOX_RELAY = relay;
-      const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: `req-nonprod-${relay}` } as never, undefined as never);
+    for (const context of [undefined, "branch-deploy", "deploy-preview", "dev"]) {
+      if (context === undefined) delete process.env.CONTEXT;
+      else process.env.CONTEXT = context;
+      const res = await handler(buildEvent(VALID_BODY, validJwtFor(VALID_BODY)), { awsRequestId: `req-nonprod-${context}` } as never, undefined as never);
       expect(res).toMatchObject({ statusCode: 200, body: JSON.stringify({ errorCode: 0 }) });
     }
   });
