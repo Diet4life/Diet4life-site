@@ -105,13 +105,131 @@ export function normalizePemKey(pem: string): string {
 // CERTIFICATE-----" is parsed with `new X509Certificate(pem)` and its
 // `.publicKey` (a KeyObject Node's Verify.verify() accepts directly) is
 // used; anything else still goes through createPublicKey() exactly as
-// before, so "PUBLIC KEY" PEM support is unchanged. Tried against several
-// candidate forms of the same string, in order, stopping at the first that
-// parses -- the byte-identical raw value first (so an already-valid PEM,
-// certificate or not, is never mutated), then surrounding whitespace
-// trimmed (a copy-paste-into-a-dashboard artifact), then (only if neither
-// of those has a real newline) the existing \n-literal normalization. Never
-// throws; returns undefined if nothing parses.
+// before, so "PUBLIC KEY" PEM support is unchanged.
+//
+// 2026-11-11: a second real deploy, with the certificate replaced by a
+// freshly re-validated copy of the exact same .cer file (openssl parses it
+// fine), STILL came back invalid_public_key / keyShape=x509_certificate.
+// That rules out "the certificate itself is invalid" -- the certificate is
+// fine; something about how it survives a round trip through a Netlify env
+// var (copy/paste into the dashboard, whatever intermediate editor/clipboard
+// touched it) produces a byte sequence Node's PEM/X509 parser won't accept,
+// and the previous fallback (try raw, try trimmed, try \n-literal-converted
+// -- but only when NO real newline exists anywhere in the string) is too
+// narrow to catch it: it does nothing for CRLF/lone-CR line endings, for a
+// value with escaped \r\n sequences, for a value that mixes real and
+// escaped breaks (plausible if only part of a multi-line value got
+// re-wrapped), or for stray whitespace split across the Base64 body itself
+// rather than just at the ends.
+//
+// canonicalizeCertificatePem() below replaces that narrow fallback for the
+// certificate path specifically: it normalizes every one of those input
+// shapes in one deterministic pass, locates exactly one complete BEGIN/END
+// CERTIFICATE block, strictly validates the body is pure Base64 (never
+// silently dropping an unexpected character to "make it fit" -- a stray
+// non-Base64 byte is a real corruption, not noise to clean up), and
+// rebuilds a canonical 64-column PEM before it is ever hygiene-free-handed
+// to `new X509Certificate()`. Only ever receives/returns the full PEM
+// internally; nothing in this module logs it (see
+// payments-netopia-notify.ts's rejection log line, which only ever logs the
+// classification types below, never a byte of actual key material).
+export type CertificateCanonicalizationReason =
+  | "no_certificate_marker"
+  | "incomplete_certificate_block"
+  | "multiple_certificate_blocks"
+  | "empty_certificate_body"
+  | "invalid_base64_body";
+
+export type CertificateCanonicalizationResult =
+  | { ok: true; pem: string }
+  | { ok: false; reason: CertificateCanonicalizationReason };
+
+const CERT_BEGIN_MARKER = "-----BEGIN CERTIFICATE-----";
+const CERT_END_MARKER = "-----END CERTIFICATE-----";
+
+function allIndexesOf(haystack: string, needle: string): number[] {
+  const indexes: number[] = [];
+  let from = 0;
+  for (;;) {
+    const i = haystack.indexOf(needle, from);
+    if (i === -1) return indexes;
+    indexes.push(i);
+    from = i + needle.length;
+  }
+}
+
+export function canonicalizeCertificatePem(input: string): CertificateCanonicalizationResult {
+  // Escaped-sequence conversion runs FIRST, and unconditionally -- not
+  // gated behind "only if there is no real newline anywhere", the way the
+  // older normalizePemKey() is for the PUBLIC KEY path. That gate is
+  // exactly what would miss a value with BOTH real and escaped breaks
+  // (e.g. only one line re-wrapped by an intermediate editor): converting
+  // every escaped form up front, regardless of what else is in the string,
+  // handles the pure and the mixed case identically. Order matters here:
+  // the 3-character \r\n escape must be matched before the standalone \r
+  // and \n escapes, or it would be split into two separate (correct,
+  // as it happens, but accidentally so) replacements.
+  let text = input.replace(/\\r\\n/g, "\n").replace(/\\r/g, "\n").replace(/\\n/g, "\n");
+
+  // Real CRLF and lone-CR line endings -> LF.
+  text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+  // Surrounding whitespace only -- never anything inside the value.
+  text = text.trim();
+
+  const beginIndexes = allIndexesOf(text, CERT_BEGIN_MARKER);
+  const endIndexes = allIndexesOf(text, CERT_END_MARKER);
+
+  if (beginIndexes.length === 0 && endIndexes.length === 0) {
+    return { ok: false, reason: "no_certificate_marker" };
+  }
+  if (beginIndexes.length > 1 || endIndexes.length > 1) {
+    return { ok: false, reason: "multiple_certificate_blocks" };
+  }
+  if (beginIndexes.length !== 1 || endIndexes.length !== 1 || endIndexes[0] < beginIndexes[0]) {
+    return { ok: false, reason: "incomplete_certificate_block" };
+  }
+
+  const body = text.slice(beginIndexes[0] + CERT_BEGIN_MARKER.length, endIndexes[0]);
+
+  // Whitespace (spaces, tabs, newlines) removed from the body only -- this
+  // is also what makes a body split across multiple short lines, or one
+  // with no line breaks at all, resolve identically.
+  const compactBody = body.replace(/\s+/g, "");
+
+  if (compactBody.length === 0) {
+    return { ok: false, reason: "empty_certificate_body" };
+  }
+
+  // Strict Base64 validation: the standard alphabet plus up to two '='
+  // padding characters, total length a multiple of 4. A stray leftover
+  // character from a bad escape, a smart-quote from a word processor, a
+  // truncated copy/paste -- anything outside that alphabet fails closed
+  // here. This never strips an unexpected character to "fix" the body;
+  // it only ever removes whitespace (above) and otherwise accepts the
+  // body whole or rejects it whole.
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(compactBody) || compactBody.length % 4 !== 0) {
+    return { ok: false, reason: "invalid_base64_body" };
+  }
+
+  const lines: string[] = [];
+  for (let i = 0; i < compactBody.length; i += 64) {
+    lines.push(compactBody.slice(i, i + 64));
+  }
+
+  return { ok: true, pem: `${CERT_BEGIN_MARKER}\n${lines.join("\n")}\n${CERT_END_MARKER}\n` };
+}
+
+// Tried against several candidate forms of the same string, in order,
+// stopping at the first that parses -- the byte-identical raw value first
+// (so an already-valid PEM, certificate or not, is never mutated), then
+// surrounding whitespace trimmed, then (only if neither of those has a real
+// newline) the existing \n-literal normalization. These three candidates
+// only matter for the non-certificate (createPublicKey) path now --
+// canonicalizeCertificatePem() above does its own full normalization
+// internally in one pass, so the certificate path gets an equivalent result
+// from any of the three candidates and simply resolves on the first one.
+// Never throws; returns undefined if nothing parses.
 function resolveConfiguredPublicKey(rawPem: string): KeyObject | undefined {
   const candidates: string[] = [rawPem];
   const trimmed = rawPem.trim();
@@ -126,10 +244,16 @@ function resolveConfiguredPublicKey(rawPem: string): KeyObject | undefined {
   return undefined;
 }
 
+function looksLikeCertificatePem(pem: string): boolean {
+  return pem.includes("CERTIFICATE");
+}
+
 function tryParsePublicKeyPem(pem: string): KeyObject | undefined {
-  if (pem.includes("-----BEGIN CERTIFICATE-----")) {
+  if (looksLikeCertificatePem(pem)) {
+    const canonicalized = canonicalizeCertificatePem(pem);
+    if (!canonicalized.ok) return undefined;
     try {
-      return new X509Certificate(pem).publicKey;
+      return new X509Certificate(canonicalized.pem).publicKey;
     } catch {
       return undefined;
     }
@@ -152,6 +276,32 @@ export function classifyPublicKeyPemShape(pem: string): PublicKeyPemShape {
   if (pem.includes("-----BEGIN CERTIFICATE-----")) return "x509_certificate";
   if (pem.includes("-----BEGIN")) return "public_key_or_other";
   return "no_begin_marker";
+}
+
+// Safe, secret-free, certificate-specific diagnosis -- distinguishes
+// "canonicalization itself failed, and exactly why" from "canonicalization
+// succeeded but the resulting bytes still aren't a valid X.509 structure"
+// from "this isn't even certificate-shaped". Never returns or logs the key
+// material itself, only one of these classification labels (see
+// payments-netopia-notify.ts's rejection log line, the only caller). Never
+// used for the accept/reject decision -- that's always
+// resolveConfiguredPublicKey()/verifyRsaJwt() above, independently.
+export type PublicKeyCertificateDiagnosis =
+  | "not_certificate_shaped"
+  | `canonicalization_failed:${CertificateCanonicalizationReason}`
+  | "certificate_parse_failed_after_canonicalization"
+  | "certificate_parses_ok";
+
+export function diagnosePublicKeyCertificate(pem: string): PublicKeyCertificateDiagnosis {
+  if (!looksLikeCertificatePem(pem)) return "not_certificate_shaped";
+  const canonicalized = canonicalizeCertificatePem(pem);
+  if (!canonicalized.ok) return `canonicalization_failed:${canonicalized.reason}`;
+  try {
+    new X509Certificate(canonicalized.pem);
+    return "certificate_parses_ok";
+  } catch {
+    return "certificate_parse_failed_after_canonicalization";
+  }
 }
 
 export function verifyRsaJwt(token: string, publicKeyPem: string): JwtVerifyResult {

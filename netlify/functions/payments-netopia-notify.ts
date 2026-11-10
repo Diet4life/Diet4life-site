@@ -1,5 +1,5 @@
 import type { Handler } from "@netlify/functions";
-import { classifyPublicKeyPemShape, verifyNetopiaNotification } from "@/server/security/netopiaVerification";
+import { classifyPublicKeyPemShape, diagnosePublicKeyCertificate, verifyNetopiaNotification } from "@/server/security/netopiaVerification";
 import { getOrderConfirmationContext, markConfirmationEmailStatus, recordNetopiaNotification } from "@/server/orders/orderService";
 import { mapNetopiaStatus } from "@/server/orders/netopiaStatusMapping";
 import { isCheckoutAllowed, isDiet4LifeProductionSite, isProductionContext, isSandboxRelayEnabled } from "@/server/environment";
@@ -198,14 +198,20 @@ export const handler: Handler = async (event, context) => {
     // Never log the token, the body, or any header value -- only the
     // classification of why verification failed. For invalid_public_key
     // specifically, also log the configured key's safe structural PEM
-    // shape (x509_certificate / public_key_or_other / no_begin_marker) --
-    // never the key bytes -- so a real deploy's logs can distinguish "the
-    // wrong PEM type was configured" from "the PEM is simply unparsable"
-    // without ever exposing the secret itself.
-    const keyShape =
-      verification.reason === "invalid_public_key" && process.env.NETOPIA_PUBLIC_KEY
-        ? ` keyShape=${classifyPublicKeyPemShape(process.env.NETOPIA_PUBLIC_KEY)}`
-        : "";
+    // shape (x509_certificate / public_key_or_other / no_begin_marker) and,
+    // when it's certificate-shaped, the specific canonicalization/parse
+    // diagnosis (e.g. canonicalization_failed:invalid_base64_body,
+    // certificate_parse_failed_after_canonicalization) -- never the key
+    // bytes -- so a real deploy's logs can distinguish exactly which stage
+    // failed without ever exposing the secret itself.
+    let keyShape = "";
+    if (verification.reason === "invalid_public_key" && process.env.NETOPIA_PUBLIC_KEY) {
+      const shape = classifyPublicKeyPemShape(process.env.NETOPIA_PUBLIC_KEY);
+      keyShape = ` keyShape=${shape}`;
+      if (shape === "x509_certificate") {
+        keyShape += ` certDiagnosis=${diagnosePublicKeyCertificate(process.env.NETOPIA_PUBLIC_KEY)}`;
+      }
+    }
     console.error(`payments-netopia-notify[${requestId}] rejected reason=${verification.reason}${keyShape}`);
     return ACK_REJECT;
   }
