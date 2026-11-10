@@ -10,7 +10,7 @@ import { useDocumentHead } from "@/hooks/use-document-head";
 // to /contact for anything still "contact" -- so re-scoping an item back to
 // contact-only later is a one-line catalog change, no JSX edit needed here.
 // UNCHANGED this round, per explicit instruction.
-function serviceCtaHref(id: string): string {
+export function serviceCtaHref(id: string): string {
   const entry = checkoutCatalog.find((s) => s.id === id);
   return entry?.purchaseMode === "checkout" ? `/checkout/${id}` : "/contact";
 }
@@ -48,6 +48,35 @@ interface ServiceOffering {
   noteEn?: string;
 }
 
+// 2026-11-09: id/nameRo/nameEn/price used to be hand-typed literals on each
+// entry below, duplicating src/lib/catalog/services.ts's id/name/priceCents
+// -- two independently-edited sources describing the exact same services,
+// with nothing to stop them drifting apart (exactly the risk flagged in
+// this round's checkout-CTA audit: Checkout.tsx/OrderSummary.tsx always
+// display whatever the *catalog/DB* side says, never this page's own
+// copy, so a name or price changed here alone would silently become a
+// lie the moment someone clicked through). This page remains the only
+// place that owns periods/descriptions/benefit lists/notes -- purely
+// presentational content with no checkout-identity meaning -- but id,
+// name, and price now resolve from the shared catalog by id, so the two
+// can no longer disagree. Throws at module load (never silently falls
+// back to a wrong value) if a presentation entry's id has no matching
+// catalog entry -- a missing catalog row should fail loudly in dev, not
+// render a blank/wrong price in production.
+function catalogServiceDisplay(id: string): { nameRo: string; nameEn: string; price: number } {
+  const entry = checkoutCatalog.find((s) => s.id === id);
+  if (!entry) {
+    throw new Error(`Services.tsx: no catalog entry for service id "${id}" in src/lib/catalog/services.ts`);
+  }
+  return { nameRo: entry.name.ro, nameEn: entry.name.en, price: entry.priceCents / 100 };
+}
+
+type ServicePresentation = Omit<ServiceOffering, "nameRo" | "nameEn" | "price">;
+
+function withCatalogDisplay(presentation: ServicePresentation): ServiceOffering {
+  return { ...presentation, ...catalogServiceDisplay(presentation.id) };
+}
+
 const CTA_RO = "Alege serviciul";
 const CTA_EN = "Choose this service";
 const SUB_CTA_RO = "Vei continua către plata securizată.";
@@ -66,12 +95,9 @@ const WHATSAPP_NOTE_EN =
 // removed ("45-60 minute", "30 minute", "de aproximativ 20 de minute");
 // every day/week/month period, every service name, every price, and the
 // number of check-ins (1, 3) are unchanged.
-const services: ServiceOffering[] = [
+export const services: ServiceOffering[] = ([
   {
     id: "primii-pasi",
-    nameRo: "Primii Pași",
-    nameEn: "First Steps",
-    price: 200,
     periodRo: "21 zile",
     periodEn: "21 days",
     periodSubRo: "7 zile de jurnal + 14 zile de aplicare",
@@ -98,9 +124,6 @@ const services: ServiceOffering[] = [
   },
   {
     id: "consultatie-nutritionala",
-    nameRo: "Consultație Nutrițională",
-    nameEn: "Nutrition Consultation",
-    price: 300,
     shortRo:
       "Pentru persoanele care au nevoie de o evaluare completă și de recomandări nutriționale adaptate nevoilor și obiectivelor lor.",
     shortEn:
@@ -125,9 +148,6 @@ const services: ServiceOffering[] = [
   },
   {
     id: "program-6-saptamani",
-    nameRo: "Program Nutrițional 6 săptămâni",
-    nameEn: "6-Week Nutrition Program",
-    price: 480,
     periodRo: "6 săptămâni",
     periodEn: "6 weeks",
     shortRo:
@@ -154,9 +174,6 @@ const services: ServiceOffering[] = [
   },
   {
     id: "program-3-luni",
-    nameRo: "Program Nutrițional 3 luni",
-    nameEn: "3-Month Nutrition Program",
-    price: 850,
     periodRo: "3 luni",
     periodEn: "3 months",
     shortRo:
@@ -181,16 +198,13 @@ const services: ServiceOffering[] = [
     ],
     hasWhatsApp: true,
   },
-];
+] satisfies ServicePresentation[]).map(withCatalogDisplay);
 
 // Kept structurally separate from `services` (own section, own eyebrow),
 // per the earlier explicit "must read as visually separate from the 4
 // new-patient services" instruction -- not just a data-shape difference.
-const MONITORING: ServiceOffering = {
+export const MONITORING: ServiceOffering = withCatalogDisplay({
   id: "monitorizare-nutritionala",
-  nameRo: "Monitorizare Nutrițională",
-  nameEn: "Nutritional Monitoring",
-  price: 200,
   shortRo: "Pentru pacienții care au avut deja o consultație și au nevoie de o reevaluare punctuală a evoluției.",
   shortEn: "For patients who have already had a consultation and need a one-time reassessment of their progress.",
   includeLabelRo: "Include",
@@ -207,7 +221,7 @@ const MONITORING: ServiceOffering = {
     "Reviewing your meal plan, if needed.",
     "Updated written recommendations for the period ahead.",
   ],
-};
+});
 
 // Replaces the previous two separate blocks ("Cum alegi?", a definition
 // list above the cards, and "Ce se întâmplă după plată?", below them) with

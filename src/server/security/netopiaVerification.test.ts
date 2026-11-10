@@ -1,6 +1,10 @@
+import { execFileSync } from "node:child_process";
 import { generateKeyPairSync, createSign } from "node:crypto";
+import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { hashRequestBody, normalizePemKey, verifyNetopiaNotification, verifyRsaJwt } from "./netopiaVerification";
+import { classifyPublicKeyPemShape, hashRequestBody, normalizePemKey, verifyNetopiaNotification, verifyRsaJwt } from "./netopiaVerification";
 
 // A real RSA keypair generated once for this test file -- lets us build
 // genuinely RS256/RS512-signed JWTs and prove verifyRsaJwt() actually
@@ -11,6 +15,27 @@ const { publicKey, privateKey } = generateKeyPairSync("rsa", {
   publicKeyEncoding: { type: "spki", format: "pem" },
   privateKeyEncoding: { type: "pkcs8", format: "pem" },
 });
+
+// 2026-11-09: a real self-signed X.509 certificate PEM wrapping the exact
+// same RSA keypair above, built once via the system `openssl` CLI -- this
+// is the PEM shape NETOPIA's real sandbox credential actually is (a `.cer`
+// certificate, not a bare SPKI "PUBLIC KEY" PEM), and it's what exposed the
+// invalid_public_key bug: createPublicKey() can't parse a "-----BEGIN
+// CERTIFICATE-----" block at all, only `new X509Certificate(pem)` can. Since
+// the certificate embeds the same public key as `publicKey` above, any
+// signature verifiable against `publicKey` must also verify against this
+// certificate's `.publicKey` -- that equivalence is exactly what these
+// tests check.
+const CERTIFICATE_PEM = (() => {
+  const dir = mkdtempSync(join(tmpdir(), "netopia-test-cert-"));
+  const keyPath = join(dir, "key.pem");
+  const certPath = join(dir, "cert.pem");
+  writeFileSync(keyPath, privateKey);
+  execFileSync("openssl", ["req", "-x509", "-key", keyPath, "-subj", "/CN=netopia-sandbox-test", "-days", "1", "-out", certPath], {
+    stdio: "pipe",
+  });
+  return readFileSync(certPath, "utf8");
+})();
 
 function base64url(input: Buffer | string): string {
   return Buffer.from(input).toString("base64url");
@@ -93,6 +118,84 @@ describe("verifyRsaJwt", () => {
     const token = signJwt(validPayload(), privateKey);
     const escapedKey = publicKey.replace(/\n/g, "\\n");
     expect(verifyRsaJwt(token, escapedKey)).toEqual({ ok: true, payload: validPayload() });
+  });
+
+  // 2026-11-09: the real root cause -- NETOPIA's actual sandbox credential
+  // is an X.509 CERTIFICATE PEM, not a bare PUBLIC KEY PEM, and
+  // createPublicKey() alone can never parse that shape.
+  describe("X.509 CERTIFICATE PEM (NETOPIA's real sandbox credential shape)", () => {
+    it("verifies a genuinely RS512-signed token against a valid X.509 certificate's embedded public key, unmodified", () => {
+      const token = signJwt(validPayload(), privateKey, "RS512");
+      expect(verifyRsaJwt(token, CERTIFICATE_PEM)).toEqual({ ok: true, payload: validPayload() });
+    });
+
+    it("also verifies RS256 against the certificate", () => {
+      const token = signJwt(validPayload(), privateKey, "RS256");
+      expect(verifyRsaJwt(token, CERTIFICATE_PEM)).toEqual({ ok: true, payload: validPayload() });
+    });
+
+    it("tolerates a certificate PEM whose real newlines were replaced with literal \\n", () => {
+      const token = signJwt(validPayload(), privateKey, "RS512");
+      const escapedCert = CERTIFICATE_PEM.replace(/\n/g, "\\n");
+      expect(verifyRsaJwt(token, escapedCert)).toEqual({ ok: true, payload: validPayload() });
+    });
+
+    it("tolerates surrounding whitespace around an otherwise-valid certificate PEM", () => {
+      const token = signJwt(validPayload(), privateKey, "RS512");
+      const padded = `\n\n  ${CERTIFICATE_PEM}  \n\t\n`;
+      expect(verifyRsaJwt(token, padded)).toEqual({ ok: true, payload: validPayload() });
+    });
+
+    it("tolerates surrounding whitespace combined with escaped newlines", () => {
+      const token = signJwt(validPayload(), privateKey, "RS512");
+      const padded = `   ${CERTIFICATE_PEM.replace(/\n/g, "\\n")}   `;
+      expect(verifyRsaJwt(token, padded)).toEqual({ ok: true, payload: validPayload() });
+    });
+
+    it("still rejects a signature from the wrong key, even presented as a valid certificate", () => {
+      const { privateKey: otherPrivateKey } = generateKeyPairSync("rsa", {
+        modulusLength: 2048,
+        publicKeyEncoding: { type: "spki", format: "pem" },
+        privateKeyEncoding: { type: "pkcs8", format: "pem" },
+      });
+      const token = signJwt(validPayload(), otherPrivateKey, "RS512");
+      expect(verifyRsaJwt(token, CERTIFICATE_PEM)).toEqual({ ok: false, reason: "signature_verification_failed" });
+    });
+  });
+
+  describe("malformed / unsupported public key input", () => {
+    it("rejects a 'CERTIFICATE' marker with garbage body as invalid_public_key, never throwing", () => {
+      const token = signJwt(validPayload(), privateKey);
+      const garbageCert = "-----BEGIN CERTIFICATE-----\nnot-real-base64\n-----END CERTIFICATE-----";
+      expect(() => verifyRsaJwt(token, garbageCert)).not.toThrow();
+      expect(verifyRsaJwt(token, garbageCert)).toEqual({ ok: false, reason: "invalid_public_key" });
+    });
+
+    it("rejects an empty string as invalid_public_key, never throwing", () => {
+      const token = signJwt(validPayload(), privateKey);
+      expect(() => verifyRsaJwt(token, "")).not.toThrow();
+      expect(verifyRsaJwt(token, "")).toEqual({ ok: false, reason: "invalid_public_key" });
+    });
+  });
+});
+
+describe("classifyPublicKeyPemShape", () => {
+  it("classifies a certificate PEM as x509_certificate", () => {
+    expect(classifyPublicKeyPemShape(CERTIFICATE_PEM)).toBe("x509_certificate");
+  });
+
+  it("classifies a certificate PEM as x509_certificate even with escaped newlines or surrounding whitespace", () => {
+    expect(classifyPublicKeyPemShape(CERTIFICATE_PEM.replace(/\n/g, "\\n"))).toBe("x509_certificate");
+    expect(classifyPublicKeyPemShape(`  ${CERTIFICATE_PEM}  `)).toBe("x509_certificate");
+  });
+
+  it("classifies a PUBLIC KEY PEM as public_key_or_other", () => {
+    expect(classifyPublicKeyPemShape(publicKey)).toBe("public_key_or_other");
+  });
+
+  it("classifies anything without a PEM BEGIN marker as no_begin_marker", () => {
+    expect(classifyPublicKeyPemShape("not a pem key at all")).toBe("no_begin_marker");
+    expect(classifyPublicKeyPemShape("")).toBe("no_begin_marker");
   });
 });
 

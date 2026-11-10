@@ -52,7 +52,7 @@
 // classic alg-confusion bug; picking from a fixed allowlist first removes
 // that shape entirely. "none", HS256, and anything else are rejected
 // before the public key is ever touched.
-import { createHash, createPublicKey, createVerify } from "node:crypto";
+import { createHash, createPublicKey, createVerify, X509Certificate, type KeyObject } from "node:crypto";
 
 // Verifies an RS512/RS256 JWT against the given RSA public key (PEM).
 // Returns a tagged result instead of null so the caller (and ultimately
@@ -87,6 +87,73 @@ export function normalizePemKey(pem: string): string {
   return pem.replace(/\\n/g, "\n");
 }
 
+// 2026-11-09: root cause of a real sandbox notification being rejected as
+// invalid_public_key even though the configured NETOPIA_PUBLIC_KEY was a
+// genuinely valid PEM (OpenSSL parses it; Node's own `new
+// X509Certificate(pem)` and `.publicKey` succeed). NETOPIA's sandbox
+// credential is distributed as a `.cer` X.509 CERTIFICATE PEM block, not a
+// bare SPKI "PUBLIC KEY" PEM block -- and `crypto.createPublicKey()` does
+// NOT accept a "-----BEGIN CERTIFICATE-----" block at all (it only parses
+// "PUBLIC KEY"/"RSA PUBLIC KEY"/"PRIVATE KEY" encodings). The previous
+// resolution logic called createPublicKey() unconditionally, so it threw on
+// the *first* attempt for a structural reason that has nothing to do with
+// newline-escaping -- and the \n-normalization fallback then failed for the
+// exact same reason, since converting escaped newlines never changes the
+// PEM's type. The result was indistinguishable from a genuinely corrupt key.
+//
+// Fix: explicit, type-aware parsing. A PEM containing "-----BEGIN
+// CERTIFICATE-----" is parsed with `new X509Certificate(pem)` and its
+// `.publicKey` (a KeyObject Node's Verify.verify() accepts directly) is
+// used; anything else still goes through createPublicKey() exactly as
+// before, so "PUBLIC KEY" PEM support is unchanged. Tried against several
+// candidate forms of the same string, in order, stopping at the first that
+// parses -- the byte-identical raw value first (so an already-valid PEM,
+// certificate or not, is never mutated), then surrounding whitespace
+// trimmed (a copy-paste-into-a-dashboard artifact), then (only if neither
+// of those has a real newline) the existing \n-literal normalization. Never
+// throws; returns undefined if nothing parses.
+function resolveConfiguredPublicKey(rawPem: string): KeyObject | undefined {
+  const candidates: string[] = [rawPem];
+  const trimmed = rawPem.trim();
+  if (trimmed !== rawPem) candidates.push(trimmed);
+  const normalized = normalizePemKey(trimmed);
+  if (normalized !== trimmed) candidates.push(normalized);
+
+  for (const candidate of candidates) {
+    const key = tryParsePublicKeyPem(candidate);
+    if (key) return key;
+  }
+  return undefined;
+}
+
+function tryParsePublicKeyPem(pem: string): KeyObject | undefined {
+  if (pem.includes("-----BEGIN CERTIFICATE-----")) {
+    try {
+      return new X509Certificate(pem).publicKey;
+    } catch {
+      return undefined;
+    }
+  }
+  try {
+    return createPublicKey(pem);
+  } catch {
+    return undefined;
+  }
+}
+
+export type PublicKeyPemShape = "x509_certificate" | "public_key_or_other" | "no_begin_marker";
+
+// Safe, secret-free structural classification -- never returns or logs the
+// key's actual bytes, only which PEM shape was detected in it. For
+// diagnostics only (see payments-netopia-notify.ts's rejection log line);
+// never used for the accept/reject decision itself, which is always
+// resolveConfiguredPublicKey()/verifyRsaJwt() below.
+export function classifyPublicKeyPemShape(pem: string): PublicKeyPemShape {
+  if (pem.includes("-----BEGIN CERTIFICATE-----")) return "x509_certificate";
+  if (pem.includes("-----BEGIN")) return "public_key_or_other";
+  return "no_begin_marker";
+}
+
 export function verifyRsaJwt(token: string, publicKeyPem: string): JwtVerifyResult {
   const parts = token.split(".");
   if (parts.length !== 3) return { ok: false, reason: "malformed_verification_token" };
@@ -110,34 +177,23 @@ export function verifyRsaJwt(token: string, publicKeyPem: string): JwtVerifyResu
   }
   if (signature.length === 0) return { ok: false, reason: "malformed_verification_token" };
 
-  // Validate the public key ON ITS OWN, before ever attempting a signature
-  // check against it -- this is what lets a malformed/mis-pasted
-  // NETOPIA_PUBLIC_KEY surface as "invalid_public_key" in the logs instead
-  // of being indistinguishable from a genuinely wrong signature. Tries the
-  // key as given first, then the \n-literal-normalized form -- so a key
-  // that was already correct never takes a different code path than
-  // before, and a key that only fails because of escaped newlines gets a
-  // real chance to parse instead of silently becoming "invalid_signature"
-  // the way it would have before this round.
-  let normalizedKeyPem = publicKeyPem;
-  try {
-    createPublicKey(publicKeyPem);
-  } catch {
-    const normalized = normalizePemKey(publicKeyPem);
-    try {
-      createPublicKey(normalized);
-      normalizedKeyPem = normalized;
-    } catch {
-      return { ok: false, reason: "invalid_public_key" };
-    }
-  }
+  // Validate/resolve the public key ON ITS OWN, before ever attempting a
+  // signature check against it -- this is what lets a malformed/mis-pasted
+  // or wrong-PEM-type NETOPIA_PUBLIC_KEY surface as "invalid_public_key" in
+  // the logs instead of being indistinguishable from a genuinely wrong
+  // signature. Handles an X.509 CERTIFICATE PEM (NETOPIA's real sandbox
+  // credential shape) via X509Certificate, and a PUBLIC KEY (or other
+  // createPublicKey-supported) PEM exactly as before -- see
+  // resolveConfiguredPublicKey()'s header comment.
+  const resolvedKey = resolveConfiguredPublicKey(publicKeyPem);
+  if (!resolvedKey) return { ok: false, reason: "invalid_public_key" };
 
   let signatureValid = false;
   try {
     const verifier = createVerify(digest);
     verifier.update(`${headerB64}.${payloadB64}`);
     verifier.end();
-    signatureValid = verifier.verify(normalizedKeyPem, signature);
+    signatureValid = verifier.verify(resolvedKey, signature);
   } catch {
     // The key already parsed on its own above, so an exception here means
     // the signature bytes themselves are the wrong shape for this key
